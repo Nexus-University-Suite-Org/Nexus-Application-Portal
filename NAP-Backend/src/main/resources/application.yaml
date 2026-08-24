@@ -1,3 +1,17 @@
 spring:
   application:
     name: NAP-Backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/capstoneapidb
+    username: postgres
+    password: mugwadavid
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+
+    open-in-view: false
