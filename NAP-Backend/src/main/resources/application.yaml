@@ -3,9 +3,9 @@ spring:
     name: NAP-Backend
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/capstoneapidb
-    username: postgres
-    password: mugwadavid
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
 
   jpa:
     hibernate:
