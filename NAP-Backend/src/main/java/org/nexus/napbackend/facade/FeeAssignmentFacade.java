@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import org.nexus.napbackend.dto.FeeAssignmentRequest;
 import org.nexus.napbackend.dto.FeeAssignmentResponse;
+import org.nexus.napbackend.dto.FeeReportResponse;
 import org.nexus.napbackend.mapper.FeeAssignmentMapper;
 import org.nexus.napbackend.model.FeeAssignment;
 import org.nexus.napbackend.service.FeeAssignmentService;
@@ -74,5 +75,18 @@ public class FeeAssignmentFacade {
         service.findById(id)
                 .orElseThrow(() -> new RuntimeException("FeeAssignment not found with id: " + id));
         service.deleteById(id);
+    }
+
+    @Transactional
+    public List<FeeReportResponse> getReport(String academicYear) {
+        List<FeeAssignment> assignments;
+        if (academicYear != null) {
+            assignments = service.findByAcademicYearForReport(academicYear);
+        } else {
+            assignments = service.findAllForReport();
+        }
+        return assignments.stream()
+                .map(FeeAssignmentMapper::toReportDto)
+                .toList();
     }
 }

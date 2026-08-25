@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import org.nexus.napbackend.dto.FeeAssignmentRequest;
 import org.nexus.napbackend.dto.FeeAssignmentResponse;
+import org.nexus.napbackend.dto.FeeReportResponse;
 import org.nexus.napbackend.facade.FeeAssignmentFacade;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,5 +61,11 @@ public class FeeAssignmentController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         facade.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/report")
+    public ResponseEntity<List<FeeReportResponse>> getReport(
+            @RequestParam(required = false) String academicYear) {
+        return ResponseEntity.ok(facade.getReport(academicYear));
     }
 }

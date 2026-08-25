@@ -2,6 +2,7 @@ package org.nexus.napbackend.mapper;
 
 import org.nexus.napbackend.dto.FeeAssignmentRequest;
 import org.nexus.napbackend.dto.FeeAssignmentResponse;
+import org.nexus.napbackend.dto.FeeReportResponse;
 import org.nexus.napbackend.model.FeeAssignment;
 
 public final class FeeAssignmentMapper {
@@ -37,6 +38,22 @@ public final class FeeAssignmentMapper {
                 entity.getNotes(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
+        );
+    }
+
+    public static FeeReportResponse toReportDto(FeeAssignment entity) {
+        return new FeeReportResponse(
+                entity.getAcademicYear(),
+                entity.getCollege(),
+                entity.getCategory(),
+                entity.getYearLevel(),
+                entity.getSemester(),
+                entity.getItemName(),
+                entity.getAmount(),
+                entity.getCurrency(),
+                0L,
+                java.math.BigDecimal.ZERO,
+                java.math.BigDecimal.ZERO
         );
     }
 }

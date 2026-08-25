@@ -191,18 +191,48 @@ public class EntityController {
 - `postgresql` - Database driver
 - `h2` - Test database
 
+## Completed Tasks Summary
+
+### FN-01 FeeAssignment (DONE)
+Created a fee structure module. Admin can create fee items like "Tuition Fee", "Lab Fee" etc. for each college, year level, semester and academic year. Each fee has an amount in UGX. Built the full stack: Entity, DTOs, Mapper, Repository, Service, Facade, Controller, and database migration.
+
+### FN-02 StudentFee (DONE)
+Created a student fee assignment module. Links a student to a fee assignment with amount, paid amount, due date, and status. Balance is computed server-side (amount minus paid amount). When a fee is assigned, it fires a FeeAssignedEvent. When a payment is recorded, it fires a PaymentRecordedEvent and auto-updates status to PAID or PARTIAL.
+
+### FN-03 Fee Report (DONE)
+Added a read-only report endpoint `GET /api/v1/fees/report` that returns fee structure entries grouped by college, category, year level, and semester. Can filter by `?academicYear=2024`. Used by the reporting module for CSV exports and transcripts.
+
+### MS-01 to MS-04 Messaging (DONE)
+Created a full messaging system. Users can send messages with attachments, view inbox/sent/starred, soft delete (per-side), star, archive, and manage drafts. Soft delete is per-side so sender deleting doesn't affect recipient's view. Drafts auto-default subject to "(no subject)" if blank. Sending a message is separate from drafts - drafts are saved independently.
+
+### NT-01 to NT-03 Notifications (DONE)
+Created notification system with: notifications table (user, type, title, message, related_id, link, read flag), announcements table (author, title, body, course_id, system_wide flag). Supports dual casing via @JsonProperty for the "read" field. List endpoint accepts both user_id and recipient_id params. Mark-read works via PUT /{id} and POST /{id}/read/. Mark-all-read accepts user_id or recipient_id in body. Announcements can be course-scoped or system-wide.
+
+### NT-04 Event Listeners (DONE)
+Created FeeAssignedListener and PaymentRecordedListener that listen to events from the Finance module and automatically create notifications for students. FeeAssignedListener notifies when a fee is assigned. PaymentRecordedListener notifies when a payment is received with remaining balance info.
+
+### NT-05 Push/Email Fan-Out (DONE)
+Created NotificationFanOut interface with sendInApp, sendEmail, sendPush methods. NoOpNotificationFanOut is a no-op implementation that just logs. This is an interface seam for future email digest and push notification implementation.
+
 ## Tagoole's Assigned Modules (From RTM)
 
 ### Finance (FN)
-- FN-01: FeeAssignment CRUD
-- FN-02: StudentFee CRUD-lite with computed balance
-- FN-03: Fee report feed
+- ~~FN-01: FeeAssignment CRUD~~ DONE
+- ~~FN-02: StudentFee CRUD-lite with computed balance~~ DONE
+- ~~FN-03: Fee report feed~~ DONE
 
 ### Messaging (MS)
-- MS-01: Message model with soft delete, star/archive
-- MS-02: Inbox routes
-- MS-03: Send message + draft deletion
-- MS-04: Drafts CRUD
+- ~~MS-01: Message model with soft delete, star/archive~~ DONE
+- ~~MS-02: Inbox routes~~ DONE
+- ~~MS-03: Send message + draft deletion~~ DONE
+- ~~MS-04: Drafts CRUD~~ DONE
+
+### Notification (NT)
+- ~~NT-01: Notification core with dual casing~~ DONE
+- ~~NT-02: Mixed casing acceptance~~ DONE (handled via @JsonProperty on "read" field)
+- ~~NT-03: Announcements entity + routes~~ DONE
+- ~~NT-04: Event listeners wiring~~ DONE (FeeAssignedListener, PaymentRecordedListener)
+- ~~NT-05: Push/email fan-out stub~~ DONE (NotificationFanOut interface + NoOpNotificationFanOut)
 
 ### Notification (NT)
 - NT-01: Notification core with dual casing

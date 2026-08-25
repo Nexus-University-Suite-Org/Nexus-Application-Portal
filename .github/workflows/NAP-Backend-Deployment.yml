@@ -116,18 +116,29 @@ jobs:
              echo ".env restored"
 
              echo ""
-             echo "=== Step 5: Building and starting NAP Backend container ==="
+             echo "=== Step 5: Stopping and removing old nap-backend container ==="
              echo "Docker containers before:"
              docker ps -a --filter "name=nap" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
              echo ""
-             echo "Building and starting nap-backend..."
-             docker compose up -d --build nap-backend
+             echo "Stopping nap-backend container (if running)..."
+             docker compose stop nap-backend 2>/dev/null || true
+             echo "Removing old nap-backend container..."
+             docker compose rm -f nap-backend 2>/dev/null || true
+             echo "Cleaning up any orphaned containers..."
+             docker container prune -f 2>/dev/null || true
+             echo ""
+             echo "Docker containers after cleanup:"
+             docker ps -a --filter "name=nap" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+             echo ""
+             echo "=== Step 6: Building and starting NAP Backend container ==="
+             docker compose up -d --no-deps --build nap-backend
              echo ""
              echo "Docker containers after:"
              docker ps -a --filter "name=nap" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
              echo ""
-             echo "=== Step 6: Checking container logs ==="
+             echo "=== Step 7: Checking container logs ==="
              sleep 5
              echo "=== nap-backend logs (last 30 lines) ==="
              docker logs nap-backend --tail 30 2>&1 || echo "No logs available yet"

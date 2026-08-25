@@ -48,4 +48,12 @@ public class FeeAssignmentService {
     public void deleteById(Long id) {
         repository.deleteById(id);
     }
+
+    public List<FeeAssignment> findAllForReport() {
+        return repository.findAllForReport();
+    }
+
+    public List<FeeAssignment> findByAcademicYearForReport(String academicYear) {
+        return repository.findByAcademicYearForReport(academicYear);
+    }
 }
