@@ -249,13 +249,13 @@ Created NotificationFanOut interface with sendInApp, sendEmail, sendPush methods
 - CT-05: Donations intent (deferred)
 
 ### Admissions (AD)
-- AD-01: Applications table (~90 fields)
+- ~~AD-01: Applications table (~90 fields)~~ DONE
 - AD-02: Portal OTP aliases
 - AD-03: Admissions review surface
 - AD-04: Contact + partnership forms
 
 ### Audit (AU)
-- AU-01: Append-only audit_logs
+- ~~AU-01: Append-only audit_logs~~ DONE
 
 ## Package Structure
 
