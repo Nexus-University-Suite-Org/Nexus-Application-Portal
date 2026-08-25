@@ -27,7 +27,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     open-in-view: false
     show-sql: false
     properties:
@@ -38,7 +38,7 @@ spring:
         order_updates: true
 
   flyway:
-    enabled: true
+    enabled: false
 
   lifecycle:
     timeout-per-shutdown-phase: 20s
