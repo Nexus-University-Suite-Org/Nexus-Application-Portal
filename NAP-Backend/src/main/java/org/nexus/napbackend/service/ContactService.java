@@ -53,7 +53,10 @@ public class ContactService {
         String subject = submission.getSubject();
         String message = submission.getMessage();
         String receivedAt = RECEIVED_AT_FORMAT.format(ZonedDateTime.now(java.time.ZoneId.of("Africa/Kampala")));
-        notificationExecutor.submit(() -> deliverNotification(id, name, email, subject, message, receivedAt));
+        notificationExecutor.submit(() -> {
+            log.info("Attempting EmailJS notification for submission id={}", id);
+            deliverNotification(id, name, email, subject, message, receivedAt);
+        });
 
         return new ContactResponse(id, false);
     }
@@ -61,6 +64,7 @@ public class ContactService {
     private void deliverNotification(Long id, String name, String email, String subject, String message,
                                      String receivedAt) {
         boolean delivered = emailJsSender.send(name, email, subject, message, receivedAt);
+        log.info("EmailJS notification result for submission id={}: delivered={}", id, delivered);
         if (delivered) {
             markEmailed(id);
         }

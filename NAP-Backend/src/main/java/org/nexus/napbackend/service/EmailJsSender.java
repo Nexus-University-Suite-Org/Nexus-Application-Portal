@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
+
 @Component
 public class EmailJsSender {
 
@@ -29,6 +31,15 @@ public class EmailJsSender {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
+    }
+
+    @PostConstruct
+    void logConfig() {
+        log.info("EmailJS configured={}; serviceId={} templateId={} publicKey={}",
+                properties.configured(),
+                properties.serviceId() != null ? properties.serviceId().substring(0, Math.min(8, properties.serviceId().length())) + "..." : "null",
+                properties.templateId() != null ? properties.templateId().substring(0, Math.min(8, properties.templateId().length())) + "..." : "null",
+                properties.publicKey() != null ? "set" : "null");
     }
 
     public boolean send(String name, String email, String subject, String message, String receivedAt) {
