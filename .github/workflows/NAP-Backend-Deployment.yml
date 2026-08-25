@@ -72,7 +72,7 @@ jobs:
              pwd && \
              echo "=== Docker status ===" && \
              docker --version && \
-             docker-compose --version && \
+             docker compose version && \
              echo "=== Disk space ===" && \
              df -h / && \
              echo "=== Memory ===" && \
@@ -120,8 +120,8 @@ jobs:
              echo "Docker containers before:"
              docker ps -a --filter "name=nap" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
              echo ""
-             echo "Building and starting nap-backend (only this service, not others)..."
-             docker-compose up -d --no-deps --build nap-backend
+             echo "Building and starting nap-backend..."
+             docker compose up -d --build nap-backend
              echo ""
              echo "Docker containers after:"
              docker ps -a --filter "name=nap" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
@@ -164,8 +164,8 @@ jobs:
              echo "=== nap-backend logs (last 50 lines) ===" && \
              docker logs nap-backend --tail 50 2>&1 && \
              echo "" && \
-             echo "=== docker-compose config ===" && \
-             cd $HOME/Applications/Nexus && docker-compose config && \
+             echo "=== docker compose config ===" && \
+             cd $HOME/Applications/Nexus && docker compose config && \
              echo "" && \
              echo "=== Disk space ===" && \
              df -h && \
