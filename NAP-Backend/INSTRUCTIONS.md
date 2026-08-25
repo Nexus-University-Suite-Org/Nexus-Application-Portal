@@ -250,9 +250,9 @@ Created NotificationFanOut interface with sendInApp, sendEmail, sendPush methods
 
 ### Admissions (AD)
 - ~~AD-01: Applications table (~90 fields)~~ DONE
-- AD-02: Portal OTP aliases
-- AD-03: Admissions review surface
-- AD-04: Contact + partnership forms
+- ~~AD-02: Portal OTP aliases~~ DONE
+- ~~AD-03: Admissions review surface~~ DONE (in AD-01 ApplicationController)
+- ~~AD-04: Contact + partnership forms~~ DONE
 
 ### Audit (AU)
 - ~~AU-01: Append-only audit_logs~~ DONE
