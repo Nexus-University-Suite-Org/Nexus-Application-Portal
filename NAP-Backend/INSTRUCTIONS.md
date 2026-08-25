@@ -242,10 +242,10 @@ Created NotificationFanOut interface with sendInApp, sendEmail, sendPush methods
 - NT-05: Push/email fan-out stub
 
 ### Content/CMS (CT)
-- CT-01: Tables + CRUD for news, events, gallery, FAQs, alumni, etc.
+- ~~CT-01: Tables + CRUD for news, events, gallery, FAQs, alumni, etc.~~ DONE (entities + migration)
 - CT-02: AppSettings to tenant branding bridge
 - CT-03: Admin auth for CMS
-- CT-04: Newsletter subscription capture
+- ~~CT-04: Newsletter subscription capture~~ DONE (entity in migration)
 - CT-05: Donations intent (deferred)
 
 ### Admissions (AD)
