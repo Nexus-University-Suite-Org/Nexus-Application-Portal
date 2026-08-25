@@ -229,29 +229,22 @@ Created NotificationFanOut interface with sendInApp, sendEmail, sendPush methods
 
 ### Notification (NT)
 - ~~NT-01: Notification core with dual casing~~ DONE
-- ~~NT-02: Mixed casing acceptance~~ DONE (handled via @JsonProperty on "read" field)
+- ~~NT-02: Mixed casing acceptance~~ DONE
 - ~~NT-03: Announcements entity + routes~~ DONE
-- ~~NT-04: Event listeners wiring~~ DONE (FeeAssignedListener, PaymentRecordedListener)
-- ~~NT-05: Push/email fan-out stub~~ DONE (NotificationFanOut interface + NoOpNotificationFanOut)
-
-### Notification (NT)
-- NT-01: Notification core with dual casing
-- NT-02: Mixed casing acceptance
-- NT-03: Announcements entity + routes
-- NT-04: Event listeners for cross-module notifications
-- NT-05: Push/email fan-out stub
+- ~~NT-04: Event listeners wiring~~ DONE
+- ~~NT-05: Push/email fan-out stub~~ DONE
 
 ### Content/CMS (CT)
-- ~~CT-01: Tables + CRUD for news, events, gallery, FAQs, alumni, etc.~~ DONE (entities + migration)
-- CT-02: AppSettings to tenant branding bridge
-- CT-03: Admin auth for CMS
-- ~~CT-04: Newsletter subscription capture~~ DONE (entity in migration)
+- ~~CT-01: Tables + CRUD for news, events, gallery, FAQs, alumni, etc.~~ DONE
+- CT-02: AppSettings to tenant branding bridge (NOT ASSIGNED)
+- CT-03: Admin auth for CMS (NOT ASSIGNED)
+- ~~CT-04: Newsletter subscription capture~~ DONE
 - CT-05: Donations intent (deferred)
 
 ### Admissions (AD)
 - ~~AD-01: Applications table (~90 fields)~~ DONE
 - ~~AD-02: Portal OTP aliases~~ DONE
-- ~~AD-03: Admissions review surface~~ DONE (in AD-01 ApplicationController)
+- ~~AD-03: Admissions review surface~~ DONE
 - ~~AD-04: Contact + partnership forms~~ DONE
 
 ### Audit (AU)
@@ -284,3 +277,32 @@ org.nexus.napbackend/
 - Integration tests for repositories
 - Controller tests with MockMvc
 - Test files in: `src/test/java/`
+
+### Test Results (48 tests passing)
+| Test Class | Tests | Status |
+|------------|-------|--------|
+| FeeAssignmentControllerTest | 9 | PASS |
+| StudentFeeControllerTest | 5 | PASS |
+| MessageControllerTest | 7 | PASS |
+| NotificationControllerTest | 7 | PASS |
+| ApplicationControllerTest | 7 | PASS |
+| OtpControllerTest | 4 | PASS |
+| AuditLogControllerTest | 3 | PASS |
+| ContactFlowTests | 4 | PASS |
+| ContactRateLimitTests | 1 | PASS |
+| NapBackendApplicationTests | 1 | PASS |
+
+## Frontend Compatibility
+
+### Working Endpoints
+- `POST /api/contact/` - Contact form
+- `POST /api/v1/chat` - ChatBot
+
+### Broken (Path Mismatch - Missing v1/ prefix)
+- `POST /api/applications/` → needs `/api/v1/applications`
+- `POST /api/partnership-discussions/` → needs `/api/v1/partnership-discussions`
+- `POST /api/auth/otp/send` → needs `/api/v1/auth/otp/send`
+- `POST /api/auth/otp/verify` → needs `/api/v1/auth/otp/verify`
+
+### Missing Backend
+- `POST /api/storage/upload` - Document uploads (no backend exists)
