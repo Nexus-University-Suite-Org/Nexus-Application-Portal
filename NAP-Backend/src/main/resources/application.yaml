@@ -66,6 +66,9 @@ nap:
     template-id: ${EMAILJS_TEMPLATE_ID:}
     public-key: ${EMAILJS_PUBLIC_KEY:}
     private-key: ${EMAILJS_PRIVATE_KEY:}
+  gemini:
+    api-key: ${GEMINI_API_KEY:}
+    model: ${GEMINI_MODEL:gemini-3.6-flash}
 
 logging:
   level:

@@ -16,15 +16,14 @@ interface Message {
   content: string;
 }
 
-// Chat backend was removed with the legacy stack.
-// Point this at the future Spring Boot chat endpoint when available.
-const CHAT_URL = "";
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.trim() || "/api";
+const CHAT_URL = `${API_BASE}${API_BASE.endsWith("/") ? "" : "/"}v1/chat`;
 
 const getQuickTopics = (instituteName: string) => [
+  { label: "Programs", query: "What vocational programs do you offer?" },
   { label: "Admissions", query: `How do I apply to ${instituteName}?` },
-  { label: "Programs", query: "What programs do you offer?" },
-  { label: "Campus Life", query: "Tell me about student life on campus" },
-  { label: "Tuition", query: "What are the tuition costs?" },
+  { label: "Tuition", query: "What are the costs and do you offer sponsorships?" },
+  { label: "Success Stories", query: "Tell me about graduates who found jobs" },
 ];
 
 async function streamChat({
@@ -194,7 +193,7 @@ const ChatBot = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const [portalName] = useState("University Application Portal");
+  const [portalName] = useState("Nexus University");
   const chatRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
