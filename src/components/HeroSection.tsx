@@ -84,14 +84,6 @@ const HeroSection = () => {
         stagger: 0.45,
       });
 
-      const imageX = gsap.quickTo(imageRef.current, "x", {
-        duration: 1,
-        ease: "power3.out",
-      });
-      const imageY = gsap.quickTo(imageRef.current, "y", {
-        duration: 1,
-        ease: "power3.out",
-      });
       const contentX = gsap.quickTo(heroContentRef.current, "x", {
         duration: 0.9,
         ease: "power3.out",
@@ -115,33 +107,17 @@ const HeroSection = () => {
         const offsetX = (event.clientX - rect.left) / rect.width - 0.5;
         const offsetY = (event.clientY - rect.top) / rect.height - 0.5;
 
-        imageX(offsetX * 26);
-        imageY(offsetY * 18);
         contentX(offsetX * 16);
         contentY(offsetY * 10);
         glowX(offsetX * 180);
         glowY(offsetY * 130);
-
-        gsap.to(overlayRef.current, {
-          opacity: 0.52 + Math.abs(offsetX) * 0.14 + Math.abs(offsetY) * 0.1,
-          duration: 0.35,
-          overwrite: true,
-        });
       };
 
       handleMouseLeave = () => {
-        imageX(0);
-        imageY(0);
         contentX(0);
         contentY(0);
         glowX(0);
         glowY(0);
-
-        gsap.to(overlayRef.current, {
-          opacity: 0.55,
-          duration: 0.45,
-          overwrite: true,
-        });
       };
 
       if (sectionRef.current && handleMouseMove && handleMouseLeave) {
