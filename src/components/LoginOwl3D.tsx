@@ -115,7 +115,7 @@ export default function LoginOwl3D({
             transform: `translate3d(${textShiftX * 0.35}px, ${textShiftY * 0.35 - (introVisible ? 0 : 8)}px, 0)`,
           }}
         >
-          Veritas Secure Access
+          University Application Portal Secure Access
         </p>
       </div>
 

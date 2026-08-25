@@ -91,8 +91,8 @@ const makeFallbackNews = (portalName: string): NewsItem[] =>
   newsArticles.map((article) => ({
     id: article.slug,
     slug: article.slug,
-    title: article.title.replace(/Veritas Institute/g, portalName),
-    excerpt: article.excerpt.replace(/Veritas Institute/g, portalName),
+    title: article.title.replace(/University Application Portal/g, portalName),
+    excerpt: article.excerpt.replace(/University Application Portal/g, portalName),
     category: article.category,
     date: article.date,
     featured: article.slug === featuredNewsSlug,
@@ -102,7 +102,7 @@ const NewsPage = () => {
   const imageRef = useRef<HTMLImageElement>(null);
   const newsRef = useRef<HTMLDivElement>(null);
   const eventsRef = useRef<HTMLDivElement>(null);
-  const [portalName] = useState("Veritas Institute");
+  const [portalName] = useState("University Application Portal");
 
   const { data: rawNewsData } = useContentCollection<RemoteNewsArticle>(
     "NewsArticles",
@@ -124,7 +124,7 @@ const NewsPage = () => {
           .map((item) => {
             const title =
               typeof item.title === "string" && item.title.trim().length > 0
-                ? item.title.replace(/Veritas Institute/g, portalName)
+                ? item.title.replace(/University Application Portal/g, portalName)
                 : "Untitled News";
             const generatedSlug = `${toSlug(title)}-${item.id.slice(0, 6)}`;
             return {
@@ -137,7 +137,7 @@ const NewsPage = () => {
               excerpt:
                 typeof item.excerpt === "string" &&
                 item.excerpt.trim().length > 0
-                  ? item.excerpt.replace(/Veritas Institute/g, portalName)
+                  ? item.excerpt.replace(/University Application Portal/g, portalName)
                   : "Read the full story for details.",
               category:
                 typeof item.category === "string" &&

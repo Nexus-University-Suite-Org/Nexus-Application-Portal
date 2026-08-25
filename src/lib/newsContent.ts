@@ -13,15 +13,15 @@ const currentYear = new Date().getFullYear();
 
 export const newsArticles: NewsArticle[] = [
   {
-    slug: "veritas-top-200-global-ranking",
-    title: "Veritas Institute ranks among the top 200 universities globally",
+    slug: "university-application-portal-top-200-global-ranking",
+    title: "University Application Portal ranks among the top 200 universities globally",
     date: `March 8, ${currentYear}`,
     category: "Institutional",
     excerpt:
-      "For the first time in its history, Veritas Institute has entered the top 200 of the World University Rankings, reflecting sustained investment in research, faculty excellence, and global partnerships.",
+      "For the first time in its history, University Application Portal has entered the top 200 of the World University Rankings, reflecting sustained investment in research, faculty excellence, and global partnerships.",
     readTime: "6 min read",
     body: [
-      "The latest rankings cite Veritas Institute's research output, graduate employability, and international collaboration as the main drivers behind its move into the global top tier. The result follows several years of strategic investment in research labs, scholarship support, and faculty recruitment.",
+      "The latest rankings cite University Application Portal's research output, graduate employability, and international collaboration as the main drivers behind its move into the global top tier. The result follows several years of strategic investment in research labs, scholarship support, and faculty recruitment.",
       "Institution leaders said the milestone is important not only as a prestige marker, but as evidence that the institution's long-term academic strategy is producing measurable outcomes. Particular recognition was given to interdisciplinary research centers, industry partnerships, and student support services that improved retention and progression rates.",
       "The university now plans to use the momentum to strengthen postgraduate research, expand international exchange programs, and deepen community-facing innovation projects. Faculty and student leaders both described the ranking as a validation of work already underway rather than a finish line.",
     ],
@@ -56,11 +56,11 @@ export const newsArticles: NewsArticle[] = [
     date: `February 15, ${currentYear}`,
     category: "Innovation",
     excerpt:
-      "AgriSense, founded by two Veritas engineering students, secured backing for its precision agriculture platform after pilot results with farming cooperatives.",
+      "AgriSense, founded by two University Application Portal engineering students, secured backing for its precision agriculture platform after pilot results with farming cooperatives.",
     readTime: "5 min read",
     body: [
       "AgriSense began as a capstone project focused on affordable field monitoring for smallholder farmers. After successful pilots across three districts, the founding team refined the product into a decision-support platform that combines sensing, forecasting, and advisory workflows.",
-      "The new financing will support product engineering, regional expansion, and a structured internship program for Veritas students interested in agricultural technology. Faculty mentors described the round as an example of what happens when applied research and entrepreneurship operate closely together.",
+      "The new financing will support product engineering, regional expansion, and a structured internship program for University Application Portal students interested in agricultural technology. Faculty mentors described the round as an example of what happens when applied research and entrepreneurship operate closely together.",
       "University innovation staff said the company will continue to work with campus labs while scaling its field network and validation programs with new partners.",
     ],
     highlights: [
@@ -147,7 +147,7 @@ export const newsArticles: NewsArticle[] = [
   },
 ];
 
-export const featuredNewsSlug = "veritas-top-200-global-ranking";
+export const featuredNewsSlug = "university-application-portal-top-200-global-ranking";
 
 export const getNewsArticleBySlug = (slug: string) =>
   newsArticles.find((article) => article.slug === slug);

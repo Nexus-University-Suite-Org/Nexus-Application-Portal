@@ -7,7 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import PageTransition from "@/components/PageTransition";
 import useSmoothScroll from "@/hooks/useSmoothScroll";
 const Index = lazy(() => import("./pages/Index.tsx"));
-const StudyAtVeritas = lazy(() => import("./pages/StudyAtVeritas.tsx"));
+  const StudyAtPortal = lazy(() => import("./pages/StudyAtPortal.tsx"));
 const StudyItemPage = lazy(() => import("./pages/StudyItemPage.tsx"));
 const StudentsPage = lazy(() => import("./pages/StudentsPage.tsx"));
 const ResearchPage = lazy(() => import("./pages/ResearchPage.tsx"));
@@ -78,7 +78,7 @@ const AnimatedRoutes = () => {
         <Suspense fallback={<RouteFallback />}>
           <Routes location={location}>
             <Route path="/" element={<Index />} />
-            <Route path="/study" element={<StudyAtVeritas />} />
+            <Route path="/study" element={<StudyAtPortal />} />
             <Route path="/study/:slug" element={<StudyItemPage />} />
             <Route path="/students" element={<StudentsPage />} />
             <Route path="/research" element={<ResearchPage />} />

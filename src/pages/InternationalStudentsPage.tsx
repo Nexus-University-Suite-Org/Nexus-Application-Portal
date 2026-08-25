@@ -199,7 +199,7 @@ const InternationalStudentsPage = () => {
         {/* Key Benefits */}
         <div className="mt-16 p-8 rounded-[24px] border border-accent/30 bg-accent/5">
           <p className="font-body text-xs tracking-[0.15em] uppercase text-accent font-semibold mb-6">
-            Why Choose Veritas
+            Why Choose University Application Portal
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[

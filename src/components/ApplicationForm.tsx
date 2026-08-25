@@ -204,7 +204,7 @@ const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
-  const [portalName] = useState("Veritas Institute");
+  const [portalName] = useState("University Application Portal");
   const stepContentRef = useRef<HTMLDivElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
 
@@ -616,7 +616,7 @@ const ApplicationForm = ({ onClose }: ApplicationFormProps) => {
                 </label>
                 <p className="font-body text-xs text-muted-foreground mb-4">
                   In no more than 5,000 characters, tell us why you wish to
-                  study at Veritas and what question drives your intellectual
+                  study at University Application Portal and what question drives your intellectual
                   curiosity.
                 </p>
                 <div className="relative group">

@@ -3548,7 +3548,7 @@ const ApplicationStartPage = () => {
                                 updateField("personalStatement", e.target.value)
                               }
                               className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm min-h-[160px]"
-                              placeholder="Tell us why you want to join Veritas (minimum 50 characters)."
+                              placeholder="Tell us why you want to join University Application Portal (minimum 50 characters)."
                             />
                             <p className="text-xs text-muted-foreground mt-2">
                               {formData.personalStatement.length} characters

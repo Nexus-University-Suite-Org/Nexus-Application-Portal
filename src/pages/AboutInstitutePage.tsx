@@ -29,7 +29,7 @@ const AboutInstitutePage = () => {
   const heroTextRef = useRef<HTMLDivElement>(null);
   const highlightsRef = useRef<HTMLDivElement>(null);
   const missionRef = useRef<HTMLDivElement>(null);
-  const [portalName] = useState("Veritas Institute");
+  const [portalName] = useState("University Application Portal");
 
   useEffect(() => {
     window.scrollTo(0, 0);

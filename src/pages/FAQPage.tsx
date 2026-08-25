@@ -49,7 +49,7 @@ const faqCategories = [
         a: "Our average class size is 25-30 students for introductory courses and 15-20 for upper-level courses. We prioritize personal attention and mentorship.",
       },
       {
-        q: "Does Veritas offer online learning options?",
+        q: "Does University Application Portal offer online learning options?",
         a: "Yes! We offer fully online degrees, hybrid programs, and certificates through our Learning Online platform. All programs maintain the same academic rigor as on-campus options.",
       },
     ],
@@ -64,7 +64,7 @@ const faqCategories = [
       },
       {
         q: "What student organizations are available?",
-        a: "Veritas has 150+ student clubs and organizations covering academic, cultural, sports, and social interests. You're welcome to start new clubs with 5+ interested members.",
+        a: "University Application Portal has 150+ student clubs and organizations covering academic, cultural, sports, and social interests. You're welcome to start new clubs with 5+ interested members.",
       },
       {
         q: "What food options are available?",
@@ -72,7 +72,7 @@ const faqCategories = [
       },
       {
         q: "Are there sports programs?",
-        a: "Yes! Veritas competes in 20 varsity sports and has intramural programs for all skill levels. We have Olympic-standard facilities and strong academic athlete support.",
+        a: "Yes! University Application Portal competes in 20 varsity sports and has intramural programs for all skill levels. We have Olympic-standard facilities and strong academic athlete support.",
       },
     ],
   },
@@ -111,12 +111,12 @@ const faqCategories = [
         a: "We offer daily campus tours at 10 AM and 2 PM. You can also schedule private tours or attend our open house events held quarterly. Virtual tours are available on our website.",
       },
       {
-        q: "How many students attend Veritas?",
-        a: "Veritas has approximately 12,400 students: 8,500 undergraduates and 3,900 graduate students. Our student-to-faculty ratio is 1:15.",
+        q: "How many students attend University Application Portal?",
+        a: "University Application Portal has approximately 12,400 students: 8,500 undergraduates and 3,900 graduate students. Our student-to-faculty ratio is 1:15.",
       },
       {
         q: "What career services are available?",
-        a: "Veritas offers comprehensive career services including resume review, interview coaching, job fairs, alumni networking events, and internship placements. 92% of graduates secure employment within 6 months.",
+        a: "University Application Portal offers comprehensive career services including resume review, interview coaching, job fairs, alumni networking events, and internship placements. 92% of graduates secure employment within 6 months.",
       },
     ],
   },
@@ -336,17 +336,17 @@ const FAQPage = () => {
             <p className="font-body text-muted-foreground mb-6 leading-relaxed">
               Contact our admissions team at{" "}
               <a
-                href="mailto:admissions@veritas.edu"
+                href="mailto:admissions@universityapplicationportal.edu"
                 className="text-accent font-semibold hover:text-accent/80 transition-colors"
               >
-                admissions@veritas.edu
+                admissions@universityapplicationportal.edu
               </a>{" "}
               or call{" "}
               <a
-                href="tel:+1-555-VERITAS"
+                href="tel:+1-555-PORTAL"
                 className="text-accent font-semibold hover:text-accent/80 transition-colors"
               >
-                +1-555-VERITAS
+                +1-555-PORTAL
               </a>
             </p>
             <button className="px-8 py-3 rounded-[16px] border border-accent/50 bg-gradient-to-r from-accent/10 to-accent/5 hover:from-accent/20 hover:to-accent/10 transition-all duration-300">

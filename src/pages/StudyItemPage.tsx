@@ -462,7 +462,7 @@ const StudyItemPage = () => {
             to="/study"
             className="inline-flex items-center gap-2 font-body text-xs tracking-[0.15em] uppercase text-muted-foreground hover:text-accent transition-colors duration-300 mb-6"
           >
-            Back to Study at Veritas
+            Back to Study at University Application Portal
           </Link>
 
           {isJoinAdmissions ? (

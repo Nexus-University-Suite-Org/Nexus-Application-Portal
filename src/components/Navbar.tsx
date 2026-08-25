@@ -25,7 +25,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [portalName] = useState("Veritas Institute");
+  const [portalName] = useState("University Application Portal");
   const forceSolidNavbar = location.pathname.startsWith(
     "/admissions/application/start",
   );

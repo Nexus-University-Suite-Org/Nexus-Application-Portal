@@ -143,7 +143,7 @@ export const resourceGuides: ResourceGuide[] = [
     ],
     primaryAction: { label: "Browse Courses", href: "/admissions/courses" },
     secondaryAction: {
-      label: "Study at Veritas",
+      label: "Study at University Application Portal",
       href: "/study/courses-programs",
     },
   },

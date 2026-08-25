@@ -48,7 +48,7 @@ const Footer = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [email, setEmail] = useState("");
-  const [portalName] = useState("Veritas Institute");
+  const [portalName] = useState("University Application Portal");
   const [organizationEmail] = useState("");
   const [organizationMission] = useState(
     "Empowering single mothers and vulnerable youth through practical vocational skills — building dignified livelihoods one graduate at a time.",

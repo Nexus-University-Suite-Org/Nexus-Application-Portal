@@ -109,7 +109,7 @@ const ResearchSection = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
         <div className="lg:col-span-7 order-2 lg:order-1">
           <p className="body-text text-foreground max-w-2xl text-lg mb-16">
-            At Veritas, research is not a department—it is the institution's
+            At University Application Portal, research is not a department—it is the institution's
             lifeblood. From quantum computing to ancient languages, our faculty
             and students push the boundaries of human understanding with a
             fearlessness matched only by their methodological rigor.

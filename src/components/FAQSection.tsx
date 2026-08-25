@@ -27,7 +27,7 @@ const faqData = [
     a: "Yes, you can change your major during your first year without penalties. After that, changes are still possible but may require additional coursework.",
   },
   {
-    q: "Does Veritas offer online learning options?",
+    q: "Does University Application Portal offer online learning options?",
     a: "Yes! We offer fully online degrees, hybrid programs, and certificates through our Learning Online platform. All programs maintain the same academic rigor as on-campus options.",
   },
 ];

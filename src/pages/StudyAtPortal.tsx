@@ -3,21 +3,21 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { studyLinks } from "@/lib/studyLinks";
 
-const StudyAtVeritas = () => {
+const StudyAtPortal = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-28 md:pt-36 px-8 md:px-16 pb-20">
         <section className="max-w-6xl mx-auto">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
-            Study at Veritas
+            Study at University Application Portal
           </p>
           <h1 className="font-heading text-5xl md:text-7xl font-light text-foreground leading-[0.95] mb-6">
             Build your future through rigorous, hands-on learning.
           </h1>
           <p className="font-body text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl">
             With over 143 programs across 10 colleges setting a global standard
-            for excellence, Veritas University emphasizes learning by doing.
+            for excellence, the University Application Portal emphasizes learning by doing.
             Explore admissions pathways, fees, scholarships, and all study
             resources below.
           </p>
@@ -50,4 +50,4 @@ const StudyAtVeritas = () => {
   );
 };
 
-export default StudyAtVeritas;
+export default StudyAtPortal;

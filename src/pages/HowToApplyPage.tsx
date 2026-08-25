@@ -127,7 +127,7 @@ const HowToApplyPage = () => {
             How to Apply
           </h1>
           <p className="font-body text-lg text-primary-foreground/80 max-w-2xl leading-relaxed">
-            A straightforward, step-by-step guide to your Veritas admission
+            A straightforward, step-by-step guide to your University Application Portal admission
             journey.
           </p>
         </div>

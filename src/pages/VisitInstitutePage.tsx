@@ -143,7 +143,7 @@ const VisitInstitutePage = () => {
             Campus Experience
           </p>
           <h1 className="font-heading text-5xl md:text-7xl font-light text-primary-foreground leading-[0.95] mb-8">
-            Visit Veritas
+            Visit University Application Portal
           </h1>
           <p className="font-body text-lg text-primary-foreground/80 max-w-2xl leading-relaxed">
             Experience our beautiful campus firsthand. Explore world-class

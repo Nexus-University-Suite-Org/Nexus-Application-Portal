@@ -53,7 +53,7 @@ const ResearchOpportunitiesPage = () => {
             Build with teams solving real problems.
           </h1>
           <p className="font-body text-lg text-muted-foreground leading-relaxed max-w-3xl mb-12">
-            Veritas research opportunities are designed for students, faculty,
+            University Application Portal research opportunities are designed for students, faculty,
             collaborators, and employers who want practical work with clear
             academic standards and measurable public value.
           </p>

@@ -11,42 +11,42 @@ const faculty = [
     area: "Epistemology, Philosophy of Mind",
     credentials:
       "Ph.D. University of Cambridge · Fellow, Royal Institute of Philosophy",
-    years: "32 years at Veritas",
+    years: "32 years at University Application Portal",
   },
   {
     name: "Prof. Kenji Tanaka",
     title: "Director of Theoretical Physics",
     area: "Quantum Field Theory, Cosmology",
     credentials: "Ph.D. ETH Zürich · Recipient, Dirac Medal 2019",
-    years: "18 years at Veritas",
+    years: "18 years at University Application Portal",
   },
   {
     name: "Dr. Amara Osei",
     title: "Professor of Comparative Literature",
     area: "Postcolonial Narratives, Translation Theory",
     credentials: "Ph.D. Yale University · MacArthur Fellow 2021",
-    years: "11 years at Veritas",
+    years: "11 years at University Application Portal",
   },
   {
     name: "Prof. Lars Ekström",
     title: "Chair of Architecture & Urban Design",
     area: "Sustainable Urbanism, Material Culture",
     credentials: "Dr.Sc. TU Delft · Pritzker Jury Member",
-    years: "24 years at Veritas",
+    years: "24 years at University Application Portal",
   },
   {
     name: "Dr. Mira Castellano",
     title: "Professor of Biomedical Engineering",
     area: "Neural Interfaces, Biomechanics",
     credentials: "Ph.D. MIT · IEEE Engineering in Medicine Award",
-    years: "9 years at Veritas",
+    years: "9 years at University Application Portal",
   },
   {
     name: "Prof. Aleksandr Petrov",
     title: "Professor of Mathematical Sciences",
     area: "Algebraic Topology, Number Theory",
     credentials: "Ph.D. Moscow State University · Fields Medal Nominee",
-    years: "15 years at Veritas",
+    years: "15 years at University Application Portal",
   },
 ];
 

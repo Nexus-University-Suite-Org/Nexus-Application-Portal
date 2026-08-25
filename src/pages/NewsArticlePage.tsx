@@ -37,16 +37,16 @@ const makeFallbackArticles = (portalName: string): Article[] =>
   newsArticles.map((item) => ({
     id: item.slug,
     slug: item.slug,
-    title: item.title.replace(/Veritas Institute/g, portalName),
+    title: item.title.replace(/University Application Portal/g, portalName),
     date: item.date,
     category: item.category,
-    excerpt: item.excerpt.replace(/Veritas Institute/g, portalName),
+    excerpt: item.excerpt.replace(/University Application Portal/g, portalName),
     readTime: item.readTime,
     body: item.body.map((paragraph) =>
-      paragraph.replace(/Veritas Institute/g, portalName),
+      paragraph.replace(/University Application Portal/g, portalName),
     ),
     highlights: item.highlights.map((highlight) =>
-      highlight.replace(/Veritas Institute/g, portalName),
+      highlight.replace(/University Application Portal/g, portalName),
     ),
   }));
 
@@ -74,7 +74,7 @@ const toSlug = (value: string) =>
 
 const NewsArticlePage = () => {
   const { slug } = useParams();
-  const [portalName] = useState("Veritas Institute");
+  const [portalName] = useState("University Application Portal");
   const { data: remoteArticles } =
     useContentCollection<RemoteNewsArticle>("NewsArticles", [], {
       orderBy: { field: "createdAt", direction: "desc" },
@@ -96,7 +96,7 @@ const NewsArticlePage = () => {
                 typeof item.slug === "string" && item.slug.trim().length > 0
                   ? item.slug
                   : generatedSlug,
-              title: title.replace(/Veritas Institute/g, portalName),
+              title: title.replace(/University Application Portal/g, portalName),
               date:
                 (typeof item.createdAt === "string" && item.createdAt) ||
                 (typeof item.published_date === "string" &&
@@ -115,12 +115,12 @@ const NewsArticlePage = () => {
               excerpt:
                 typeof item.excerpt === "string" &&
                 item.excerpt.trim().length > 0
-                  ? item.excerpt.replace(/Veritas Institute/g, portalName)
+                  ? item.excerpt.replace(/University Application Portal/g, portalName)
                   : "Read the full story for details.",
               content:
                 typeof item.content === "string" &&
                 item.content.trim().length > 0
-                  ? item.content.replace(/Veritas Institute/g, portalName)
+                  ? item.content.replace(/University Application Portal/g, portalName)
                   : undefined,
             };
           })
@@ -145,11 +145,11 @@ const NewsArticlePage = () => {
     .filter((item) => item.slug !== normalizedArticle.slug)
     .slice(0, 3);
   const paragraphs = toParagraphs(normalizedArticle).map((paragraph) =>
-    paragraph.replace(/Veritas Institute/g, portalName),
+    paragraph.replace(/University Application Portal/g, portalName),
   );
   const highlights = Array.isArray(normalizedArticle.highlights)
     ? normalizedArticle.highlights.map((highlight) =>
-        highlight.replace(/Veritas Institute/g, portalName),
+        highlight.replace(/University Application Portal/g, portalName),
       )
     : [];
   const articleDate =

@@ -70,7 +70,7 @@ const testimonials = [
     name: "Amara Osei",
     program: "MSc Computer Science, 2025",
     quote:
-      "Veritas gave me the tools, the mentors, and the confidence to build technology that matters.",
+      "University Application Portal gave me the tools, the mentors, and the confidence to build technology that matters.",
   },
   {
     name: "James Kariuki",
@@ -196,7 +196,7 @@ const StudentsPage = () => {
         </div>
         <div className="relative z-10 px-8 md:px-16 pb-24 pt-40 stu-hero-text max-w-4xl">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6 opacity-0">
-            Student Life at Veritas
+            Student Life at University Application Portal
           </p>
           <h1 className="font-heading text-5xl md:text-8xl font-light text-primary-foreground leading-[0.9] mb-8 opacity-0">
             Where Every

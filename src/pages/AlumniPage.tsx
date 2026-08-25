@@ -80,7 +80,7 @@ const AlumniPage = () => {
             role: [item.occupation, item.company].filter(Boolean).join(", "),
             year: item.graduation_year ? String(item.graduation_year) : "-",
             bio:
-              item.bio || "Alumni profile from the Veritas community network.",
+              item.bio || "Alumni profile from the University Application Portal community network.",
           }))
       : spotlights;
 
@@ -190,7 +190,7 @@ const AlumniPage = () => {
             Our Community
           </p>
           <h1 className="font-heading text-5xl md:text-7xl font-light text-primary-foreground leading-[0.95] mb-8">
-            Veritas Alumni
+            University Application Portal Alumni
           </h1>
           <p className="font-body text-lg text-primary-foreground/80 max-w-2xl leading-relaxed">
             A global network of leaders, innovators, and changemakers

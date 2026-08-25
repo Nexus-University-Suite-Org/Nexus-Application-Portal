@@ -136,7 +136,7 @@ const HistoryTimelinePage = () => {
             History Timeline
           </h1>
           <p className="font-body text-lg text-primary-foreground/80 max-w-2xl leading-relaxed">
-            Over 100 years of transformative moments that shaped Veritas
+            Over 100 years of transformative moments that shaped University Application Portal
             Institute into a global leader in education and research.
           </p>
         </div>

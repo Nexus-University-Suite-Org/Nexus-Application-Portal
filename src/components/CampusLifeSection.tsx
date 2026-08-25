@@ -168,7 +168,7 @@ const CampusLifeSection = () => {
         Campus Life
       </h2>
       <p className="body-text text-muted-foreground max-w-2xl mb-16 text-lg">
-        Life at Veritas extends far beyond the lecture hall. Our campus is
+        Life at University Application Portal extends far beyond the lecture hall. Our campus is
         designed to cultivate the whole person—intellectually, physically, and
         socially.
       </p>
@@ -180,7 +180,7 @@ const CampusLifeSection = () => {
       >
         <img
           src={campusLifeImg}
-          alt="Veritas Institute campus quad at golden hour with students and autumn foliage"
+          alt="University Application Portal campus quad at golden hour with students and autumn foliage"
           className="w-full aspect-[21/9] object-cover"
         />
       </div>

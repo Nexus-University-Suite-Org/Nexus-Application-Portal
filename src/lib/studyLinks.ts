@@ -103,8 +103,8 @@ export const studyLinks: StudyLink[] = [
     summary: "Alternative admission route for mature applicants.",
   },
   {
-    title: "Studying at Veritas",
-    slug: "studying-at-veritas",
+    title: "Studying at University Application Portal",
+    slug: "studying-at-university-application-portal",
     summary: "Student life, academic culture, and learning-by-doing model.",
   },
 ];
