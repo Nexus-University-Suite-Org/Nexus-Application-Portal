@@ -873,7 +873,9 @@ const ApplicationStartPage = () => {
     const fileError = documentUploadErrors[config.field];
     const validationError = errors[config.field];
     const isImagePreview =
-      config.preview || /\.(png|jpe?g|webp|gif)$/i.test(meta?.fileName ?? "");
+      config.preview ||
+      /\.(png|jpe?g|webp|gif)$/i.test(meta?.fileName ?? "") ||
+      /\.(png|jpe?g|webp|gif)$/i.test(uploadedUrl ?? "");
 
     return (
       <div
@@ -936,6 +938,28 @@ const ApplicationStartPage = () => {
             >
               View uploaded file
             </a>
+            <button
+              type="button"
+              onClick={() => {
+                updateUploadField(config.field as DocumentUploadField, "");
+                if (config.field === "passportPhotoUrl") {
+                  updateField("passportPhotoUploaded", false);
+                }
+                setDocumentUploadErrors((prev) => {
+                  const next = { ...prev };
+                  delete next[config.field];
+                  return next;
+                });
+                setUploadingDocuments((prev) => {
+                  const next = { ...prev };
+                  delete next[config.field];
+                  return next;
+                });
+              }}
+              className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-destructive ml-4"
+            >
+              Remove
+            </button>
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">No file uploaded yet.</p>
