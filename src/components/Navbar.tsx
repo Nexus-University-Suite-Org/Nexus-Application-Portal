@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Menu, X, Heart } from "lucide-react";
+import NotificationBell from "@/components/NotificationBell";
 import { useLocation, useNavigate } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -101,6 +102,7 @@ const Navbar = () => {
           ))}
           {/* CTA Buttons */}
           <div className="flex items-center gap-3 pl-4 border-l border-accent/20">
+            <NotificationBell />
             <button
               onClick={() => navigate("/admissions/how-to-apply")}
               className="px-5 py-2.5 bg-accent text-accent-foreground font-body text-xs tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 hover:scale-105"

@@ -57,6 +57,10 @@ const PartnershipDiscussionPage = lazy(
 );
 const StudentStoriesPage = lazy(() => import("./pages/StudentStoriesPage.tsx"));
 const ContactPage = lazy(() => import("./pages/ContactPage.tsx"));
+const MessagesPage = lazy(() => import("./pages/MessagesPage.tsx"));
+const MessageDetailPage = lazy(() => import("./pages/MessageDetailPage.tsx"));
+const ComposeMessagePage = lazy(() => import("./pages/ComposeMessagePage.tsx"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage.tsx"));
 const ChatBot = lazy(() => import("@/components/ChatBot"));
 
 const queryClient = new QueryClient();
@@ -135,6 +139,10 @@ const AnimatedRoutes = () => {
             />
             <Route path="/stories" element={<StudentStoriesPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/messages" element={<MessagesPage />} />
+            <Route path="/messages/compose" element={<ComposeMessagePage />} />
+            <Route path="/messages/:id" element={<MessageDetailPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/not-found" element={<NotFound />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
