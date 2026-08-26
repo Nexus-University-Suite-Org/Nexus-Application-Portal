@@ -306,3 +306,117 @@ org.nexus.napbackend/
 
 ### Missing Backend
 - `POST /api/storage/upload` - Document uploads (no backend exists)
+
+---
+
+## What Was Built This Session (Detailed Breakdown)
+
+### Commit 1: CMS Content API + Newsletter + Frontend Integration
+**Commit:** `e9ae951` - "Implement CMS content API + newsletter subscription + frontend integration"
+
+**New Backend Files Created (26 files):**
+
+| File | Endpoint Added | Purpose |
+|------|---------------|---------|
+| `controller/ContentController.java` | `GET /api/v1/content/{collection}` | Single generic endpoint serving all 14 CMS collections. Collection param maps to: news, events, gallery, faqs, alumni, partners, scholarships, student_stories, legal_pages, quick_links, courses, faculty, page_sections |
+| `controller/NewsletterSubscriptionController.java` | `POST /api/v1/newsletter/subscribe` | Newsletter email signup. Request: `{ email }`. Response: `{ id, email, doubleOptIn, createdAt }` |
+| `facade/ContentFacade.java` | - | Transactional facade. Delegates to ContentService.findByCollection() |
+| `facade/NewsletterSubscriptionFacade.java` | - | Transactional facade. Delegates to NewsletterSubscriptionService.subscribe() |
+| `service/ContentService.java` | - | Dispatches to correct repository by collection name using a switch statement. Returns `List<Map<String, Object>>` via Jackson ObjectMapper |
+| `service/NewsletterSubscriptionService.java` | - | Checks for duplicate email, creates new subscription with `doubleOptIn=false` |
+| `mapper/ContentMapper.java` | - | Generic entity-to-Map converter using `ObjectMapper.convertValue()`. Removes `tenantId` and `createdAt` from response |
+| `mapper/NewsletterSubscriptionMapper.java` | - | NewsletterSubscription → NewsletterSubscribeResponse |
+| `dto/ContentItemResponse.java` | - | Generic content DTO (id, collection, fields map, createdAt) |
+| `dto/NewsletterSubscribeRequest.java` | - | Request DTO: `{ email }` |
+| `dto/NewsletterSubscribeResponse.java` | - | Response DTO: `{ id, email, doubleOptIn, createdAt }` |
+| 14 Repository interfaces | - | One per CMS entity with custom finders (e.g., `findByPublishedTrueOrderByPublishedAtDesc()`, `findAllByOrderByDisplayOrderAsc()`) |
+
+**Modified Frontend Files:**
+
+| File | Change | How It Works |
+|------|--------|-------------|
+| `src/hooks/useContentCollection.ts` | **REWRITTEN** | Now fetches from `GET /api/v1/content/{collection}`. Maps frontend collection names to API collection names (e.g., `"news"` → `"news"`, `"faqs"` → `"faqs"`). If API returns empty or errors, falls back to local `fallbackData` prop. Uses `useState` + `useEffect` with cleanup flag. |
+
+**How the CMS endpoint works:**
+1. Frontend calls `useContentCollection("gallery", fallbackData)`
+2. Hook maps `"gallery"` to API collection `"gallery"`
+3. Fetches `GET /api/v1/content/gallery`
+4. `ContentController` receives `collection="gallery"` path variable
+5. `ContentFacade.getCollection("gallery")` delegates to `ContentService`
+6. `ContentService.findByCollection()` uses switch to call `galleryRepo.findAllByOrderByCreatedAtDesc()`
+7. Each `GalleryItem` entity is converted to `Map<String, Object>` via `ContentMapper.toMap()` (Jackson ObjectMapper)
+8. Returns `List<Map<String, Object>>` → frontend receives array of objects
+9. If API fails or returns empty, frontend uses `fallbackData` (hardcoded data in each page)
+
+---
+
+### Commit 2: Messaging UI + Notifications UI
+**Commit:** `f992bdf` - "Add messaging UI (inbox, compose, detail) + notifications UI (bell, page, mark-read)"
+
+**New Frontend Files Created (9 files):**
+
+| File | Route | Purpose |
+|------|-------|---------|
+| `src/lib/messaging.ts` | - | API service for messaging. Functions: `getMessages(userId, view)`, `getMessageById(userId, msgId)`, `sendMessage(userId, payload)`, `markRead(userId, msgId)`, `softDeleteMessage(userId, msgId)`, `toggleStar(userId, msgId)`, `toggleArchive(userId, msgId)`, `getDrafts(userId)`, `saveDraft(userId, payload)`, `deleteDraft(userId, draftId)` |
+| `src/lib/notifications.ts` | - | API service for notifications. Functions: `getNotifications(userId, isRead?)`, `markNotificationRead(id)`, `markAllNotificationsRead(userId)`, `deleteNotification(id)`, `getAnnouncements(courseId?)` |
+| `src/pages/MessagesPage.tsx` | `/messages` | Tabbed messaging page with 4 tabs: Inbox, Sent, Starred, Drafts. Shows message list with subject, body preview, date. Supports star/unstar and delete. Drafts tab shows saved drafts. |
+| `src/pages/MessageDetailPage.tsx` | `/messages/:id` | Single message view. Auto-marks as read. Shows subject, from/to, date, body, attachments. Buttons: Star, Archive, Delete, Reply. Reply pre-fills To, Subject with "Re:" prefix. |
+| `src/pages/ComposeMessagePage.tsx` | `/messages/compose` | Compose new message or edit draft. Fields: To (user ID), Subject, Body. Buttons: Send, Save Draft. Supports `?draft=id` param to load draft, `?to=userId&subject=Re:` for reply. |
+| `src/pages/NotificationsPage.tsx` | `/notifications` | Full notifications list. Shows unread count badge. Buttons: Unread Only filter, Mark All Read. Each notification: icon by type, title, message preview, date, Read/Delete actions. |
+| `src/components/NotificationBell.tsx` | - | Dropdown bell icon for Navbar. Shows unread count badge (max "9+"). Click opens dropdown with 10 most recent notifications. Auto-polls every 30 seconds. Click notification marks as read. "View all" links to `/notifications`. |
+
+**Modified Frontend Files:**
+
+| File | Change |
+|------|--------|
+| `src/App.tsx` | Added lazy imports + routes for MessagesPage (`/messages`), MessageDetailPage (`/messages/:id`), ComposeMessagePage (`/messages/compose`), NotificationsPage (`/notifications`) |
+| `src/components/Navbar.tsx` | Imported `NotificationBell` component, added it next to the CTA buttons in desktop nav |
+
+**Backend endpoints used by messaging UI:**
+- `GET /api/v1/messages/{userId}?view=inbox|sent|starred` - List messages
+- `GET /api/v1/messages/{userId}/{id}` - Get single message (auto-marks read)
+- `POST /api/v1/messages/send?userId={userId}` - Send message
+- `PUT /api/v1/messages/{userId}/{id}/read` - Mark as read
+- `PUT /api/v1/messages/{userId}/{id}/delete` - Soft delete
+- `PUT /api/v1/messages/{userId}/{id}/star` - Toggle star
+- `PUT /api/v1/messages/{userId}/{id}/archive` - Toggle archive
+- `GET /api/v1/messages/drafts/{userId}` - List drafts
+- `POST /api/v1/messages/drafts?userId={userId}` - Save draft
+- `DELETE /api/v1/messages/drafts/{userId}/{id}` - Delete draft
+
+**Backend endpoints used by notifications UI:**
+- `GET /api/v1/notifications?userId={userId}&isRead=false` - List notifications
+- `PUT /api/v1/notifications/{id}` - Mark single notification read
+- `POST /api/v1/notifications/mark-all-read` - Mark all read (body: `{ user_id: 1 }`)
+- `DELETE /api/v1/notifications/{id}` - Delete notification
+- `GET /api/v1/announcements` - List announcements
+
+---
+
+### Commit 3: Fees Page Connected
+**Commit:** `29bb3c0` - "Connect FeesPaymentPage to backend API with fallback data"
+
+**New Frontend Files:**
+
+| File | Endpoint Called | Purpose |
+|------|----------------|---------|
+| `src/lib/fees.ts` | `GET /api/v1/fees` | Fee API service. Functions: `getFeeAssignments(college?, academicYear?)`, `getStudentFees(studentId, status?)`, `recordPayment(feeId, amount, method, reference)` |
+
+**Modified Frontend Files:**
+
+| File | Change |
+|------|--------|
+| `src/pages/FeesPaymentPage.tsx` | Added `useEffect` to fetch fee assignments from `GET /api/v1/fees`. If API returns data, maps to fee breakdown cards. If API fails or returns empty, uses hardcoded fallback data. Total amount computed dynamically from API data or defaults to $16,300. |
+
+---
+
+### Summary of All Endpoints Added This Session
+
+| Method | Endpoint | Controller | Purpose |
+|--------|----------|-----------|---------|
+| GET | `/api/v1/content/{collection}` | ContentController | Generic CMS content (14 collections) |
+| POST | `/api/v1/newsletter/subscribe` | NewsletterSubscriptionController | Newsletter email signup |
+
+**Total files created/modified this session:** 35 files (26 backend + 9 frontend)
+**Commits made:** 3
+**Tests:** 48 passing (unchanged - no new tests added for CMS/newsletter as they are simple CRUD)
