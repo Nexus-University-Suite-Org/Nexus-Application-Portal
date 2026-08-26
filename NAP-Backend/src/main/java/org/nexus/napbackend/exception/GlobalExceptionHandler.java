@@ -37,11 +37,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleUnexpected(Exception ex) {
-        log.error("Unhandled exception", ex);
+        log.error("Unhandled exception: {}", ex.getMessage(), ex);
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected server error");
+                HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage() != null ? ex.getMessage() : "Unexpected server error");
         problem.setTitle("Server error");
-        return withMessage(problem, "Unexpected server error");
+        problem.setProperty("message", ex.getMessage());
+        return problem;
     }
 
     private ProblemDetail withMessage(ProblemDetail problem, String message) {

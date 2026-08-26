@@ -120,7 +120,7 @@ export const submitContactSubmission = async (
 ): Promise<unknown> => {
   let response: Response;
   try {
-    response = await fetch(buildUrl("contact/"), {
+    response = await fetch(buildUrl("contact"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -155,20 +155,29 @@ export const submitContactSubmission = async (
 export const submitApplicationSubmission = async (
   payload: ApplicationSubmissionInput,
 ): Promise<{ id: string }> => {
+  const url = buildUrl("applications");
+  console.log("[SUBMIT] POST", url);
+  console.log("[SUBMIT] payload:", JSON.stringify(payload, null, 2));
   let response: Response;
   try {
-    response = await fetch(buildUrl("applications/"), {
+    response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-  } catch {
+  } catch (e) {
+    console.error("[SUBMIT] fetch failed:", e);
     throw new Error(
       "Could not reach the applications API. The backend service is not connected yet.",
     );
   }
 
+  console.log("[SUBMIT] response status:", response.status, response.statusText);
+
   if (!response.ok) {
+    let bodyText = "";
+    try { bodyText = await response.text(); } catch {}
+    console.error("[SUBMIT] error body:", bodyText);
     const detail =
       (await parseErrorDetail(response)) ??
       "Could not submit your application. Please try again.";
@@ -181,6 +190,7 @@ export const submitApplicationSubmission = async (
   } catch {
     data = null;
   }
+  console.log("[SUBMIT] success response:", data);
   if (!data || typeof data !== "object" || !("id" in data)) {
     throw new Error("Application service returned an invalid response.");
   }
@@ -192,7 +202,7 @@ export const submitPartnershipSubmission = async (
 ) => {
   let response: Response;
   try {
-    response = await fetch(buildUrl("partnership-discussions/"), {
+    response = await fetch(buildUrl("partnership-discussions"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

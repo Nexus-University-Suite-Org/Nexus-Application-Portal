@@ -1645,7 +1645,9 @@ const ApplicationStartPage = () => {
     ? "UGX 50,000 + bank/service charges (typically UGX 2,750-5,000)."
     : "USD 75 (or equivalent, e.g. UGX 281,250 in some schemes).";
   const handleSubmit = async () => {
-    if (!validateStep(5)) return;
+    const valid = validateStep(5);
+    console.log("[SUBMIT] validateStep(5) =", valid, "errors:", errors);
+    if (!valid) return;
     setSubmittingApplication(true);
     setSubmissionStatus("");
     try {
@@ -1753,7 +1755,9 @@ const ApplicationStartPage = () => {
         emailVerified: otpVerified,
       };
 
+      console.log("[SUBMIT] sending payload with keys:", Object.keys(payload));
       const submission = await submitApplicationSubmission(payload);
+      console.log("[SUBMIT] success, id:", submission.id);
       localStorage.removeItem(APPLICATION_DRAFT_STORAGE_KEY);
       setApplicationId(submission.id);
       setSubmitted(true);
@@ -1785,6 +1789,7 @@ const ApplicationStartPage = () => {
         },
       );
     } catch (error) {
+      console.error("[SUBMIT] caught error:", error);
       const message =
         error instanceof Error
           ? error.message

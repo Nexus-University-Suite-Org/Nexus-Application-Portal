@@ -40,6 +40,10 @@ spring:
   flyway:
     enabled: false
 
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
   servlet:
     multipart:
       max-file-size: 5MB

@@ -28,7 +28,7 @@ public class ApplicationController {
     }
 
     @PostMapping
-    public ResponseEntity<ApplicationResponse> create(@Valid @RequestBody ApplicationCreateRequest request) {
+    public ResponseEntity<ApplicationResponse> create(@RequestBody ApplicationCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(facade.create(request));
     }
 
