@@ -1,14 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { CreditCard, DollarSign } from "lucide-react";
 import aboutHero from "@/assets/about-hero.jpg";
+import { getFeeAssignments, type FeeAssignment } from "@/lib/fees";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const feeBreakdown = [
+const fallbackFeeBreakdown = [
   {
     category: "Tuition Fee",
     amount: "$12,000/year",
@@ -54,6 +55,29 @@ const FeesPaymentPage = () => {
   const heroTextRef = useRef<HTMLDivElement>(null);
   const breakdownRef = useRef<HTMLDivElement>(null);
   const plansRef = useRef<HTMLDivElement>(null);
+  const [feeAssignments, setFeeAssignments] = useState<FeeAssignment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getFeeAssignments()
+      .then(setFeeAssignments)
+      .catch(() => setFeeAssignments([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const feeBreakdown =
+    feeAssignments.length > 0
+      ? feeAssignments.map((fa) => ({
+          category: fa.description || fa.program || "Fee",
+          amount: `$${fa.amount.toLocaleString()}`,
+          note: `${fa.college} - ${fa.academicYear}`,
+        }))
+      : fallbackFeeBreakdown;
+
+  const totalAmount =
+    feeAssignments.length > 0
+      ? feeAssignments.reduce((sum, fa) => sum + fa.amount, 0)
+      : 16300;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -202,7 +226,7 @@ const FeesPaymentPage = () => {
               Estimated Annual Total
             </p>
             <p className="font-heading text-4xl font-light text-accent">
-              $16,300
+              ${totalAmount.toLocaleString()}
             </p>
           </div>
           <p className="font-body text-sm text-muted-foreground mt-3">
