@@ -1,6 +1,7 @@
 package org.nexus.napbackend.controller;
 
 import java.util.Map;
+import org.nexus.napbackend.service.EmailJsSender;
 import org.nexus.napbackend.service.OtpService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,9 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class OtpController {
 
     private final OtpService otpService;
+    private final EmailJsSender emailJsSender;
 
-    public OtpController(OtpService otpService) {
+    public OtpController(OtpService otpService, EmailJsSender emailJsSender) {
         this.otpService = otpService;
+        this.emailJsSender = emailJsSender;
     }
 
     @PostMapping("/send")
@@ -24,8 +27,12 @@ public class OtpController {
         if (email == null || email.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("ok", false, "message", "Email is required"));
         }
-        otpService.generateOtp(email, "APPLICATION_EMAIL");
-        return ResponseEntity.ok(Map.of("ok", true, "message", "Verification code sent"));
+        var otp = otpService.generateOtp(email, "APPLICATION_EMAIL");
+        boolean sent = emailJsSender.sendOtp(email, otp.getCode(), 10);
+        if (!sent) {
+            return ResponseEntity.ok(Map.of("ok", true, "message", "Verification code generated (email delivery unavailable — check console for code)", "emailSent", false));
+        }
+        return ResponseEntity.ok(Map.of("ok", true, "message", "Verification code sent", "emailSent", true));
     }
 
     @PostMapping("/verify")

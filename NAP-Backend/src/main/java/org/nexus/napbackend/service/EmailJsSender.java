@@ -42,6 +42,51 @@ public class EmailJsSender {
                 properties.publicKey() != null ? "set" : "null");
     }
 
+    public boolean sendOtp(String email, String code, int expiryMinutes) {
+        if (!properties.otpConfigured()) {
+            log.warn("EmailJS OTP template not configured; OTP email skipped");
+            return false;
+        }
+        Map<String, Object> templateParams = new LinkedHashMap<>();
+        templateParams.put("email", email);
+        templateParams.put("passcode", code);
+        templateParams.put("time", expiryMinutes + " minutes");
+        templateParams.put("reply_to", "screenflowcom@gmail.com");
+
+        Map<String, Object> body = Map.of(
+                "service_id", properties.serviceId(),
+                "template_id", properties.otpTemplateId(),
+                "user_id", properties.publicKey(),
+                "accessToken", properties.privateKey(),
+                "template_params", templateParams
+        );
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(properties.baseUrl()))
+                    .timeout(Duration.ofSeconds(10))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(body)))
+                    .build();
+            HttpResponse<String> response =
+                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                log.warn("EmailJS OTP rejected: status={} body={}", response.statusCode(), response.body());
+                return false;
+            }
+            log.info("OTP email sent to {}", email);
+            return true;
+        } catch (JacksonException ex) {
+            log.warn("EmailJS OTP payload serialization failed: {}", ex.getMessage());
+            return false;
+        } catch (Exception ex) {
+            if (ex instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            log.warn("EmailJS OTP failed: {}", ex.getMessage());
+            return false;
+        }
+    }
+
     public boolean send(String name, String email, String subject, String message, String receivedAt) {
         if (!properties.configured()) {
             log.warn("EmailJS is not configured; contact notification skipped");

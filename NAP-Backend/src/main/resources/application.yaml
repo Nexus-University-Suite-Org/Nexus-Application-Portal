@@ -40,6 +40,11 @@ spring:
   flyway:
     enabled: false
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+
   lifecycle:
     timeout-per-shutdown-phase: 20s
 
@@ -64,11 +69,17 @@ nap:
     base-url: https://api.emailjs.com/api/v1.0/email/send
     service-id: ${EMAILJS_SERVICE_ID:}
     template-id: ${EMAILJS_TEMPLATE_ID:}
+    otp-template-id: ${EMAILJS_OTP_TEMPLATE_ID:template_rb2h0rh}
     public-key: ${EMAILJS_PUBLIC_KEY:}
     private-key: ${EMAILJS_PRIVATE_KEY:}
   gemini:
     api-key: ${GEMINI_API_KEY:}
     model: ${GEMINI_MODEL:gemini-3.6-flash}
+  jwt:
+    secret: ${JWT_SECRET:nexus-admin-secret-key-change-in-production-2024-ultra-secure}
+    expiration-hours: ${JWT_EXPIRATION_HOURS:24}
+  storage:
+    upload-dir: ${UPLOAD_DIR:uploads}
 
 logging:
   level:

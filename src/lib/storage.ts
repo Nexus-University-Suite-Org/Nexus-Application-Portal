@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || "/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || "/api/v1";
 
 export type UploadResult = {
   url: string;

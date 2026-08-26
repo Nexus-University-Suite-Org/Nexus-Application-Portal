@@ -614,7 +614,7 @@ const nationalityOptions = [
 
 // Email verification moves to the platform API (Spring Boot identity module).
 const OTP_API_BASE =
-  import.meta.env.VITE_API_BASE_URL?.trim() || "/api";
+  import.meta.env.VITE_API_BASE_URL?.trim() || "/api/v1";
 
 const APPLICATION_DRAFT_STORAGE_KEY = "application_start_draft_v1";
 
@@ -734,6 +734,7 @@ const ApplicationStartPage = () => {
   const [otpStatus, setOtpStatus] = useState<string>("");
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [draftHydrated, setDraftHydrated] = useState(false);
   const [academicSubStep, setAcademicSubStep] = useState(0);
   const [documentSubStep, setDocumentSubStep] = useState(0);
@@ -1119,6 +1120,12 @@ const ApplicationStartPage = () => {
   }, []);
 
   useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = setInterval(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearInterval(id);
+  }, [resendCooldown]);
+
+  useEffect(() => {
     if (!draftHydrated || submitted) return;
 
     const {
@@ -1165,7 +1172,7 @@ const ApplicationStartPage = () => {
     }
   };
 
-  const validateStep = (step: number) => {
+  const validateStepFields = (step: number) => {
     const nextErrors: Record<string, string> = {};
 
     if (step === 0) {
@@ -1500,12 +1507,51 @@ const ApplicationStartPage = () => {
       nextErrors.termsAccepted = "You must accept terms before submitting.";
     }
 
+    return nextErrors;
+  };
+
+  const validateStep = (step: number) => {
+    const nextErrors = validateStepFields(step);
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
 
+  const academicSubStepErrorKeys: Record<number, string[]> = {
+    0: ["applicationType", "entryScheme", "program", "startDate", "previousInstitution"],
+    1: [
+      "academicCredentialLevel", "academicCredentialsDetails",
+      "uceIndexNumber", "uceYearOfSitting", "uceSecondIndexNumber", "uceSecondYearOfSitting",
+      "uaceIndexNumber", "uaceYearOfSitting", "uaceSecondIndexNumber", "uaceSecondYearOfSitting",
+      "uaceTotalPoints", "uceTotalAggregates", "uceDivision",
+      "oLevelSchoolName", "uacePrincipalSubjects",
+      "uacePrincipalSubject0", "uacePrincipalSubject1", "uacePrincipalSubject2",
+      "uacePrincipalGrade0", "uacePrincipalGrade1", "uacePrincipalGrade2",
+      "uaceGeneralPaperGrade", "uaceIctOrSubMathSubject", "uaceIctOrSubMathGrade",
+      "oLevelSubjects", "certificateSubjects", "gpa",
+    ],
+    2: ["highestQualification", "personalStatement", "howDidYouHear"],
+  };
+
+  const findFirstFailingSubStep = (errors: Record<string, string>): number => {
+    for (let sub = 0; sub < 3; sub++) {
+      if (academicSubStepErrorKeys[sub].some((key) => errors[key])) return sub;
+    }
+    return 0;
+  };
+
   const handleNext = () => {
     if (activeStep === 2 && academicSubStep < academicStepLabels.length - 1) {
+      const stepErrors = validateStepFields(activeStep);
+      setErrors((prev) => ({ ...prev, ...stepErrors }));
+      if (Object.keys(stepErrors).length > 0) {
+        const failingSub = findFirstFailingSubStep(stepErrors);
+        if (failingSub <= academicSubStep) {
+          setAcademicSubStep(failingSub);
+        } else {
+          setAcademicSubStep(academicSubStep + 1);
+        }
+        return;
+      }
       setAcademicSubStep((prev) => prev + 1);
       return;
     }
@@ -1515,7 +1561,14 @@ const ApplicationStartPage = () => {
       return;
     }
 
-    if (!validateStep(activeStep)) return;
+    if (!validateStep(activeStep)) {
+      if (activeStep === 2) {
+        const stepErrors = validateStepFields(activeStep);
+        setErrors((prev) => ({ ...prev, ...stepErrors }));
+        setAcademicSubStep(findFirstFailingSubStep(stepErrors));
+      }
+      return;
+    }
 
     const nextStep = Math.min(activeStep + 1, applicationSteps.length - 1);
     setFurthestStep((prev) => Math.max(prev, nextStep));
@@ -1724,6 +1777,7 @@ const ApplicationStartPage = () => {
 
       setOtpSent(true);
       setOtpStatus(payload.message ?? "OTP sent. Check your email.");
+      setResendCooldown(60);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to send OTP.";
@@ -1738,7 +1792,7 @@ const ApplicationStartPage = () => {
     const code = otpCode.trim();
 
     if (!code) {
-      setErrors((prev) => ({ ...prev, otp: "Enter the 5-digit OTP code." }));
+      setErrors((prev) => ({ ...prev, otp: "Enter the 6-digit OTP code." }));
       return;
     }
 
@@ -2077,62 +2131,112 @@ const ApplicationStartPage = () => {
                           </div>
                         </div>
 
-                        <div className="border border-border rounded-[14px] p-4 space-y-3 bg-secondary/10">
-                          <p className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                            Email Verification (OTP)
-                          </p>
-                          <div className="flex flex-wrap items-stretch gap-3">
-                            <button
-                              type="button"
-                              onClick={handleSendOtp}
-                              disabled={sendingOtp || otpVerified}
-                              className="w-full sm:w-auto px-4 py-2 rounded-[10px] border border-accent/40 text-accent font-body text-xs tracking-[0.16em] uppercase disabled:opacity-50"
-                            >
-                              {sendingOtp
-                                ? "Sending..."
-                                : otpSent
-                                  ? "Resend OTP"
-                                  : "Send OTP"}
-                            </button>
-
-                            <input
-                              value={otpCode}
-                              onChange={(e) =>
-                                setOtpCode(
-                                  e.target.value.replace(/\D/g, "").slice(0, 5),
-                                )
-                              }
-                              placeholder="Enter 5-digit OTP"
-                              className="w-full sm:w-[180px] border border-border rounded-[10px] px-3 py-2 bg-transparent font-body text-sm"
-                              disabled={!otpSent || otpVerified}
-                            />
-
-                            <button
-                              type="button"
-                              onClick={handleVerifyOtp}
-                              disabled={!otpSent || verifyingOtp || otpVerified}
-                              className="w-full sm:w-auto px-4 py-2 rounded-[10px] bg-accent text-accent-foreground font-body text-xs tracking-[0.16em] uppercase disabled:opacity-50"
-                            >
-                              {verifyingOtp
-                                ? "Verifying..."
-                                : otpVerified
-                                  ? "Verified"
-                                  : "Verify OTP"}
-                            </button>
+                        <div className="border border-border rounded-[14px] p-5 space-y-4 bg-secondary/10">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent/10">
+                              {otpVerified ? (
+                                <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                Email Verification
+                              </p>
+                              {otpSent && !otpVerified && (
+                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                  Code sent to {formData.email}
+                                </p>
+                              )}
+                            </div>
                           </div>
 
-                          {otpStatus ? (
-                            <p
-                              className={`text-xs ${otpVerified ? "text-green-600" : "text-muted-foreground"}`}
-                            >
-                              {otpStatus}
-                            </p>
-                          ) : null}
-                          {errors.otp ? (
-                            <p className="text-xs text-destructive">
+                          {!otpVerified && (
+                            <>
+                              <div className="space-y-3">
+                                <div className="flex items-stretch gap-2">
+                                  <input
+                                    value={otpCode}
+                                    onChange={(e) =>
+                                      setOtpCode(
+                                        e.target.value.replace(/\D/g, "").slice(0, 6),
+                                      )
+                                    }
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" && otpSent && otpCode.length === 6) {
+                                        handleVerifyOtp();
+                                      }
+                                    }}
+                                    placeholder="000000"
+                                    className="flex-1 sm:flex-none sm:w-[200px] border border-border rounded-[10px] px-4 py-2.5 bg-transparent font-mono text-lg tracking-[0.4em] text-center placeholder:text-muted-foreground/40 placeholder:tracking-[0.4em] focus:outline-none focus:ring-2 focus:ring-accent/30 transition-shadow"
+                                    disabled={!otpSent}
+                                    autoComplete="one-time-code"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={handleVerifyOtp}
+                                    disabled={!otpSent || verifyingOtp || otpCode.length < 6}
+                                    className="px-5 py-2.5 rounded-[10px] bg-accent text-accent-foreground font-body text-xs tracking-[0.16em] uppercase disabled:opacity-40 hover:bg-accent/90 transition-colors"
+                                  >
+                                    {verifyingOtp ? (
+                                      <span className="flex items-center gap-2">
+                                        <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                        </svg>
+                                        Verifying
+                                      </span>
+                                    ) : (
+                                      "Verify"
+                                    )}
+                                  </button>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                  <button
+                                    type="button"
+                                    onClick={handleSendOtp}
+                                    disabled={sendingOtp || resendCooldown > 0}
+                                    className="text-xs text-accent underline underline-offset-2 disabled:opacity-40 disabled:no-underline hover:text-accent/80 transition-colors"
+                                  >
+                                    {sendingOtp
+                                      ? "Sending..."
+                                      : resendCooldown > 0
+                                        ? `Resend in ${resendCooldown}s`
+                                        : otpSent
+                                          ? "Resend code"
+                                          : "Send verification code"}
+                                  </button>
+                                </div>
+                              </div>
+                            </>
+                          )}
+
+                          {otpVerified && (
+                            <div className="flex items-center gap-2 py-1">
+                              <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                              <p className="text-xs text-green-600 font-medium">
+                                Email verified successfully
+                              </p>
+                            </div>
+                          )}
+
+                          {errors.otp && (
+                            <p className="text-xs text-destructive flex items-center gap-1.5">
+                              <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <circle cx="12" cy="12" r="10" />
+                                <path strokeLinecap="round" d="M12 8v4m0 4h.01" />
+                              </svg>
                               {errors.otp}
                             </p>
-                          ) : null}
+                          )}
                         </div>
                       </>
                     )}

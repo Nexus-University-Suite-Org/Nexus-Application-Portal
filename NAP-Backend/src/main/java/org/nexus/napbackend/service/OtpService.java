@@ -5,10 +5,14 @@ import java.util.Optional;
 import java.util.Random;
 import org.nexus.napbackend.model.OtpCode;
 import org.nexus.napbackend.repository.OtpRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class OtpService {
+
+    private static final Logger log = LoggerFactory.getLogger(OtpService.class);
 
     private static final Long DEMO_TENANT_ID = 1L;
     private static final int OTP_LENGTH = 6;
@@ -33,6 +37,7 @@ public class OtpService {
         }
 
         String code = String.format("%0" + OTP_LENGTH + "d", random.nextInt(1000000));
+        log.info("Generated OTP={} for email={}", code, email);
 
         OtpCode otp = new OtpCode();
         otp.setTenantId(DEMO_TENANT_ID);

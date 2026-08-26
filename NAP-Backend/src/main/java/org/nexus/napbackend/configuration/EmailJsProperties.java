@@ -7,11 +7,16 @@ public record EmailJsProperties(
         String baseUrl,
         String serviceId,
         String templateId,
+        String otpTemplateId,
         String publicKey,
         String privateKey
 ) {
     public boolean configured() {
         return notBlank(serviceId) && notBlank(templateId) && notBlank(publicKey) && notBlank(privateKey);
+    }
+
+    public boolean otpConfigured() {
+        return notBlank(serviceId) && notBlank(otpTemplateId) && notBlank(publicKey) && notBlank(privateKey);
     }
 
     private boolean notBlank(String value) {

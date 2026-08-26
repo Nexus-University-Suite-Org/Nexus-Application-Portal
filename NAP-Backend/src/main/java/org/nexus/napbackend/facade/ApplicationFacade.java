@@ -43,7 +43,10 @@ public class ApplicationFacade {
     public ApplicationResponse review(Long id, String reviewStatus, String notes) {
         Application entity = service.findById(id)
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
-        entity.setReviewStatus(reviewStatus);
+        if (!"SUBMITTED".equals(entity.getStatus())) {
+            throw new RuntimeException("Only SUBMITTED applications can be reviewed. Current status: " + entity.getStatus());
+        }
+        entity.setReviewStatus(reviewStatus.toUpperCase());
         entity.setReviewerNotes(notes);
         entity.setReviewedAt(LocalDateTime.now());
         if ("admitted".equals(reviewStatus)) {
