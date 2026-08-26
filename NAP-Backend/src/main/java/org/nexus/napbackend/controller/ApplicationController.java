@@ -64,7 +64,7 @@ public class ApplicationController {
         if (reviewStatus != null) {
             return ResponseEntity.ok(facade.findByReviewStatus(reviewStatus));
         }
-        return ResponseEntity.ok(List.of());
+        return ResponseEntity.ok(facade.findAll());
     }
 
     @DeleteMapping("/{id}")

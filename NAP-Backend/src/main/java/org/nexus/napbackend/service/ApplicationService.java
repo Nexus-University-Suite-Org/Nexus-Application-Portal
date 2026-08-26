@@ -37,6 +37,10 @@ public class ApplicationService {
         return repository.findByPrn(prn);
     }
 
+    public List<Application> findAll() {
+        return repository.findAll();
+    }
+
     public List<Application> findByEmail(String email) {
         return repository.findByEmailOrderByCreatedAtDesc(email);
     }

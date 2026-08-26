@@ -68,6 +68,13 @@ public class ApplicationFacade {
     }
 
     @Transactional
+    public List<ApplicationResponse> findAll() {
+        return service.findAll().stream()
+                .map(ApplicationMapper::toDto)
+                .toList();
+    }
+
+    @Transactional
     public List<ApplicationResponse> findByEmail(String email) {
         return service.findByEmail(email).stream()
                 .map(ApplicationMapper::toDto)
