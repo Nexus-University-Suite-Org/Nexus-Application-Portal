@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || "/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || "/api/v1";
 
 const buildUrl = (path: string) =>
   `${API_BASE_URL}${API_BASE_URL.endsWith("/") ? "" : "/"}${path}`;

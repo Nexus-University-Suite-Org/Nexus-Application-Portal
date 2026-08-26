@@ -16,18 +16,21 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping("/api/v1/storage")
 public class StorageController {
 
     private static final Logger log = LoggerFactory.getLogger(StorageController.class);
+
+    private static final String FILES_PREFIX = "/api/v1/storage/files/";
 
     @Value("${nap.storage.upload-dir:uploads}")
     private String uploadDir;
@@ -55,7 +58,7 @@ public class StorageController {
                 Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
             }
 
-            String downloadUrl = "/api/v1/storage/files/" + path + "/" + filename;
+            String downloadUrl = FILES_PREFIX + path + "/" + filename;
             log.info("File uploaded: {} ({} bytes)", target, file.getSize());
             return ResponseEntity.ok(Map.of("ok", true, "url", downloadUrl));
 
@@ -66,20 +69,27 @@ public class StorageController {
         }
     }
 
-    @GetMapping("/files/{path}/{filename:.+}")
-    public ResponseEntity<Resource> serveFile(
-            @PathVariable String path,
-            @PathVariable String filename) {
+    @GetMapping("/files/**")
+    public ResponseEntity<Resource> serveFile(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        String relativePath = uri.substring(FILES_PREFIX.length());
 
-        Path filePath = Paths.get(uploadDir, path).toAbsolutePath().normalize()
-                .resolve(filename).normalize();
+        if (relativePath.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
 
-        if (!Files.exists(filePath)) {
+        Path filePath = Paths.get(uploadDir).toAbsolutePath().normalize()
+                .resolve(relativePath).normalize();
+
+        log.info("Serving file: {}", filePath);
+
+        if (!Files.exists(filePath) || Files.isDirectory(filePath)) {
+            log.warn("File not found: {}", filePath);
             return ResponseEntity.notFound().build();
         }
 
         Resource resource = new FileSystemResource(filePath);
-        String contentType = determineContentType(filename);
+        String contentType = determineContentType(relativePath);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, contentType)

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { ArrowLeft, ArrowRight, Check, Lock } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Lock, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 import { uploadFile } from "@/lib/storage";
 import {
   submitApplicationSubmission,
@@ -807,8 +808,7 @@ const ApplicationStartPage = () => {
     }));
 
     try {
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const uploadPath = `applications/${config.field}/${Date.now()}-${safeName}`;
+      const uploadPath = `applications/${config.field}`;
       const { url: downloadUrl } = await uploadFile(uploadPath, file);
       updateUploadField(config.field, downloadUrl);
 
@@ -1757,8 +1757,32 @@ const ApplicationStartPage = () => {
       localStorage.removeItem(APPLICATION_DRAFT_STORAGE_KEY);
       setApplicationId(submission.id);
       setSubmitted(true);
-      setSubmissionStatus(
-        "Your application has been submitted successfully.",
+      toast(
+        <div className="flex items-start gap-3">
+          <img
+            src="/institute-icon.svg"
+            alt="Nexus University"
+            className="w-10 h-10 rounded-lg object-contain shrink-0 mt-0.5"
+          />
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm text-foreground mb-1">
+              Application Submitted
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Your application has been received. A confirmation will be sent to your email.
+            </p>
+            {submission.id && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Reference: <span className="font-mono text-foreground">{submission.id}</span>
+              </p>
+            )}
+          </div>
+          <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+        </div>,
+        {
+          duration: 10000,
+          className: "border-green-200 bg-green-50/80",
+        },
       );
     } catch (error) {
       const message =
@@ -1766,6 +1790,10 @@ const ApplicationStartPage = () => {
           ? error.message
           : "Failed to save application. Please try again.";
       setSubmissionStatus(message);
+      toast.error("Submission Failed", {
+        description: message,
+        duration: 6000,
+      });
     } finally {
       setSubmittingApplication(false);
     }
@@ -1947,37 +1975,50 @@ const ApplicationStartPage = () => {
 
             <section className="border border-border rounded-[20px] md:rounded-[24px] p-4 sm:p-6 md:p-10 bg-background">
               {submitted ? (
-                <div>
-                  <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">
+                <div className="flex flex-col items-center text-center py-8 sm:py-12">
+                  <div className="relative mb-8">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-green-50 border-2 border-green-200 flex items-center justify-center">
+                      <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 text-green-600" strokeWidth={1.5} />
+                    </div>
+                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-green-600 text-white rounded-full p-1.5">
+                      <Check size={14} strokeWidth={3} />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 mb-4">
+                    <img
+                      src="/institute-icon.svg"
+                      alt="University Logo"
+                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-contain"
+                    />
+                    <p className="font-heading text-sm sm:text-base tracking-[0.25em] uppercase text-foreground">
+                      Nexus University
+                    </p>
+                  </div>
+
+                  <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-light text-foreground mb-3">
                     Application Submitted
-                  </p>
-                  <h2 className="font-heading text-3xl md:text-4xl font-light text-foreground mb-6">
-                    Thank You, {formData.firstName || "Applicant"}
                   </h2>
-                  <p className="font-body text-muted-foreground leading-relaxed mb-8 max-w-2xl">
-                    Your full application has been received. We will contact you
-                    at {formData.email || "your email"} with next steps.
+                  <p className="font-body text-muted-foreground leading-relaxed mb-6 max-w-lg">
+                    Thank you, <span className="text-foreground font-medium">{formData.firstName || "Applicant"}</span>. Your application has been received and is being processed.
                   </p>
-                  <p className="font-body text-sm text-foreground leading-relaxed mb-4 max-w-2xl">
-                    This submission is final. The application is locked after
-                    submission and payment confirmation, and no further edits
-                    can be made unless the admissions office reopens it.
-                  </p>
+
                   {applicationId ? (
-                    <p className="font-body text-sm text-foreground mb-4">
-                      Application Reference: {applicationId}
-                    </p>
+                    <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[12px] border border-border bg-secondary/30 mb-6">
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider">Reference</span>
+                      <span className="font-mono text-sm text-foreground font-medium">{applicationId}</span>
+                    </div>
                   ) : null}
-                  {submissionStatus ? (
-                    <p className="font-body text-sm text-muted-foreground mb-6 max-w-2xl">
-                      {submissionStatus}
-                    </p>
-                  ) : null}
+
+                  <p className="font-body text-xs text-muted-foreground leading-relaxed mb-8 max-w-md">
+                    A confirmation will be sent to <span className="text-foreground">{formData.email || "your email"}</span>. This application is now locked — no further edits can be made unless the admissions office reopens it.
+                  </p>
+
                   <Link
-                    to="/admissions/how-to-apply"
-                    className="inline-flex items-center gap-2 px-6 py-3 border border-accent/40 text-accent rounded-[14px] font-body text-xs tracking-[0.2em] uppercase"
+                    to="/"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-accent-foreground rounded-[14px] font-body text-xs tracking-[0.2em] uppercase hover:bg-accent/90 transition-colors"
                   >
-                    Back to Guide
+                    Back to Home
                     <ArrowRight size={14} />
                   </Link>
                 </div>
@@ -3970,6 +4011,11 @@ const ApplicationStartPage = () => {
                         {errors.termsAccepted && (
                           <p className="text-xs text-destructive">
                             {errors.termsAccepted}
+                          </p>
+                        )}
+                        {submissionStatus && (
+                          <p className="text-xs text-destructive mt-2">
+                            {submissionStatus}
                           </p>
                         )}
                       </div>

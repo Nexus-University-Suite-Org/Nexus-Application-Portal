@@ -16,7 +16,7 @@ interface Message {
   content: string;
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL?.trim() || "/api";
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.trim() || "/api/v1";
 const CHAT_URL = `${API_BASE}${API_BASE.endsWith("/") ? "" : "/"}v1/chat`;
 
 const getQuickTopics = (instituteName: string) => [
