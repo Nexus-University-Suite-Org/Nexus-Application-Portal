@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type OrderDirection = "asc" | "desc";
 
@@ -22,26 +22,79 @@ export type ContentCollectionResult<T> = {
   isUsingFallback: boolean;
 };
 
-/**
- * Local-data collection hook.
- *
- * This replaces the former remote backend implementation. Content is served
- * from bundled static data until the Spring Boot content module
- * (/api/v1/content/**) goes live, at which point this hook becomes a thin
- * fetch wrapper over that API while keeping the same call signature.
- */
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || "/api";
+
+const buildUrl = (path: string) =>
+  `${API_BASE_URL}${API_BASE_URL.endsWith("/") ? "" : "/"}${path}`;
+
+const collectionApiMap: Record<string, string> = {
+  news: "news",
+  events: "events",
+  gallery: "gallery",
+  faqs: "faqs",
+  alumni: "alumni",
+  partners: "partners",
+  scholarships: "scholarships",
+  student_stories: "student_stories",
+  legal_pages: "legal_pages",
+  quick_links: "quick_links",
+  courses: "courses",
+  faculty: "faculty",
+  page_sections: "page_sections",
+};
+
 export const useContentCollection = <T extends Record<string, unknown>>(
-  _collectionName: string,
+  collectionName: string,
   fallbackData: T[] = [],
   _options?: CollectionOptions,
 ): ContentCollectionResult<T> => {
+  const [data, setData] = useState<T[]>(fallbackData);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [isUsingFallback, setIsUsingFallback] = useState(true);
+
+  useEffect(() => {
+    const apiCollection = collectionApiMap[collectionName];
+    if (!apiCollection) {
+      setIsLoading(false);
+      setIsUsingFallback(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchData = async () => {
+      try {
+        const response = await fetch(buildUrl(`v1/content/${apiCollection}`));
+        if (!response.ok) {
+          throw new Error(`Content API returned ${response.status}`);
+        }
+        const result = await response.json();
+        if (!cancelled && Array.isArray(result) && result.length > 0) {
+          setData(result as T[]);
+          setIsUsingFallback(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err : new Error(String(err)));
+          setIsUsingFallback(true);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [collectionName]);
+
   return useMemo<ContentCollectionResult<T>>(
-    () => ({
-      data: fallbackData,
-      isLoading: false,
-      error: null,
-      isUsingFallback: true,
-    }),
-    [fallbackData],
+    () => ({ data, isLoading, error, isUsingFallback }),
+    [data, isLoading, error, isUsingFallback],
   );
 };
