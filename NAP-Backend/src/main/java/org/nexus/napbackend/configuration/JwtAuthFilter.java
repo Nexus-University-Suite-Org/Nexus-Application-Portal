@@ -32,9 +32,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (jwtUtil.isValid(token)) {
                 Long adminId = jwtUtil.getAdminId(token);
                 String email = jwtUtil.getEmail(token);
+                String role = jwtUtil.getRole(token);
 
-                AdminPrincipal principal = new AdminPrincipal(adminId, email);
-                var authorities = List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                AdminPrincipal principal = new AdminPrincipal(adminId, email, role);
+                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
                 var auth = new UsernamePasswordAuthenticationToken(principal, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
@@ -43,6 +44,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    public record AdminPrincipal(Long id, String email) {
+    public record AdminPrincipal(Long id, String email, String role) {
     }
 }

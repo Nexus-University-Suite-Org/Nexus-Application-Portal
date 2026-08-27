@@ -298,11 +298,11 @@ org.nexus.napbackend/
 - `POST /api/contact/` - Contact form
 - `POST /api/v1/chat` - ChatBot
 
-### Broken (Path Mismatch - Missing v1/ prefix)
-- `POST /api/applications/` → needs `/api/v1/applications`
-- `POST /api/partnership-discussions/` → needs `/api/v1/partnership-discussions`
-- `POST /api/auth/otp/send` → needs `/api/v1/auth/otp/send`
-- `POST /api/auth/otp/verify` → needs `/api/v1/auth/otp/verify`
+### Fixed (Path Mismatch - v1/ prefix resolved)
+- `POST /api/v1/applications/` ✓
+- `POST /api/v1/partnership-discussions/` ✓
+- `POST /api/v1/auth/otp/send` ✓
+- `POST /api/v1/auth/otp/verify` ✓
 
 ### Missing Backend
 - `POST /api/storage/upload` - Document uploads (no backend exists)

@@ -22,16 +22,24 @@ public class JwtUtil {
     }
 
     public String generateToken(Long adminId, String email) {
+        return generateToken(adminId, email, "ADMIN");
+    }
+
+    public String generateToken(Long adminId, String email, String role) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
         return Jwts.builder()
                 .subject(String.valueOf(adminId))
                 .claim("email", email)
-                .claim("role", "ADMIN")
+                .claim("role", role)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(key)
                 .compact();
+    }
+
+    public String getRole(String token) {
+        return parseToken(token).get("role", String.class);
     }
 
     public Claims parseToken(String token) {
