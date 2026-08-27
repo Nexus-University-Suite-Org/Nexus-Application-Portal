@@ -14,6 +14,10 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     Optional<Application> findByPrn(String prn);
 
+    Optional<Application> findByRegistrationNumber(String registrationNumber);
+
+    Optional<Application> findByStudentNumber(String studentNumber);
+
     List<Application> findByEmailOrderByCreatedAtDesc(String email);
 
     List<Application> findByStatusOrderByCreatedAtDesc(String status);
@@ -21,6 +25,10 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     List<Application> findByReviewStatusOrderByCreatedAtDesc(String reviewStatus);
 
     boolean existsByPrn(String prn);
+
+    boolean existsByRegistrationNumber(String registrationNumber);
+
+    boolean existsByStudentNumber(String studentNumber);
 
     long countByStatus(String status);
 

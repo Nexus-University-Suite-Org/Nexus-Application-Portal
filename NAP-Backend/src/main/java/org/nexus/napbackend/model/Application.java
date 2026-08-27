@@ -28,6 +28,12 @@ public class Application {
     @Column(name = "prn", unique = true, length = 50)
     private String prn;
 
+    @Column(name = "registration_number", unique = true, length = 50)
+    private String registrationNumber;
+
+    @Column(name = "student_number", unique = true, length = 50)
+    private String studentNumber;
+
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
 
@@ -39,6 +45,9 @@ public class Application {
 
     @Column(nullable = false, length = 320)
     private String email;
+
+    @Column(name = "password_hash", columnDefinition = "text")
+    private String passwordHash;
 
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;

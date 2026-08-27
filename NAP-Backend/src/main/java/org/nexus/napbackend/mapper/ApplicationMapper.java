@@ -25,10 +25,12 @@ public final class ApplicationMapper {
 
     public static Application toEntity(ApplicationCreateRequest r) {
         Application e = new Application();
-        e.setFirstName(r.firstName());
-        e.setLastName(r.lastName());
+        e.setFirstName(r.firstName());        e.setLastName(r.lastName());
         e.setOtherNames(r.otherNames());
         e.setEmail(r.email());
+        if (r.password() != null && !r.password().isBlank()) {
+            e.setPasswordHash(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode(r.password()));
+        }
         e.setPhoneNumber(r.phoneNumber());
         e.setGender(r.gender());
         e.setDateOfBirth(r.dateOfBirth());
@@ -120,6 +122,8 @@ public final class ApplicationMapper {
         return new ApplicationResponse(
                 e.getId(),
                 e.getPrn(),
+                e.getRegistrationNumber(),
+                e.getStudentNumber(),
                 e.getFirstName(),
                 e.getLastName(),
                 e.getOtherNames(),

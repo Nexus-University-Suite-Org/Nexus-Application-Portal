@@ -102,6 +102,7 @@ export type ApplicationSubmissionInput = {
   interviewPreference: string;
   termsAccepted: boolean;
   emailVerified: boolean;
+  password: string;
 };
 
 const parseErrorDetail = async (response: Response) => {

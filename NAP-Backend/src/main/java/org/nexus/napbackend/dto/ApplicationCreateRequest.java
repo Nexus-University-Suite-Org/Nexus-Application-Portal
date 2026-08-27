@@ -91,6 +91,7 @@ public record ApplicationCreateRequest(
         String paymentReference,
         String interviewPreference,
         Boolean termsAccepted,
-        Boolean emailVerified
+        Boolean emailVerified,
+        String password
 ) {
 }

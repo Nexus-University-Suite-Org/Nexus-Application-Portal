@@ -1821,6 +1821,7 @@ const ApplicationStartPage = () => {
         interviewPreference: formData.interviewPreference,
         termsAccepted: formData.termsAccepted,
         emailVerified: otpVerified,
+        password: formData.password,
       };
 
       console.log("[SUBMIT] sending payload with keys:", Object.keys(payload));

@@ -15,7 +15,7 @@ public class OtpService {
     private static final Logger log = LoggerFactory.getLogger(OtpService.class);
 
     private static final Long DEMO_TENANT_ID = 1L;
-    private static final int OTP_LENGTH = 6;
+    private static final int OTP_LENGTH = 4;
     private static final int MAX_ATTEMPTS = 5;
     private static final int COOLDOWN_SECONDS = 60;
     private static final int EXPIRY_MINUTES = 10;
@@ -36,7 +36,7 @@ public class OtpService {
             }
         }
 
-        String code = String.format("%0" + OTP_LENGTH + "d", random.nextInt(1000000));
+        String code = String.format("%0" + OTP_LENGTH + "d", random.nextInt(10000));
         log.info("Generated OTP={} for email={}", code, email);
 
         OtpCode otp = new OtpCode();

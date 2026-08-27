@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 public record ApplicationResponse(
         Long id,
         String prn,
+        String registrationNumber,
+        String studentNumber,
         String firstName,
         String lastName,
         String otherNames,

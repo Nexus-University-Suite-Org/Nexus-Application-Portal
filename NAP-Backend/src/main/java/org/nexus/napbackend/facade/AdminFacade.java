@@ -8,6 +8,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.nexus.napbackend.configuration.JwtUtil;
 import org.nexus.napbackend.dto.AdminLoginRequest;
 import org.nexus.napbackend.dto.AdminLoginResponse;
@@ -141,7 +143,10 @@ public class AdminFacade {
         app.setReviewedAt(LocalDateTime.now());
 
         switch (reviewStatus) {
-            case "admitted" -> app.setStatus("ADMITTED");
+            case "admitted" -> {
+                app.setStatus("ADMITTED");
+                generateStudentNumbers(app);
+            }
             case "rejected" -> app.setStatus("REJECTED");
             case "waitlisted" -> app.setStatus("WAITLISTED");
             default -> throw new RuntimeException("Invalid review status: " + reviewStatus);
@@ -149,5 +154,41 @@ public class AdminFacade {
 
         Application updated = applicationRepository.save(app);
         return ApplicationMapper.toDto(updated);
+    }
+
+    private void generateStudentNumbers(Application app) {
+        int year = LocalDateTime.now().getYear();
+
+        String regPrefix = String.format("REG-%d-", year);
+        String nextReg = getNextSequence(regPrefix, app::getRegistrationNumber, app::setRegistrationNumber);
+
+        String stuPrefix = String.format("STU-%d-", year);
+        String nextStu = getNextSequence(stuPrefix, app::getStudentNumber, app::setStudentNumber);
+
+        app.setRegistrationNumber(nextReg);
+        app.setStudentNumber(nextStu);
+    }
+
+    private String getNextSequence(String prefix,
+                                   Supplier<String> currentGetter,
+                                   Consumer<String> currentSetter) {
+        List<Application> existing = applicationRepository.findAll().stream()
+                .filter(a -> {
+                    String val = currentGetter.get();
+                    return val != null && val.startsWith(prefix);
+                })
+                .toList();
+
+        int maxSeq = existing.stream()
+                .map(a -> currentGetter.get())
+                .filter(java.util.Objects::nonNull)
+                .map(val -> val.substring(prefix.length()))
+                .filter(s -> s.matches("\\d+"))
+                .mapToInt(Integer::parseInt)
+                .max()
+                .orElse(0);
+
+        int nextSeq = maxSeq + 1;
+        return String.format("%s%04d", prefix, nextSeq);
     }
 }

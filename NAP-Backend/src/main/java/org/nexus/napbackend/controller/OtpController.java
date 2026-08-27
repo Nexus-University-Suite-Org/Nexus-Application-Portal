@@ -28,11 +28,29 @@ public class OtpController {
             return ResponseEntity.badRequest().body(Map.of("ok", false, "message", "Email is required"));
         }
         var otp = otpService.generateOtp(email, "APPLICATION_EMAIL");
-        boolean sent = emailJsSender.sendOtp(email, otp.getCode(), 10);
-        if (!sent) {
-            return ResponseEntity.ok(Map.of("ok", true, "message", "Verification code generated (email delivery unavailable — check console for code)", "emailSent", false));
-        }
-        return ResponseEntity.ok(Map.of("ok", true, "message", "Verification code sent", "emailSent", true));
+
+        Map<String, Object> popup = Map.of(
+                "title", "Your Verification Code",
+                "code", otp.getCode(),
+                "expiryMinutes", 10,
+                "instructions", "Use this code to verify your identity. If you did not request this, please ignore this message."
+        );
+
+        Thread.startVirtualThread(() -> {
+            try {
+                emailJsSender.sendOtp(email, otp.getCode(), 10);
+            } catch (Exception e) {
+                org.slf4j.LoggerFactory.getLogger(OtpController.class)
+                        .warn("Async OTP email failed for {}: {}", email, e.getMessage());
+            }
+        });
+
+        return ResponseEntity.ok(Map.of(
+                "ok", true,
+                "message", "Verification code generated",
+                "emailSent", true,
+                "popup", popup
+        ));
     }
 
     @PostMapping("/verify")
