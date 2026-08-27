@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class QuickLinkService {
 
+    private static final Long DEMO_TENANT_ID = 1L;
     private final QuickLinkRepository repository;
 
     public QuickLinkService(QuickLinkRepository repository) {
@@ -17,6 +18,7 @@ public class QuickLinkService {
     }
 
     public QuickLink create(QuickLink entity) {
+        entity.setTenantId(DEMO_TENANT_ID);
         entity.setCreatedAt(LocalDateTime.now());
         return repository.save(entity);
     }

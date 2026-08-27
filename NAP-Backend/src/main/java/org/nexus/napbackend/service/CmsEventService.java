@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class CmsEventService {
 
+    private static final Long DEMO_TENANT_ID = 1L;
     private final CmsEventRepository repository;
 
     public CmsEventService(CmsEventRepository repository) {
@@ -17,6 +18,7 @@ public class CmsEventService {
     }
 
     public CmsEvent create(CmsEvent entity) {
+        entity.setTenantId(DEMO_TENANT_ID);
         entity.setCreatedAt(LocalDateTime.now());
         entity.setUpdatedAt(LocalDateTime.now());
         return repository.save(entity);

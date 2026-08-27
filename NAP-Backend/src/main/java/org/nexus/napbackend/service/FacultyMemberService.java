@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class FacultyMemberService {
 
+    private static final Long DEMO_TENANT_ID = 1L;
     private final FacultyMemberRepository repository;
 
     public FacultyMemberService(FacultyMemberRepository repository) {
@@ -17,6 +18,7 @@ public class FacultyMemberService {
     }
 
     public FacultyMember create(FacultyMember entity) {
+        entity.setTenantId(DEMO_TENANT_ID);
         entity.setCreatedAt(LocalDateTime.now());
         return repository.save(entity);
     }

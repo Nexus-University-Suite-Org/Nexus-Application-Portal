@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class PageSectionService {
 
+    private static final Long DEMO_TENANT_ID = 1L;
     private final PageSectionRepository repository;
 
     public PageSectionService(PageSectionRepository repository) {
@@ -17,6 +18,7 @@ public class PageSectionService {
     }
 
     public PageSection create(PageSection entity) {
+        entity.setTenantId(DEMO_TENANT_ID);
         entity.setCreatedAt(LocalDateTime.now());
         entity.setUpdatedAt(LocalDateTime.now());
         return repository.save(entity);

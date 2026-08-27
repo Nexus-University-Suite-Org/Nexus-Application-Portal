@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class LegalPageService {
 
+    private static final Long DEMO_TENANT_ID = 1L;
     private final LegalPageRepository repository;
 
     public LegalPageService(LegalPageRepository repository) {
@@ -17,6 +18,7 @@ public class LegalPageService {
     }
 
     public LegalPage create(LegalPage entity) {
+        entity.setTenantId(DEMO_TENANT_ID);
         entity.setCreatedAt(LocalDateTime.now());
         return repository.save(entity);
     }

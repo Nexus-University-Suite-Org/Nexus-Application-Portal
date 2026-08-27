@@ -77,6 +77,7 @@ export function AdminCrudPage<T extends { id: number }>({
   const [itemToDelete, setItemToDelete] = useState<T | null>(null);
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const fetchData = async () => {
     setLoading(true);
@@ -115,6 +116,7 @@ export function AdminCrudPage<T extends { id: number }>({
 
   const handleCreate = async () => {
     setSaving(true);
+    setError("");
     try {
       const response = await fetch(apiEndpoint, {
         method: "POST",
@@ -129,9 +131,12 @@ export function AdminCrudPage<T extends { id: number }>({
         setIsCreateOpen(false);
         setFormData({});
         fetchData();
+      } else {
+        const body = await response.json().catch(() => null);
+        setError(body?.message || body?.detail || `Failed to create (${response.status})`);
       }
-    } catch (error) {
-      console.error("Failed to create:", error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create");
     } finally {
       setSaving(false);
     }
@@ -140,6 +145,7 @@ export function AdminCrudPage<T extends { id: number }>({
   const handleUpdate = async () => {
     if (!editItem) return;
     setSaving(true);
+    setError("");
     try {
       const response = await fetch(`${apiEndpoint}/${editItem.id}`, {
         method: "PUT",
@@ -154,9 +160,12 @@ export function AdminCrudPage<T extends { id: number }>({
         setEditItem(null);
         setFormData({});
         fetchData();
+      } else {
+        const body = await response.json().catch(() => null);
+        setError(body?.message || body?.detail || `Failed to update (${response.status})`);
       }
-    } catch (error) {
-      console.error("Failed to update:", error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update");
     } finally {
       setSaving(false);
     }
@@ -165,6 +174,7 @@ export function AdminCrudPage<T extends { id: number }>({
   const handleDelete = async () => {
     if (!itemToDelete) return;
     setSaving(true);
+    setError("");
     try {
       const response = await fetch(`${apiEndpoint}/${itemToDelete.id}`, {
         method: "DELETE",
@@ -175,9 +185,12 @@ export function AdminCrudPage<T extends { id: number }>({
         setIsDeleteOpen(false);
         setItemToDelete(null);
         fetchData();
+      } else {
+        const body = await response.json().catch(() => null);
+        setError(body?.message || body?.detail || `Failed to delete (${response.status})`);
       }
-    } catch (error) {
-      console.error("Failed to delete:", error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete");
     } finally {
       setSaving(false);
     }
@@ -395,12 +408,13 @@ export function AdminCrudPage<T extends { id: number }>({
 
       {/* Create Dialog */}
       {!hideCreate && (
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <Dialog open={isCreateOpen} onOpenChange={(open) => { setIsCreateOpen(open); if (!open) setError(""); }}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create {title.slice(0, -1)}</DialogTitle>
               <DialogDescription>Add a new {title.toLowerCase().slice(0, -1)}</DialogDescription>
             </DialogHeader>
+            {error && <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-lg">{error}</div>}
             {renderFormFields(createFields || fields)}
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
@@ -416,12 +430,13 @@ export function AdminCrudPage<T extends { id: number }>({
 
       {/* Edit Dialog */}
       {!hideEdit && (
-        <Dialog open={!!editItem} onOpenChange={() => setEditItem(null)}>
+        <Dialog open={!!editItem} onOpenChange={(open) => { if (!open) { setEditItem(null); setError(""); } }}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit {title.slice(0, -1)}</DialogTitle>
               <DialogDescription>Update {title.toLowerCase().slice(0, -1)}</DialogDescription>
             </DialogHeader>
+            {error && <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-lg">{error}</div>}
             {renderFormFields(fields)}
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditItem(null)}>

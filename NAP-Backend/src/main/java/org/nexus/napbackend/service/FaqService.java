@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class FaqService {
 
+    private static final Long DEMO_TENANT_ID = 1L;
     private final FaqRepository repository;
 
     public FaqService(FaqRepository repository) {
@@ -17,6 +18,7 @@ public class FaqService {
     }
 
     public Faq create(Faq entity) {
+        entity.setTenantId(DEMO_TENANT_ID);
         entity.setCreatedAt(LocalDateTime.now());
         return repository.save(entity);
     }

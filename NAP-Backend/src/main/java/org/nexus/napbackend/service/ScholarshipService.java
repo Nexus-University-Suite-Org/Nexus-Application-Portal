@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class ScholarshipService {
 
+    private static final Long DEMO_TENANT_ID = 1L;
     private final ScholarshipRepository repository;
 
     public ScholarshipService(ScholarshipRepository repository) {
@@ -17,6 +18,7 @@ public class ScholarshipService {
     }
 
     public Scholarship create(Scholarship entity) {
+        entity.setTenantId(DEMO_TENANT_ID);
         entity.setCreatedAt(LocalDateTime.now());
         return repository.save(entity);
     }

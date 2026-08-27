@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class GalleryItemService {
 
+    private static final Long DEMO_TENANT_ID = 1L;
     private final GalleryItemRepository repository;
 
     public GalleryItemService(GalleryItemRepository repository) {
@@ -17,6 +18,7 @@ public class GalleryItemService {
     }
 
     public GalleryItem create(GalleryItem entity) {
+        entity.setTenantId(DEMO_TENANT_ID);
         entity.setCreatedAt(LocalDateTime.now());
         return repository.save(entity);
     }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class AlumniService {
 
+    private static final Long DEMO_TENANT_ID = 1L;
     private final AlumniRepository repository;
 
     public AlumniService(AlumniRepository repository) {
@@ -17,6 +18,7 @@ public class AlumniService {
     }
 
     public Alumni create(Alumni entity) {
+        entity.setTenantId(DEMO_TENANT_ID);
         entity.setCreatedAt(LocalDateTime.now());
         return repository.save(entity);
     }
