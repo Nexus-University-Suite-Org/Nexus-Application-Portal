@@ -205,7 +205,7 @@ Added a read-only report endpoint `GET /api/v1/fees/report` that returns fee str
 ### MS-01 to MS-04 Messaging (DONE)
 Created a full messaging system. Users can send messages with attachments, view inbox/sent/starred, soft delete (per-side), star, archive, and manage drafts. Soft delete is per-side so sender deleting doesn't affect recipient's view. Drafts auto-default subject to "(no subject)" if blank. Sending a message is separate from drafts - drafts are saved independently.
 
-### NT-01 to NT-03 Notifications (DONE)
+### NT-01 to NT-05 Notifications (DONE)
 Created notification system with: notifications table (user, type, title, message, related_id, link, read flag), announcements table (author, title, body, course_id, system_wide flag). Supports dual casing via @JsonProperty for the "read" field. List endpoint accepts both user_id and recipient_id params. Mark-read works via PUT /{id} and POST /{id}/read/. Mark-all-read accepts user_id or recipient_id in body. Announcements can be course-scoped or system-wide.
 
 ### NT-04 Event Listeners (DONE)
@@ -213,6 +213,26 @@ Created FeeAssignedListener and PaymentRecordedListener that listen to events fr
 
 ### NT-05 Push/Email Fan-Out (DONE)
 Created NotificationFanOut interface with sendInApp, sendEmail, sendPush methods. NoOpNotificationFanOut is a no-op implementation that just logs. This is an interface seam for future email digest and push notification implementation.
+
+### CT-01 Content/CMS (DONE)
+Tables + admin CRUD + public reads for: news_articles, events, gallery_items, faqs, alumni, partners, scholarships, student_stories, legal_pages, quick_links, faculty_members, course_catalog, page_sections. Public GETs sorted exactly as legacy orderBys.
+
+### CT-04 Newsletter Subscription (DONE)
+Newsletter capture: POST /api/v1/newsletter/subscribe → newsletter_subscriptions (unique per tenant, double-opt-in flag ready).
+
+### AD-01 to AD-04 Admissions (DONE)
+Applications table with ~90 fields, portal OTP aliases, admissions review surface, contact + partnership forms.
+
+### AU-01 Audit Logs (DONE)
+Append-only audit_logs with action, entity, entity_id, entity_name, details, user_id/user_name, tenant, timestamp.
+
+### ADMIN Dashboard (DONE)
+- Role-based auth with JWT (ADMIN, STUDENT, REGISTRAR)
+- Admin CRUD endpoints for ALL CMS entities
+- Frontend admin dashboard with sidebar navigation
+- Reusable CRUD component for all entities
+- Admin login page with JWT authentication
+- 20+ admin pages for managing all content
 
 ## Tagoole's Assigned Modules (From RTM)
 
