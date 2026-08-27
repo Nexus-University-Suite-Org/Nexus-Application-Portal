@@ -1,6 +1,7 @@
 package org.nexus.napbackend.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import org.nexus.napbackend.model.NewsletterSubscription;
 import org.nexus.napbackend.repository.NewsletterSubscriptionRepository;
@@ -26,5 +27,17 @@ public class NewsletterSubscriptionService {
         sub.setDoubleOptIn(false);
         sub.setCreatedAt(LocalDateTime.now());
         return repository.save(sub);
+    }
+
+    public List<NewsletterSubscription> findAll() {
+        return repository.findAll();
+    }
+
+    public Optional<NewsletterSubscription> findById(Long id) {
+        return repository.findById(id);
+    }
+
+    public void deleteById(Long id) {
+        repository.deleteById(id);
     }
 }

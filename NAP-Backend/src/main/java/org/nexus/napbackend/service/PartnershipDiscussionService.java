@@ -32,6 +32,21 @@ public class PartnershipDiscussionService {
         entity.setIpAddress(ipAddress);
         entity.setCreatedAt(LocalDateTime.now());
         repository.save(entity);
-        return new PartnershipDiscussionResponse(entity.getId(), false);
+        return toResponse(entity);
+    }
+
+    private PartnershipDiscussionResponse toResponse(PartnershipDiscussion entity) {
+        return new PartnershipDiscussionResponse(
+                entity.getId(),
+                entity.getTenantId(),
+                entity.getOrganizationName(),
+                entity.getContact_email(),
+                entity.getContactPhone(),
+                entity.getContactPerson(),
+                entity.getMessage(),
+                entity.getStatus(),
+                entity.getIpAddress(),
+                entity.getCreatedAt()
+        );
     }
 }
