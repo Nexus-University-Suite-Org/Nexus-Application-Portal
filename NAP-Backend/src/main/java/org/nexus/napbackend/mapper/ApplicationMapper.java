@@ -56,6 +56,7 @@ public final class ApplicationMapper {
         e.setProgramChoice1(r.programChoice1());
         e.setProgramChoice2(r.programChoice2());
         e.setProgramChoice3(r.programChoice3());
+        e.setProgramChoice4(r.programChoice4());
         e.setStartDate(r.startDate());
         e.setPreviousInstitution(r.previousInstitution());
         e.setHighestQualification(r.highestQualification());
@@ -150,6 +151,10 @@ public final class ApplicationMapper {
                 e.getProgramChoice1(),
                 e.getProgramChoice2(),
                 e.getProgramChoice3(),
+                e.getProgramChoice4(),
+                e.getAssignedProgramme(),
+                e.getTotalWeightScore(),
+                e.getQualificationResults(),
                 e.getStartDate(),
                 e.getPreviousInstitution(),
                 e.getHighestQualification(),

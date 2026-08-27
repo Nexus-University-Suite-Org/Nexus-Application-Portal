@@ -7,15 +7,24 @@ import org.nexus.napbackend.dto.ApplicationCreateRequest;
 import org.nexus.napbackend.dto.ApplicationResponse;
 import org.nexus.napbackend.mapper.ApplicationMapper;
 import org.nexus.napbackend.model.Application;
+import org.nexus.napbackend.model.Programme;
 import org.nexus.napbackend.service.ApplicationService;
+import org.nexus.napbackend.service.ProgrammeService;
+import org.nexus.napbackend.service.WeightingService;
 
 @Facade
 public class ApplicationFacade {
 
     private final ApplicationService service;
+    private final ProgrammeService programmeService;
+    private final WeightingService weightingService;
 
-    public ApplicationFacade(ApplicationService service) {
+    public ApplicationFacade(ApplicationService service,
+                             ProgrammeService programmeService,
+                             WeightingService weightingService) {
         this.service = service;
+        this.programmeService = programmeService;
+        this.weightingService = weightingService;
     }
 
     @Transactional
@@ -43,19 +52,33 @@ public class ApplicationFacade {
     public ApplicationResponse review(Long id, String reviewStatus, String notes) {
         Application entity = service.findById(id)
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
-        if (!"SUBMITTED".equals(entity.getStatus())) {
-            throw new RuntimeException("Only SUBMITTED applications can be reviewed. Current status: " + entity.getStatus());
+        if (!"SUBMITTED".equals(entity.getStatus()) && !"DRAFT".equals(entity.getStatus())) {
+            throw new RuntimeException("Only SUBMITTED or DRAFT applications can be reviewed. Current status: " + entity.getStatus());
         }
         entity.setReviewStatus(reviewStatus.toUpperCase());
         entity.setReviewerNotes(notes);
         entity.setReviewedAt(LocalDateTime.now());
-        if ("admitted".equals(reviewStatus)) {
+
+        List<Programme> programmes = programmeService.findActiveEntities();
+        String qualificationResultsJson = weightingService.evaluateAllChoices(entity, programmes);
+        entity.setQualificationResults(qualificationResultsJson);
+
+        if ("admitted".equals(reviewStatus.toLowerCase())) {
             entity.setStatus("ADMITTED");
-        } else if ("rejected".equals(reviewStatus)) {
+            String assigned = weightingService.findAssignedProgramme(entity, programmes);
+            entity.setAssignedProgramme(assigned);
+            try {
+                var results = new com.fasterxml.jackson.databind.ObjectMapper()
+                        .readValue(qualificationResultsJson, new com.fasterxml.jackson.core.type.TypeReference<List<org.nexus.napbackend.dto.QualificationResult>>() {});
+                double maxScore = results.stream().mapToDouble(org.nexus.napbackend.dto.QualificationResult::totalScore).max().orElse(0);
+                entity.setTotalWeightScore(maxScore);
+            } catch (Exception ignored) {}
+        } else if ("rejected".equals(reviewStatus.toLowerCase())) {
             entity.setStatus("REJECTED");
-        } else if ("waitlisted".equals(reviewStatus)) {
+        } else if ("waitlisted".equals(reviewStatus.toLowerCase())) {
             entity.setStatus("WAITLISTED");
         }
+
         Application updated = service.update(entity);
         return ApplicationMapper.toDto(updated);
     }

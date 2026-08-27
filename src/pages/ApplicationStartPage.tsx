@@ -26,7 +26,7 @@ const applicationSteps = [
   {
     number: "03",
     title: "Academic Background",
-    desc: "Submit your academic history, selected program, and personal statement.",
+    desc: "Submit your academic history, selected programmes, and personal statement.",
   },
   {
     number: "04",
@@ -81,6 +81,9 @@ type ApplicationStartData = {
   applicationType: string;
   entryScheme: string;
   program: string;
+  programChoice2: string;
+  programChoice3: string;
+  programChoice4: string;
   startDate: string;
   previousInstitution: string;
   highestQualification: string;
@@ -130,7 +133,14 @@ type ApplicationStartData = {
   termsAccepted: boolean;
 };
 
-const programOptions = [
+type ProgrammeOption = {
+  code: string;
+  name: string;
+  faculty: string;
+  cutoffScore: number;
+};
+
+const fallbackProgramOptions = [
   "Bachelor of Science in Computer Science",
   "Bachelor of Information Technology",
   "Bachelor of Software Engineering",
@@ -649,6 +659,9 @@ const initialFormData: ApplicationStartData = {
   applicationType: "",
   entryScheme: "",
   program: "",
+  programChoice2: "",
+  programChoice3: "",
+  programChoice4: "",
   startDate: "",
   previousInstitution: "",
   highestQualification: "",
@@ -739,6 +752,7 @@ const ApplicationStartPage = () => {
   const [draftHydrated, setDraftHydrated] = useState(false);
   const [academicSubStep, setAcademicSubStep] = useState(0);
   const [documentSubStep, setDocumentSubStep] = useState(0);
+  const [programmes, setProgrammes] = useState<ProgrammeOption[]>([]);
   const [uploadingDocuments, setUploadingDocuments] = useState<
     Partial<
       Record<
@@ -750,6 +764,10 @@ const ApplicationStartPage = () => {
   const [documentUploadErrors, setDocumentUploadErrors] = useState<
     Record<string, string>
   >({});
+  const programmeNames = programmes.length > 0
+    ? programmes.map((p) => p.name)
+    : fallbackProgramOptions;
+
   const isUaceSelected = formData.academicCredentialLevel.includes("UACE");
   const isDirectEntry = formData.applicationType === "Direct Entry (A-Level)";
   const shouldCaptureUceAndUace = isDirectEntry || isUaceSelected;
@@ -973,6 +991,21 @@ const ApplicationStartPage = () => {
       </div>
     );
   };
+
+  useEffect(() => {
+    const fetchProgrammes = async () => {
+      try {
+        const res = await fetch("/api/v1/programmes");
+        if (res.ok) {
+          const data = (await res.json()) as ProgrammeOption[];
+          setProgrammes(data);
+        }
+      } catch {
+        // fallback to static list
+      }
+    };
+    fetchProgrammes();
+  }, []);
 
   useEffect(() => {
     if (activeStep !== 2) {
@@ -1201,9 +1234,6 @@ const ApplicationStartPage = () => {
 
     if (step === 0) {
       if (!formData.email.trim()) nextErrors.email = "Email is required.";
-      if (!formData.otherNames.trim()) {
-        nextErrors.otherNames = "Other names are required.";
-      }
       if (!formData.gender) {
         nextErrors.gender = "Gender is required.";
       }
@@ -1287,7 +1317,13 @@ const ApplicationStartPage = () => {
         nextErrors.entryScheme = "Please select your entry scheme.";
       }
       if (!formData.program.trim())
-        nextErrors.program = "Please select a program.";
+        nextErrors.program = "Please select a 1st choice programme.";
+      if (!formData.programChoice2.trim())
+        nextErrors.programChoice2 = "Please select a 2nd choice programme.";
+      if (!formData.programChoice3.trim())
+        nextErrors.programChoice3 = "Please select a 3rd choice programme.";
+      if (!formData.programChoice4.trim())
+        nextErrors.programChoice4 = "Please select a 4th choice programme.";
       if (!formData.startDate.trim())
         nextErrors.startDate = "Please select a start date.";
       if (!formData.previousInstitution.trim()) {
@@ -1305,7 +1341,7 @@ const ApplicationStartPage = () => {
           "Please enter your academic results or transcript details.";
       }
 
-      if (shouldCaptureUceAndUace) {
+      if (isUaceSelected) {
         if (!formData.uceIndexNumber.trim()) {
           nextErrors.uceIndexNumber = "UCE index number is required.";
         }
@@ -1541,7 +1577,7 @@ const ApplicationStartPage = () => {
   };
 
   const academicSubStepErrorKeys: Record<number, string[]> = {
-    0: ["applicationType", "entryScheme", "program", "startDate", "previousInstitution"],
+    0: ["applicationType", "entryScheme", "program", "programChoice2", "programChoice3", "programChoice4", "startDate", "previousInstitution"],
     1: [
       "academicCredentialLevel", "academicCredentialsDetails",
       "uceIndexNumber", "uceYearOfSitting", "uceSecondIndexNumber", "uceSecondYearOfSitting",
@@ -1551,9 +1587,15 @@ const ApplicationStartPage = () => {
       "uacePrincipalSubject0", "uacePrincipalSubject1", "uacePrincipalSubject2",
       "uacePrincipalGrade0", "uacePrincipalGrade1", "uacePrincipalGrade2",
       "uaceGeneralPaperGrade", "uaceIctOrSubMathSubject", "uaceIctOrSubMathGrade",
-      "oLevelSubjects", "certificateSubjects", "gpa",
+      "oLevelSubjects", "certificateSubjects",
     ],
-    2: ["highestQualification", "personalStatement", "howDidYouHear"],
+    2: ["highestQualification", "gpa", "personalStatement", "howDidYouHear"],
+  };
+
+  const documentSubStepErrorKeys: Record<number, string[]> = {
+    0: ["passportPhotoUrl", "birthCertificateUrl", "oLevelResultSlipUrl", "aLevelResultSlipUrl"],
+    1: ["academicTranscriptUrl", "nationalIdOrPassportUrl", "countryIdDocumentUrl"],
+    2: [],
   };
 
   const findFirstFailingSubStep = (errors: Record<string, string>): number => {
@@ -1563,38 +1605,61 @@ const ApplicationStartPage = () => {
     return 0;
   };
 
+  const findFirstFailingDocumentSubStep = (errors: Record<string, string>): number => {
+    for (let sub = 0; sub < 3; sub++) {
+      if (documentSubStepErrorKeys[sub].some((key) => errors[key])) return sub;
+    }
+    return 0;
+  };
+
   const handleNext = () => {
+    console.log("[NEXT] activeStep:", activeStep, "academicSubStep:", academicSubStep, "documentSubStep:", documentSubStep);
+
     if (activeStep === 2 && academicSubStep < academicStepLabels.length - 1) {
-      const stepErrors = validateStepFields(activeStep);
-      setErrors((prev) => ({ ...prev, ...stepErrors }));
-      if (Object.keys(stepErrors).length > 0) {
-        const failingSub = findFirstFailingSubStep(stepErrors);
-        if (failingSub <= academicSubStep) {
-          setAcademicSubStep(failingSub);
-        } else {
-          setAcademicSubStep(academicSubStep + 1);
-        }
+      const allErrors = validateStepFields(activeStep);
+      const currentSubKeys = academicSubStepErrorKeys[academicSubStep];
+      const currentSubErrors = currentSubKeys.filter((key) => allErrors[key]);
+      console.log("[NEXT] step2 sub-step:", academicSubStep, "checking keys:", currentSubKeys, "errors found:", currentSubErrors, "allErrors:", Object.keys(allErrors));
+      if (currentSubErrors.length > 0) {
+        console.log("[NEXT] BLOCKED — current sub-step has errors:", currentSubErrors.map((k) => `${k}: ${allErrors[k]}`));
+        setErrors((prev) => ({ ...prev, ...allErrors }));
         return;
       }
+      console.log("[NEXT] advancing sub-step", academicSubStep, "->", academicSubStep + 1);
+      setErrors((prev) => {
+        const next = { ...prev };
+        currentSubKeys.forEach((key) => delete next[key]);
+        return next;
+      });
       setAcademicSubStep((prev) => prev + 1);
       return;
     }
 
     if (activeStep === 3 && documentSubStep < documentStepLabels.length - 1) {
+      console.log("[NEXT] advancing document sub-step", documentSubStep, "->", documentSubStep + 1);
       setDocumentSubStep((prev) => prev + 1);
       return;
     }
 
     if (!validateStep(activeStep)) {
+      console.log("[NEXT] step", activeStep, "validation FAILED — errors:", Object.entries(errors).map(([k, v]) => `${k}: ${v}`));
       if (activeStep === 2) {
         const stepErrors = validateStepFields(activeStep);
+        console.log("[NEXT] jumping to failing academic sub-step:", findFirstFailingSubStep(stepErrors));
         setErrors((prev) => ({ ...prev, ...stepErrors }));
         setAcademicSubStep(findFirstFailingSubStep(stepErrors));
+      }
+      if (activeStep === 3) {
+        const stepErrors = validateStepFields(activeStep);
+        console.log("[NEXT] jumping to failing document sub-step:", findFirstFailingDocumentSubStep(stepErrors));
+        setErrors((prev) => ({ ...prev, ...stepErrors }));
+        setDocumentSubStep(findFirstFailingDocumentSubStep(stepErrors));
       }
       return;
     }
 
     const nextStep = Math.min(activeStep + 1, applicationSteps.length - 1);
+    console.log("[NEXT] advancing step", activeStep, "->", nextStep);
     setFurthestStep((prev) => Math.max(prev, nextStep));
     setActiveStep(nextStep);
   };
@@ -1699,6 +1764,9 @@ const ApplicationStartPage = () => {
         applicationType: formData.applicationType,
         entryScheme: formData.entryScheme,
         program: formData.program,
+        programChoice2: formData.programChoice2,
+        programChoice3: formData.programChoice3,
+        programChoice4: formData.programChoice4,
         startDate: formData.startDate,
         previousInstitution: formData.previousInstitution.trim(),
         highestQualification: formData.highestQualification,
@@ -2067,26 +2135,7 @@ const ApplicationStartPage = () => {
                           )}
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                          <div>
-                            <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                              Other Names *
-                            </label>
-                            <input
-                              value={formData.otherNames}
-                              onChange={(e) =>
-                                updateField("otherNames", e.target.value)
-                              }
-                              className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                              type="text"
-                              placeholder="Middle/additional names"
-                            />
-                            {errors.otherNames && (
-                              <p className="text-xs text-destructive mt-2">
-                                {errors.otherNames}
-                              </p>
-                            )}
-                          </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                               Gender *
@@ -2313,7 +2362,7 @@ const ApplicationStartPage = () => {
 
                     {activeStep === 1 && (
                       <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                               First Name *
@@ -2329,6 +2378,25 @@ const ApplicationStartPage = () => {
                             {errors.firstName && (
                               <p className="text-xs text-destructive mt-2">
                                 {errors.firstName}
+                              </p>
+                            )}
+                          </div>
+                          <div>
+                            <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                              Other Names
+                            </label>
+                            <input
+                              value={formData.otherNames}
+                              onChange={(e) =>
+                                updateField("otherNames", e.target.value)
+                              }
+                              className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                              type="text"
+                              placeholder="Middle/additional names"
+                            />
+                            {errors.otherNames && (
+                              <p className="text-xs text-destructive mt-2">
+                                {errors.otherNames}
                               </p>
                             )}
                           </div>
@@ -3067,60 +3135,70 @@ const ApplicationStartPage = () => {
                             </div>
                           ) : null}
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                Program
-                              </label>
-                              <input
-                                value={formData.program}
-                                onChange={(e) =>
-                                  updateField("program", e.target.value)
-                                }
-                                className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                                type="text"
-                                list="program-options"
-                                placeholder="Search/select a program"
-                              />
-                              <datalist id="program-options">
-                                {programOptions.map((program) => (
-                                  <option key={program} value={program} />
-                                ))}
-                              </datalist>
-                              {errors.program && (
-                                <p className="text-xs text-destructive mt-2">
-                                  {errors.program}
-                                </p>
-                              )}
-                            </div>
-                            <div>
-                              <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                Preferred Start Date
-                              </label>
-                              <select
-                                value={formData.startDate}
-                                onChange={(e) =>
-                                  updateField("startDate", e.target.value)
-                                }
-                                className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                              >
-                                <option value="">Select date</option>
-                                <option value={`June ${currentYear}`}>
-                                  {`June ${currentYear}`}
-                                </option>
-                                <option value={`September ${currentYear}`}>
-                                  {`September ${currentYear}`}
-                                </option>
-                                <option value={`January ${currentYear + 1}`}>
-                                  {`January ${currentYear + 1}`}
-                                </option>
-                              </select>
-                              {errors.startDate && (
-                                <p className="text-xs text-destructive mt-2">
-                                  {errors.startDate}
-                                </p>
-                              )}
-                            </div>
+                          <div className="space-y-4">
+                            <p className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                              Course Selection (select up to 4 choices)
+                            </p>
+                            {[
+                              { field: "program" as const, label: "1st Choice (Required)" },
+                              { field: "programChoice2" as const, label: "2nd Choice" },
+                              { field: "programChoice3" as const, label: "3rd Choice" },
+                              { field: "programChoice4" as const, label: "4th Choice" },
+                            ].map(({ field, label }) => (
+                              <div key={field}>
+                                <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                  {label}
+                                </label>
+                                <select
+                                  value={formData[field]}
+                                  onChange={(e) =>
+                                    updateField(field, e.target.value)
+                                  }
+                                  className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                                >
+                                  <option value="">Select a programme</option>
+                                  {programmeNames.map((name) => (
+                                    <option key={name} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
+                                {errors[field] && (
+                                  <p className="text-xs text-destructive mt-2">
+                                    {errors[field]}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          <div>
+                            <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                              Preferred Start Date
+                            </label>
+                            <select
+                              value={formData.startDate}
+                              onChange={(e) =>
+                                updateField("startDate", e.target.value)
+                              }
+                              className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                            >
+                              <option value="">Select date</option>
+                              <option value={`June ${currentYear}`}>
+                                {`June ${currentYear}`}
+                              </option>
+                              <option value={`September ${currentYear}`}>
+                                {`September ${currentYear}`}
+                              </option>
+                              <option value={`January ${currentYear + 1}`}>
+                                {`January ${currentYear + 1}`}
+                              </option>
+                            </select>
+                            {errors.startDate && (
+                              <p className="text-xs text-destructive mt-2">
+                                {errors.startDate}
+                              </p>
+                            )}
                           </div>
 
                           <div>
@@ -3962,10 +4040,34 @@ const ApplicationStartPage = () => {
                           </p>
                           <p>
                             <span className="text-muted-foreground">
-                              Program:
+                              1st Choice:
                             </span>{" "}
                             {formData.program}
                           </p>
+                          {formData.programChoice2 && (
+                            <p>
+                              <span className="text-muted-foreground">
+                                2nd Choice:
+                              </span>{" "}
+                              {formData.programChoice2}
+                            </p>
+                          )}
+                          {formData.programChoice3 && (
+                            <p>
+                              <span className="text-muted-foreground">
+                                3rd Choice:
+                              </span>{" "}
+                              {formData.programChoice3}
+                            </p>
+                          )}
+                          {formData.programChoice4 && (
+                            <p>
+                              <span className="text-muted-foreground">
+                                4th Choice:
+                              </span>{" "}
+                              {formData.programChoice4}
+                            </p>
+                          )}
                           <p>
                             <span className="text-muted-foreground">
                               Start Date:

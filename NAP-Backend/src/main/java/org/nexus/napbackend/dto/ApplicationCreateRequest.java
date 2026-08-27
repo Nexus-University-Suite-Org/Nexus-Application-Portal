@@ -36,6 +36,7 @@ public record ApplicationCreateRequest(
         @JsonProperty("program") String programChoice1,
         String programChoice2,
         String programChoice3,
+        String programChoice4,
         String startDate,
         String previousInstitution,
         String highestQualification,

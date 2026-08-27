@@ -307,6 +307,18 @@ public class Application {
     @Column(name = "interview_preference", length = 100)
     private String interviewPreference;
 
+    @Column(name = "program_choice_4", length = 200)
+    private String programChoice4;
+
+    @Column(name = "assigned_programme", length = 20)
+    private String assignedProgramme;
+
+    @Column(name = "total_weight_score")
+    private Double totalWeightScore;
+
+    @Column(name = "qualification_results", columnDefinition = "text")
+    private String qualificationResults;
+
     @Column(name = "terms_accepted")
     private Boolean termsAccepted;
 

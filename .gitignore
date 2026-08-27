@@ -27,3 +27,11 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# Build output
+NAP-Backend/target/
+target/
+
+# Uploaded student documents (sensitive PII — never commit)
+uploads/
+NAP-Backend/uploads/

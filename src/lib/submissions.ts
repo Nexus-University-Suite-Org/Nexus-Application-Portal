@@ -51,6 +51,9 @@ export type ApplicationSubmissionInput = {
   applicationType: string;
   entryScheme: string;
   program: string;
+  programChoice2: string;
+  programChoice3: string;
+  programChoice4: string;
   startDate: string;
   previousInstitution: string;
   highestQualification: string;
