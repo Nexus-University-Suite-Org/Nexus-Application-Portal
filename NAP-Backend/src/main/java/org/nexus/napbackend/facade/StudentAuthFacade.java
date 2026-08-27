@@ -33,7 +33,7 @@ public class StudentAuthFacade {
             throw new RuntimeException("Invalid email or password");
         }
 
-        String token = jwtUtil.generateToken(application.getId(), application.getEmail());
+        String token = jwtUtil.generateToken(application.getId(), application.getEmail(), "STUDENT");
         return new StudentLoginResponse(token, toUser(application), toProfile(application));
     }
 
