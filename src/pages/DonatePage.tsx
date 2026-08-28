@@ -6,23 +6,37 @@ import Footer from "@/components/Footer";
 import { Heart, Users, Check, ChevronDown } from "lucide-react";
 import heroCampus from "@/assets/hero-campus.jpg";
 import { useSpotlightCards, useParallax } from "@/hooks/useScrollReveal";
+import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const donationTiers = [
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  body?: string;
+};
+
+const fallbackDonationTiers = [
   { amount: "$10", usd: 10, label: "Learning Materials", description: "Provides one student with notebooks, pens, and essential reading materials for a month.", impact: "Learning materials for 1 student", color: "border-border hover:border-accent/40" },
   { amount: "$25", usd: 25, label: "Training Tools", description: "Covers specialized tools and supplies needed for hands-on vocational training — needles, thread, fittings, or electrical components.", impact: "Training tools for 1 student", color: "border-border hover:border-accent/40" },
   { amount: "$50", usd: 50, label: "Monthly Sponsorship", description: "Sponsors a student for a full month, covering training fees, materials, and basic support. The most popular giving level.", impact: "Full monthly support for 1 student", color: "border-accent bg-accent/5 shadow-[0_20px_60px_-20px_hsl(var(--accent)/0.25)]", featured: true },
   { amount: "$200", usd: 200, label: "Full Program Support", description: "Covers a significant portion of a student's full training program from start to finish — a transformative gift that changes a life completely.", impact: "Covers most of a full training program", color: "border-border hover:border-accent/40" },
 ];
 
-const faqs = [
+const fallbackFaqs = [
   { q: "How is my donation used?", a: "100% of your donation goes directly to student training — covering fees, materials, tools, and basic support. We publish annual impact reports so you can see exactly how funds are used." },
   { q: "Can I sponsor a specific student?", a: "Yes! Through our Sponsor a Student program, we match you with a student in our program. You'll receive updates on their progress and a letter from them upon graduation." },
   { q: "Is my donation tax-deductible?", a: "We are a registered non-profit organization. Depending on your country, your donation may be tax-deductible. Contact us for official documentation." },
   { q: "Can organizations or companies donate?", a: "Absolutely. We welcome corporate partnerships, NGO funding, and institutional support. Please visit our Partners page or contact us directly to discuss collaboration." },
   { q: "What payment methods do you accept?", a: "We accept bank transfers, mobile money (MTN/Airtel), PayPal, and credit/debit cards. Contact us via WhatsApp or email to get payment details." },
 ];
+
+const parseJson = (body: string | undefined, fallback: unknown) => {
+  if (!body) return fallback;
+  try { return JSON.parse(body); } catch { return fallback; }
+};
 
 const DonatePage = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -31,6 +45,16 @@ const DonatePage = () => {
   const faqRef = useRef<HTMLDivElement>(null);
   const faqAnswerRefs = useRef<Array<HTMLDivElement | null>>([]);
   const pageRef = useRef<HTMLDivElement>(null);
+
+  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const tiersSections = pageSections.filter(s => s.page_key === "donate" && s.section_key === "donation_tiers");
+  const donationTiers = tiersSections.length > 0
+    ? parseJson(tiersSections[0].body, fallbackDonationTiers) as { amount: string; usd: number; label: string; description: string; impact: string; color: string; featured?: boolean }[]
+    : fallbackDonationTiers;
+  const faqsSections = pageSections.filter(s => s.page_key === "donate" && s.section_key === "faqs");
+  const faqs = faqsSections.length > 0
+    ? parseJson(faqsSections[0].body, fallbackFaqs) as { q: string; a: string }[]
+    : fallbackFaqs;
 
   const selectedTier = donationTiers.find((tier) => tier.usd === selectedTierUsd) ?? donationTiers[0];
 

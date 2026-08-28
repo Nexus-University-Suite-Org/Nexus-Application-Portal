@@ -6,26 +6,28 @@ import Footer from "@/components/Footer";
 import { CreditCard, DollarSign } from "lucide-react";
 import aboutHero from "@/assets/about-hero.jpg";
 import { getFeeAssignments, type FeeAssignment } from "@/lib/fees";
+import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const paymentPlans = [
-  {
-    name: "Full Payment",
-    desc: "Pay entire semester upfront",
-    discount: "5% discount",
-  },
-  {
-    name: "Installment Plan",
-    desc: "4 equal monthly payments",
-    interest: "No interest",
-  },
-  {
-    name: "Employer Sponsorship",
-    desc: "Payment through employer",
-    flexible: "Flexible terms",
-  },
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  body?: string;
+};
+
+const fallbackPaymentPlans = [
+  { name: "Full Payment", desc: "Pay entire semester upfront", discount: "5% discount" },
+  { name: "Installment Plan", desc: "4 equal monthly payments", interest: "No interest" },
+  { name: "Employer Sponsorship", desc: "Payment through employer", flexible: "Flexible terms" },
 ];
+
+const parseJson = (body: string | undefined, fallback: unknown) => {
+  if (!body) return fallback;
+  try { return JSON.parse(body); } catch { return fallback; }
+};
 
 const FeesPaymentPage = () => {
   const imageRef = useRef<HTMLImageElement>(null);
@@ -34,6 +36,12 @@ const FeesPaymentPage = () => {
   const plansRef = useRef<HTMLDivElement>(null);
   const [feeAssignments, setFeeAssignments] = useState<FeeAssignment[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const plansSections = pageSections.filter(s => s.page_key === "fees_payment" && s.section_key === "payment_plans");
+  const paymentPlans = plansSections.length > 0
+    ? parseJson(plansSections[0].body, fallbackPaymentPlans) as { name: string; desc: string; discount?: string; interest?: string; flexible?: string }[]
+    : fallbackPaymentPlans;
 
   useEffect(() => {
     getFeeAssignments()

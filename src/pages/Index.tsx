@@ -38,12 +38,25 @@ type RemoteStory = Record<string, unknown> & {
   content?: string;
 };
 
-const donationTiers = [
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  body?: string;
+};
+
+const fallbackDonationTiers = [
   { amount: "$10", impact: "Provides learning materials for one student" },
   { amount: "$25", impact: "Covers essential training tools" },
   { amount: "$50", impact: "Sponsors a student for one month" },
   { amount: "$200", impact: "Covers full training support" },
 ];
+
+const parseJson = (body: string | undefined, fallback: unknown) => {
+  if (!body) return fallback;
+  try { return JSON.parse(body); } catch { return fallback; }
+};
 
 const Index = () => {
   const navigate = useNavigate();
@@ -54,6 +67,12 @@ const Index = () => {
 
   const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
   const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
+  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+
+  const donationTiersSections = pageSections.filter(s => s.page_key === "home" && s.section_key === "donation_tiers");
+  const donationTiers = donationTiersSections.length > 0
+    ? parseJson(donationTiersSections[0].body, fallbackDonationTiers) as { amount: string; impact: string }[]
+    : fallbackDonationTiers;
 
   const iconMap: Record<string, typeof Scissors> = {
     tailor: Scissors, plumb: Wrench, electric: Zap, weld: Flame, hair: Users, beauty: Sparkles, auto: Car, soap: BookOpen,
