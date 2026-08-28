@@ -23,32 +23,32 @@ import { submitContactSubmission } from "@/lib/submissions";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const partnerTypes = [
-  {
-    icon: Building,
-    title: "Corporate Sponsors",
-    description:
-      "Partner your brand with a life-changing cause. Corporate sponsorships fund training programs and provide visibility within our growing community network.",
-  },
-  {
-    icon: Globe,
-    title: "NGOs & Donors",
-    description:
-      "We welcome partnerships with like-minded organizations working on poverty alleviation, women's empowerment, and youth development.",
-  },
-  {
-    icon: Users,
-    title: "Volunteers",
-    description:
-      "Share your skills with our students and staff. From workshop facilitation to mentorship and business coaching — your time makes a difference.",
-  },
-  {
-    icon: Heart,
-    title: "Individual Donors",
-    description:
-      "Become a regular supporter or make a one-time contribution. Every shilling goes directly toward training vulnerable youth and single mothers.",
-  },
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  body?: string;
+};
+
+const fallbackPartnerTypes = [
+  { title: "Corporate Sponsors", description: "Partner your brand with a life-changing cause. Corporate sponsorships fund training programs and provide visibility within our growing community network." },
+  { title: "NGOs & Donors", description: "We welcome partnerships with like-minded organizations working on poverty alleviation, women's empowerment, and youth development." },
+  { title: "Volunteers", description: "Share your skills with our students and staff. From workshop facilitation to mentorship and business coaching — your time makes a difference." },
+  { title: "Individual Donors", description: "Become a regular supporter or make a one-time contribution. Every shilling goes directly toward training vulnerable youth and single mothers." },
 ];
+
+const iconMap: Record<string, typeof Building> = {
+  "Corporate Sponsors": Building,
+  "NGOs & Donors": Globe,
+  "Volunteers": Users,
+  "Individual Donors": Heart,
+};
+
+const parseJson = (body: string | undefined, fallback: unknown) => {
+  if (!body) return fallback;
+  try { return JSON.parse(body); } catch { return fallback; }
+};
 
 const ContactPage = () => {
   const navigate = useNavigate();
@@ -69,6 +69,12 @@ const ContactPage = () => {
   const contactRef = useRef<HTMLDivElement>(null);
 
   useSpotlightCards(partnersRef, ".partner-card");
+
+  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const partnerTypesSections = pageSections.filter(s => s.page_key === "contact" && s.section_key === "partner_types");
+  const partnerTypes = partnerTypesSections.length > 0
+    ? parseJson(partnerTypesSections[0].body, fallbackPartnerTypes) as { title: string; description: string }[]
+    : fallbackPartnerTypes;
 
   const phoneDigits = organizationPhone.replace(/\D/g, "");
 
@@ -408,7 +414,9 @@ const ContactPage = () => {
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {partnerTypes.map(({ icon: Icon, title, description }) => (
+          {partnerTypes.map(({ title, description }) => {
+            const Icon = iconMap[title] || Building;
+            return (
             <div
               key={title}
               className="partner-card spotlight-card opacity-0 group p-8 bg-background border border-border rounded-[20px]"
@@ -425,7 +433,8 @@ const ContactPage = () => {
                 </p>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
         <div className="mt-12">
           <button

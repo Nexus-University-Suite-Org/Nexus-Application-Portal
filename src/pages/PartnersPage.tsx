@@ -21,56 +21,32 @@ import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const partnerTypes = [
-  {
-    icon: Building2,
-    title: "Corporate Sponsors",
-    description:
-      "Fund training programs, supply equipment, or create internship pipelines for graduates. Your CSR investment directly translates to measurable community impact.",
-    benefits: [
-      "Tax-deductible contributions",
-      "Brand visibility at events",
-      "Impact reports & tracking",
-      "Employee volunteer days",
-    ],
-  },
-  {
-    icon: Globe,
-    title: "NGOs & Foundations",
-    description:
-      "Collaborate on joint programs, share expertise, or channel funding through our proven training model to reach vulnerable communities.",
-    benefits: [
-      "Co-branded programs",
-      "Shared impact metrics",
-      "Community access",
-      "Grant collaboration",
-    ],
-  },
-  {
-    icon: Users,
-    title: "Volunteer Instructors",
-    description:
-      "Share your skills as a guest instructor, mentor graduates, or help with curriculum development. Your expertise creates ripple effects across generations.",
-    benefits: [
-      "Flexible commitment",
-      "Teaching resources provided",
-      "Community connection",
-      "Certificate of service",
-    ],
-  },
-  {
-    icon: Heart,
-    title: "Individual Donors",
-    description:
-      "Sponsor a student's full training, cover material costs, or contribute monthly to sustain ongoing operations. Every contribution changes a life.",
-    benefits: [
-      "Student progress updates",
-      "Direct communication",
-      "Annual impact letter",
-      "Tax receipts",
-    ],
-  },
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  body?: string;
+};
+
+const fallbackPartnerTypes = [
+  { title: "Corporate Sponsors", description: "Fund training programs, supply equipment, or create internship pipelines for graduates. Your CSR investment directly translates to measurable community impact.", benefits: ["Tax-deductible contributions", "Brand visibility at events", "Impact reports & tracking", "Employee volunteer days"] },
+  { title: "NGOs & Foundations", description: "Collaborate on joint programs, share expertise, or channel funding through our proven training model to reach vulnerable communities.", benefits: ["Co-branded programs", "Shared impact metrics", "Community access", "Grant collaboration"] },
+  { title: "Volunteer Instructors", description: "Share your skills as a guest instructor, mentor graduates, or help with curriculum development. Your expertise creates ripple effects across generations.", benefits: ["Flexible commitment", "Teaching resources provided", "Community connection", "Certificate of service"] },
+  { title: "Individual Donors", description: "Sponsor a student's full training, cover material costs, or contribute monthly to sustain ongoing operations. Every contribution changes a life.", benefits: ["Student progress updates", "Direct communication", "Annual impact letter", "Tax receipts"] },
 ];
+
+const iconMap: Record<string, typeof Building2> = {
+  "Corporate Sponsors": Building2,
+  "NGOs & Foundations": Globe,
+  "Volunteer Instructors": Users,
+  "Individual Donors": Heart,
+};
+
+const parseJson = (body: string | undefined, fallback: unknown) => {
+  if (!body) return fallback;
+  try { return JSON.parse(body); } catch { return fallback; }
+};
 
 type PartnerDoc = {
   id: string;
@@ -102,6 +78,12 @@ const PartnersPage = () => {
   ];
 
   useSpotlightCards(cardsRef);
+
+  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const partnerTypesSections = pageSections.filter(s => s.page_key === "partners" && s.section_key === "partner_types");
+  const partnerTypes = partnerTypesSections.length > 0
+    ? parseJson(partnerTypesSections[0].body, fallbackPartnerTypes) as { title: string; description: string; benefits: string[] }[]
+    : fallbackPartnerTypes;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -265,7 +247,9 @@ const PartnersPage = () => {
           </h2>
         </div>
         <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {partnerTypes.map(({ icon: Icon, title, description, benefits }) => (
+          {partnerTypes.map(({ title, description, benefits }) => {
+            const Icon = iconMap[title] || Building2;
+            return (
             <div
               key={title}
               className="partner-card spotlight-card opacity-0 group p-8 md:p-10 border border-border rounded-2xl"
@@ -293,7 +277,8 @@ const PartnersPage = () => {
                 </ul>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       </section>
 

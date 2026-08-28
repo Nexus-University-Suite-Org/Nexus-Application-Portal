@@ -12,33 +12,34 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "@/hooks/use-toast";
 import { submitPartnershipSubmission } from "@/lib/submissions";
+import { useContentCollection } from "@/hooks/useContentCollection";
 
-const tracks = [
-  {
-    icon: Building2,
-    title: "Corporate Partnerships",
-    description:
-      "Co-design scholarship, training, and internship pathways that move learners into dignified work.",
-  },
-  {
-    icon: Globe,
-    title: "NGO and Foundation Programs",
-    description:
-      "Build joint initiatives focused on youth employability, women empowerment, and local enterprise growth.",
-  },
-  {
-    icon: Users,
-    title: "Volunteer and Mentorship",
-    description:
-      "Support learners with practical sessions, guest lectures, and project-based mentorship.",
-  },
-  {
-    icon: HeartHandshake,
-    title: "Community Sponsorship",
-    description:
-      "Fund priority needs including student kits, trainer support, and startup seed opportunities.",
-  },
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  body?: string;
+};
+
+const fallbackTracks = [
+  { title: "Corporate Partnerships", description: "Co-design scholarship, training, and internship pathways that move learners into dignified work." },
+  { title: "NGO and Foundation Programs", description: "Build joint initiatives focused on youth employability, women empowerment, and local enterprise growth." },
+  { title: "Volunteer and Mentorship", description: "Support learners with practical sessions, guest lectures, and project-based mentorship." },
+  { title: "Community Sponsorship", description: "Fund priority needs including student kits, trainer support, and startup seed opportunities." },
 ];
+
+const iconMap: Record<string, typeof Building2> = {
+  "Corporate Partnerships": Building2,
+  "NGO and Foundation Programs": Globe,
+  "Volunteer and Mentorship": Users,
+  "Community Sponsorship": HeartHandshake,
+};
+
+const parseJson = (body: string | undefined, fallback: unknown) => {
+  if (!body) return fallback;
+  try { return JSON.parse(body); } catch { return fallback; }
+};
 
 const PartnershipDiscussionPage = () => {
   const navigate = useNavigate();
@@ -50,6 +51,12 @@ const PartnershipDiscussionPage = () => {
     partnershipGoal: "",
     message: "",
   });
+
+  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const tracksSections = pageSections.filter(s => s.page_key === "partnership_discussion" && s.section_key === "tracks");
+  const tracks = tracksSections.length > 0
+    ? parseJson(tracksSections[0].body, fallbackTracks) as { title: string; description: string }[]
+    : fallbackTracks;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -145,7 +152,9 @@ const PartnershipDiscussionPage = () => {
       <section className="px-8 md:px-16 py-20">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-6">
-            {tracks.map(({ icon: Icon, title, description }) => (
+            {tracks.map(({ title, description }) => {
+              const Icon = iconMap[title] || Building2;
+              return (
               <article
                 key={title}
                 className="p-7 rounded-2xl border border-border bg-card"
@@ -160,7 +169,8 @@ const PartnershipDiscussionPage = () => {
                   {description}
                 </p>
               </article>
-            ))}
+            );
+            })}
           </div>
 
           <form

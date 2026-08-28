@@ -661,24 +661,39 @@ Connected 3 components to their backend CMS collections, removing hardcoded dumm
 
 ---
 
-### Commit 8: Connect HeroSection + ImpactPage stats to page_sections CMS
-**Commit:** `pending` - "Replace hardcoded impact stats with page_sections CMS data"
+### Commit 8: Connect HeroSection + ImpactPage + 4 More Pages to page_sections CMS
+**Commit:** `a8f96c5` - "feat: connect 4 more pages to page_sections CMS (AboutInstitute, HistoryTimeline, VisitInstitute, CampusLife)"
 
 #### Overview
-Connected HeroSection and ImpactPage impact statistics to the `page_sections` CMS collection. Stats are stored as JSON in the `body` field.
+Connected 6 components total to the `page_sections` CMS collection. Stats, highlights, mission, timeline, tours, and campus life data stored as JSON in `body` field.
 
 #### CMS Data Format
 
-**HeroSection stats:** `page_key="home"`, `section_key="impact-stats"`, body = JSON array of `{value, label}` objects.
-
-**ImpactPage stats:** `page_key="impact"`, `section_key="stats"`, body = JSON array of `{value, suffix, label}` objects.
+| Page | page_key | section_key | body format |
+|------|----------|-------------|-------------|
+| HeroSection | `home` | `impact-stats` | JSON array of `{value, label}` |
+| ImpactPage | `impact` | `stats` | JSON array of `{value, suffix, label}` |
+| ResearchSection | `home` | `research-stats` | JSON array of `{value, label}` |
+| FactsFiguresPage | `facts_figures` | `stats` + `facts` | Stats: JSON array. Facts: JSON array of `{title, desc}` |
+| AboutInstitutePage | `about_institute` | `highlights` + `mission` | Highlights: JSON array of `{title, desc}`. Mission: plain text string |
+| HistoryTimelinePage | `history_timeline` | `timeline` | JSON array of `{year, title, desc}` |
+| VisitInstitutePage | `visit_institute` | `tours` + `highlights` | Tours: JSON array of `{name, duration, group, frequency}`. Highlights: JSON array of strings |
+| CampusLifeSection | `campus_life` | `highlights` | JSON array of `{title, stat, description}` (icon mapped on frontend) |
 
 #### Changes
 
 | File | Change |
 |------|--------|
-| `src/components/HeroSection.tsx` | Added `useContentCollection("page_sections")`, filters by page_key + section_key, parses JSON body. Falls back to hardcoded defaults when CMS is empty. |
-| `src/pages/ImpactPage.tsx` | Same pattern with `page_key="impact"` + `section_key="stats"`. |
+| `src/components/HeroSection.tsx` | Added `useContentCollection("page_sections")`, filters by `home`/`impact-stats`, parses JSON body. |
+| `src/pages/ImpactPage.tsx` | Same pattern with `impact`/`stats`. |
+| `src/components/ResearchSection.tsx` | Same pattern with `home`/`research-stats`. |
+| `src/pages/FactsFiguresPage.tsx` | Same pattern with `facts_figures`/`stats` + `facts`. |
+| `src/pages/AboutInstitutePage.tsx` | Same pattern with `about_institute`/`highlights` + `mission`. Mission stored as plain text in `body`. |
+| `src/pages/HistoryTimelinePage.tsx` | Same pattern with `history_timeline`/`timeline`. |
+| `src/pages/VisitInstitutePage.tsx` | Same pattern with `visit_institute`/`tours` + `highlights`. |
+| `src/components/CampusLifeSection.tsx` | Same pattern with `campus_life`/`highlights`. Icons mapped via `iconMap` lookup on frontend. |
+
+All components fall back to hardcoded defaults when CMS is empty.
 
 #### Testing Results
 
