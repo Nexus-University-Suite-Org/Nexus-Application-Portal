@@ -764,3 +764,43 @@ All components fall back to hardcoded defaults when CMS is empty.
 |------|--------|
 | Frontend type-check (`tsc --noEmit`) | PASS |
 | Frontend build (`vite build`) | PASS |
+
+### Commit 11: Connect StudyItemPage 16 hardcoded arrays to page_sections CMS
+**Commit:** `40b58d1` - "feat: connect StudyItemPage 16 hardcoded arrays to page_sections CMS"
+
+#### Overview
+Connected all 16 hardcoded data arrays across 3 sub-pages (Admissions, Academic Registrar, Institutes) in StudyItemPage to the `page_sections` CMS collection. A single `useContentCollection("page_sections")` call fetches all data, then `getCmsData()` helper filters by `page_key` + `section_key`.
+
+#### CMS Data Format
+
+| Sub-page | page_key | section_key | body format |
+|----------|----------|-------------|-------------|
+| Join Admissions | `join_admissions` | `stats` | JSON array of `{label, value}` |
+| Join Admissions | `join_admissions` | `pathways` | JSON array of `{title, detail}` |
+| Join Admissions | `join_admissions` | `application_journey` | JSON array of strings |
+| Join Admissions | `join_admissions` | `entry_requirements` | JSON array of `{title, items[]}` |
+| Join Admissions | `join_admissions` | `important_dates` | JSON array of `{phase, date}` |
+| Join Admissions | `join_admissions` | `required_documents` | JSON array of strings |
+| Join Admissions | `join_admissions` | `finance_options` | JSON array of strings |
+| Join Admissions | `join_admissions` | `faqs` | JSON array of `{question, answer}` |
+| Academic Registrar | `academic_registrar` | `stats` | JSON array of `{label, value}` |
+| Academic Registrar | `academic_registrar` | `services` | JSON array of `{title, description}` |
+| Academic Registrar | `academic_registrar` | `deadlines` | JSON array of `{title, date}` |
+| Academic Registrar | `academic_registrar` | `policies` | JSON array of strings |
+| Institutes | `institutes` | `stats` | JSON array of `{label, value}` |
+| Institutes | `institutes` | `list` | JSON array of `{name, summary}` |
+| Institutes | `institutes` | `pillars` | JSON array of `{title, detail}` (icon mapped via `pillarIconMap`) |
+| Institutes | `institutes` | `milestones` | JSON array of `{year, event}` |
+
+#### Changes
+
+| File | Change |
+|------|--------|
+| `src/pages/StudyItemPage.tsx` | Added `useContentCollection("page_sections")` import. Added `getCmsData()` helper. Renamed all 16 arrays to `*Fallback`. Added `pillarIconMap` for Institutes pillars icons. All hardcoded arrays now serve as fallbacks when CMS is empty. |
+
+#### Testing Results
+
+| Test | Status |
+|------|--------|
+| Frontend type-check (`tsc --noEmit`) | PASS |
+| Frontend build (`vite build`) | PASS |
