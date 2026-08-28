@@ -14,6 +14,7 @@ const useSmoothScroll = () => {
       smoothWheel: true,
       wheelMultiplier: 0.95,
       touchMultiplier: 1.4,
+      allowNestedScroll: true,
     });
 
     let rafId = 0;

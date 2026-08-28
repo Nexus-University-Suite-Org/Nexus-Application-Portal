@@ -1918,7 +1918,7 @@ const ApplicationStartPage = () => {
     const code = otpCode.trim();
 
     if (!code) {
-      setErrors((prev) => ({ ...prev, otp: "Enter the 6-digit OTP code." }));
+      setErrors((prev) => ({ ...prev, otp: "Enter the 4-digit OTP code." }));
       return;
     }
 
@@ -2284,15 +2284,15 @@ const ApplicationStartPage = () => {
                                     value={otpCode}
                                     onChange={(e) =>
                                       setOtpCode(
-                                        e.target.value.replace(/\D/g, "").slice(0, 6),
+                                        e.target.value.replace(/\D/g, "").slice(0, 4),
                                       )
                                     }
                                     onKeyDown={(e) => {
-                                      if (e.key === "Enter" && otpSent && otpCode.length === 6) {
+                                      if (e.key === "Enter" && otpSent && otpCode.length === 4) {
                                         handleVerifyOtp();
                                       }
                                     }}
-                                    placeholder="000000"
+                                    placeholder="0000"
                                     className="flex-1 sm:flex-none sm:w-[200px] border border-border rounded-[10px] px-4 py-2.5 bg-transparent font-mono text-lg tracking-[0.4em] text-center placeholder:text-muted-foreground/40 placeholder:tracking-[0.4em] focus:outline-none focus:ring-2 focus:ring-accent/30 transition-shadow"
                                     disabled={!otpSent}
                                     autoComplete="one-time-code"
@@ -2300,7 +2300,7 @@ const ApplicationStartPage = () => {
                                   <button
                                     type="button"
                                     onClick={handleVerifyOtp}
-                                    disabled={!otpSent || verifyingOtp || otpCode.length < 6}
+                                    disabled={!otpSent || verifyingOtp || otpCode.length < 4}
                                     className="px-5 py-2.5 rounded-[10px] bg-accent text-accent-foreground font-body text-xs tracking-[0.16em] uppercase disabled:opacity-40 hover:bg-accent/90 transition-colors"
                                   >
                                     {verifyingOtp ? (

@@ -67,7 +67,7 @@ const Index = () => {
 
   const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
   const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
-  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const { data: pageSections } = useContentCollection<PageSection>("page_sections", []);
 
   const donationTiersSections = pageSections.filter(s => s.page_key === "home" && s.section_key === "donation_tiers");
   const donationTiers = donationTiersSections.length > 0

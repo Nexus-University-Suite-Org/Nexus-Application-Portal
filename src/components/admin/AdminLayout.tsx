@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   LayoutDashboard,
   Newspaper,
@@ -136,7 +135,7 @@ const AdminLayout = () => {
           </button>
         </div>
 
-        <ScrollArea className="h-[calc(100vh-4rem)]">
+        <div className="h-[calc(100vh-4rem)] overflow-y-auto sidebar-scroll">
           <nav className="p-4 space-y-6">
             {sidebarSections.map((section) => (
               <div key={section.title}>
@@ -166,7 +165,7 @@ const AdminLayout = () => {
               </div>
             ))}
           </nav>
-        </ScrollArea>
+        </div>
       </aside>
 
       {/* Main content */}
