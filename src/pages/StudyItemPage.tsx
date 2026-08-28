@@ -27,17 +27,31 @@ import {
   Sparkles,
   Wallet,
 } from "lucide-react";
+import { useContentCollection } from "@/hooks/useContentCollection";
 
 const currentYear = new Date().getFullYear();
 
-const admissionStats = [
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  body?: string;
+};
+
+const parseJson = (body: string | undefined, fallback: unknown) => {
+  if (!body) return fallback;
+  try { return JSON.parse(body); } catch { return fallback; }
+};
+
+const admissionStatsFallback = [
   { label: "Programs", value: "143+" },
   { label: "Annual Intakes", value: "3" },
   { label: "Scholarship Tracks", value: "18" },
   { label: "Application Support", value: "24/7" },
 ];
 
-const pathways = [
+const pathwaysFallback = [
   {
     title: "Undergraduate Entry",
     detail:
@@ -60,7 +74,7 @@ const pathways = [
   },
 ];
 
-const applicationJourney = [
+const applicationJourneyFallback = [
   "Choose a program and confirm eligibility.",
   "Create your applicant profile and verify email.",
   "Complete the online form and upload documents.",
@@ -69,7 +83,7 @@ const applicationJourney = [
   "Receive admission decision and complete enrollment.",
 ];
 
-const entryRequirements = [
+const entryRequirementsFallback = [
   {
     title: "Undergraduate",
     items: [
@@ -96,7 +110,7 @@ const entryRequirements = [
   },
 ];
 
-const importantDates = [
+const importantDatesFallback = [
   { phase: "Application Portal Opens", date: `02 April ${currentYear}` },
   { phase: "Priority Scholarship Deadline", date: `30 May ${currentYear}` },
   { phase: "General Application Deadline", date: `21 June ${currentYear}` },
@@ -107,7 +121,7 @@ const importantDates = [
   },
 ];
 
-const requiredDocuments = [
+const requiredDocumentsFallback = [
   "Academic transcripts and result slips",
   "National ID or passport",
   "Recent passport-size photo",
@@ -116,14 +130,14 @@ const requiredDocuments = [
   "Recommendation letters for postgraduate study",
 ];
 
-const financeOptions = [
+const financeOptionsFallback = [
   "Flexible installment schedules for tuition payments",
   "Merit and need-based scholarships",
   "Student loan guidance and documentation support",
   "Employer sponsorship coordination for professional programs",
 ];
 
-const admissionFaqs = [
+const admissionFaqsFallback = [
   {
     question: "Can I apply to multiple programs in one intake?",
     answer:
@@ -198,14 +212,14 @@ const programOptions = [
   "MA Public Policy",
 ];
 
-const registrarStats = [
+const registrarStatsFallback = [
   { label: "Students Served", value: "32,000+" },
   { label: "Services", value: "18" },
   { label: "Average Turnaround", value: "48hrs" },
   { label: "Support Channels", value: "5" },
 ];
 
-const registrarServices = [
+const registrarServicesFallback = [
   {
     title: "Academic Records",
     description:
@@ -238,7 +252,7 @@ const registrarServices = [
   },
 ];
 
-const registrarDeadlines = [
+const registrarDeadlinesFallback = [
   {
     title: "Semester Registration Closes",
     date: `05 September ${currentYear}`,
@@ -258,21 +272,21 @@ const registrarDeadlines = [
   },
 ];
 
-const registrarPolicies = [
+const registrarPoliciesFallback = [
   "Students must complete registration within published timelines to maintain active status.",
   "All record amendment requests require valid identity documentation and proof of claim.",
   "Examination adjustments must be submitted with supporting documents before deadlines.",
   "Appeals are reviewed by faculty boards and communicated through official channels.",
 ];
 
-const institutesStats = [
+const institutesStatsFallback = [
   { label: "Research Institutes", value: "12" },
   { label: "Active Projects", value: "96" },
   { label: "Industry Partners", value: "70+" },
   { label: "Innovation Grants", value: "$8.4M" },
 ];
 
-const institutesList = [
+const institutesListFallback = [
   {
     name: "Institute for Sustainable Cities",
     summary:
@@ -305,34 +319,21 @@ const institutesList = [
   },
 ];
 
-const institutesPillars = [
-  {
-    title: "Discovery Research",
-    detail:
-      "Interdisciplinary teams advancing new knowledge through rigorous fundamental and applied science.",
-    icon: FlaskConical,
-  },
-  {
-    title: "Innovation Translation",
-    detail:
-      "From prototypes to deployable products through incubation, testing, and commercialization pathways.",
-    icon: Lightbulb,
-  },
-  {
-    title: "Global Collaboration",
-    detail:
-      "Cross-border research networks with universities, NGOs, governments, and private industry.",
-    icon: Globe2,
-  },
-  {
-    title: "Tech Infrastructure",
-    detail:
-      "Modern labs, high-performance computing, and digital platforms powering frontier research.",
-    icon: Cpu,
-  },
+const institutesPillarsFallback = [
+  { title: "Discovery Research", detail: "Interdisciplinary teams advancing new knowledge through rigorous fundamental and applied science." },
+  { title: "Innovation Translation", detail: "From prototypes to deployable products through incubation, testing, and commercialization pathways." },
+  { title: "Global Collaboration", detail: "Cross-border research networks with universities, NGOs, governments, and private industry." },
+  { title: "Tech Infrastructure", detail: "Modern labs, high-performance computing, and digital platforms powering frontier research." },
 ];
 
-const institutesMilestones = [
+const pillarIconMap: Record<string, typeof FlaskConical> = {
+  "Discovery Research": FlaskConical,
+  "Innovation Translation": Lightbulb,
+  "Global Collaboration": Globe2,
+  "Tech Infrastructure": Cpu,
+};
+
+const institutesMilestonesFallback = [
   { year: "2023", event: "Launch of multidisciplinary innovation cluster" },
   {
     year: "2024",
@@ -359,6 +360,30 @@ const StudyItemPage = () => {
     initialApplicationData,
   );
   const [formError, setFormError] = useState("");
+
+  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+
+  const getCmsData = (pageKey: string, sectionKey: string, fallback: unknown) => {
+    const sections = pageSections.filter(s => s.page_key === pageKey && s.section_key === sectionKey);
+    return sections.length > 0 ? parseJson(sections[0].body, fallback) : fallback;
+  };
+
+  const admissionStats = getCmsData("join_admissions", "stats", admissionStatsFallback) as { label: string; value: string }[];
+  const pathways = getCmsData("join_admissions", "pathways", pathwaysFallback) as { title: string; detail: string }[];
+  const applicationJourney = getCmsData("join_admissions", "application_journey", applicationJourneyFallback) as string[];
+  const entryRequirements = getCmsData("join_admissions", "entry_requirements", entryRequirementsFallback) as { title: string; items: string[] }[];
+  const importantDates = getCmsData("join_admissions", "important_dates", importantDatesFallback) as { phase: string; date: string }[];
+  const requiredDocuments = getCmsData("join_admissions", "required_documents", requiredDocumentsFallback) as string[];
+  const financeOptions = getCmsData("join_admissions", "finance_options", financeOptionsFallback) as string[];
+  const admissionFaqs = getCmsData("join_admissions", "faqs", admissionFaqsFallback) as { question: string; answer: string }[];
+  const registrarStats = getCmsData("academic_registrar", "stats", registrarStatsFallback) as { label: string; value: string }[];
+  const registrarServices = getCmsData("academic_registrar", "services", registrarServicesFallback) as { title: string; description: string }[];
+  const registrarDeadlines = getCmsData("academic_registrar", "deadlines", registrarDeadlinesFallback) as { title: string; date: string }[];
+  const registrarPolicies = getCmsData("academic_registrar", "policies", registrarPoliciesFallback) as string[];
+  const institutesStats = getCmsData("institutes", "stats", institutesStatsFallback) as { label: string; value: string }[];
+  const institutesList = getCmsData("institutes", "list", institutesListFallback) as { name: string; summary: string }[];
+  const institutesPillars = getCmsData("institutes", "pillars", institutesPillarsFallback) as { title: string; detail: string; icon?: string }[];
+  const institutesMilestones = getCmsData("institutes", "milestones", institutesMilestonesFallback) as { year: string; event: string }[];
 
   const updateApplicationData = <K extends keyof ApplicationData>(
     field: K,
@@ -1111,13 +1136,15 @@ const StudyItemPage = () => {
                   Built for future-defining impact
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {institutesPillars.map((pillar) => (
+                  {institutesPillars.map((pillar) => {
+                    const PillarIcon = pillarIconMap[pillar.title] || FlaskConical;
+                    return (
                     <article
                       key={pillar.title}
                       className="group border border-border/50 rounded-[18px] p-4 bg-background/90"
                     >
                       <div className="w-9 h-9 rounded-[11px] border border-accent/30 bg-accent/10 flex items-center justify-center mb-3 group-hover:bg-accent/18 transition-colors duration-300">
-                        <pillar.icon size={15} className="text-accent" />
+                        <PillarIcon size={15} className="text-accent" />
                       </div>
                       <h3 className="font-heading text-2xl font-light text-foreground mb-2">
                         {pillar.title}
@@ -1126,7 +1153,8 @@ const StudyItemPage = () => {
                         {pillar.detail}
                       </p>
                     </article>
-                  ))}
+                    );
+                  })}
                 </div>
               </article>
 
