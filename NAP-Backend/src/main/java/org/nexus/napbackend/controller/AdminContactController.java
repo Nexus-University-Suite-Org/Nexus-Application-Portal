@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,10 +40,11 @@ public class AdminContactController {
         return ResponseEntity.ok(facade.findById(id));
     }
 
-    @PutMapping("/{id}/status")
-    public ResponseEntity<ContactSubmissionResponse> updateStatus(
+    @PutMapping("/{id}")
+    public ResponseEntity<ContactSubmissionResponse> update(
             @PathVariable Long id,
-            @RequestParam String status) {
+            @RequestBody java.util.Map<String, String> body) {
+        String status = body.getOrDefault("status", "new");
         return ResponseEntity.ok(facade.updateStatus(id, status));
     }
 

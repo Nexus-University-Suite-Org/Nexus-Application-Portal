@@ -2,41 +2,23 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ChevronDown } from "lucide-react";
+import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const faqData = [
-  {
-    q: "What are the application deadlines?",
-    a: "Undergraduate applications close on March 31, Postgraduate on April 30, Professional on May 15, and Exchange students on June 30. Early applications are encouraged.",
-  },
-  {
-    q: "What is the minimum GPA requirement?",
-    a: "We require a minimum 3.0 GPA for undergraduate programs. However, we also consider the strength of your application holistically.",
-  },
-  {
-    q: "Do you accept international students?",
-    a: "Yes! We welcome international students from all over the world. International applicants need to demonstrate English language proficiency through TOEFL or IELTS scores.",
-  },
-  {
-    q: "Is financial aid available?",
-    a: "Yes, we offer merit-based scholarships and need-based financial aid to qualified students. We also have partnerships with external organizations for additional funding.",
-  },
-  {
-    q: "Can I change my major after admission?",
-    a: "Yes, you can change your major during your first year without penalties. After that, changes are still possible but may require additional coursework.",
-  },
-  {
-    q: "Does University Application Portal offer online learning options?",
-    a: "Yes! We offer fully online degrees, hybrid programs, and certificates through our Learning Online platform. All programs maintain the same academic rigor as on-campus options.",
-  },
-];
+type FaqDoc = {
+  id: string;
+  question?: string;
+  answer?: string;
+  category?: string;
+};
 
 const FAQSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
   const faqRef = useRef<HTMLDivElement>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const { data: faqDocs } = useContentCollection<FaqDoc>("faqs", []);
 
   const toggleExpand = (id: number) => {
     setExpandedId(expandedId === id ? null : id);
@@ -44,7 +26,6 @@ const FAQSection = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Title animation
       if (titleRef.current) {
         gsap.fromTo(
           titleRef.current.querySelectorAll("*"),
@@ -63,7 +44,6 @@ const FAQSection = () => {
         );
       }
 
-      // FAQ items animation
       if (faqRef.current) {
         gsap.fromTo(
           faqRef.current.querySelectorAll(".faq-item"),
@@ -84,7 +64,7 @@ const FAQSection = () => {
     }, sectionRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [faqDocs]);
 
   return (
     <section
@@ -110,12 +90,12 @@ const FAQSection = () => {
 
       {/* FAQ Items */}
       <div ref={faqRef} className="max-w-3xl mx-auto space-y-4">
-        {faqData.map((item, index) => {
+        {faqDocs.map((item, index) => {
           const isExpanded = expandedId === index;
 
           return (
             <div
-              key={index}
+              key={item.id}
               className="faq-item opacity-0 card-hover rounded-[20px] border border-border/50 bg-gradient-to-r from-secondary/10 to-background overflow-hidden transition-all duration-500"
             >
               <button
@@ -123,7 +103,7 @@ const FAQSection = () => {
                 className="w-full flex items-start justify-between p-6 md:p-8 hover:bg-secondary/5 transition-colors duration-300"
               >
                 <h3 className="font-heading text-lg md:text-xl font-light text-foreground text-left leading-relaxed">
-                  {item.q}
+                  {item.question}
                 </h3>
                 <ChevronDown
                   size={24}
@@ -133,7 +113,6 @@ const FAQSection = () => {
                 />
               </button>
 
-              {/* Expanded Answer */}
               <div
                 className={`overflow-hidden transition-all duration-300 ${
                   isExpanded ? "max-h-96" : "max-h-0"
@@ -141,13 +120,18 @@ const FAQSection = () => {
               >
                 <div className="px-6 md:px-8 pb-6 md:pb-8 border-t border-border/30">
                   <p className="font-body text-muted-foreground leading-relaxed">
-                    {item.a}
+                    {item.answer}
                   </p>
                 </div>
               </div>
             </div>
           );
         })}
+        {faqDocs.length === 0 && (
+          <p className="text-muted-foreground text-center py-12">
+            No FAQs yet. Add them from the admin panel.
+          </p>
+        )}
       </div>
 
       {/* CTA */}

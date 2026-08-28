@@ -72,46 +72,21 @@ const partnerTypes = [
   },
 ];
 
-const currentPartners = [
-  { name: "Nakawa Community Trust", type: "Community Partner", since: "2019" },
-  { name: "Uganda Skills Alliance", type: "Government Partner", since: "2020" },
-  { name: "East Africa Youth Fund", type: "Foundation", since: "2021" },
-  { name: "GreenBuild Uganda", type: "Corporate Sponsor", since: "2022" },
-  { name: "Women Empowerment Network", type: "NGO Partner", since: "2020" },
-  {
-    name: "Kampala Trade Association",
-    type: "Industry Partner",
-    since: "2023",
-  },
-];
-
 type PartnerDoc = {
   id: string;
   name: string;
   category?: string;
 };
 
-const impactNumbers = [
-  { value: "18", label: "Active Partners" },
-  { value: "$240K", label: "Funds Mobilised" },
-  { value: "1,200+", label: "Students Supported" },
-  { value: "6", label: "Countries Represented" },
-];
-
 const PartnersPage = () => {
   const navigate = useNavigate();
   const cardsRef = useRef<HTMLDivElement>(null);
   const partnersGridRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
-  const { data: partnerDocs } = useContentCollection<PartnerDoc>(
-    "partners",
-    currentPartners.map((partner) => ({
-      id: partner.name,
-      name: partner.name,
-      category: partner.type,
-    })),
-    { orderBy: { field: "name", direction: "asc" } },
-  );
+  const { data: partnerDocs, isLoading } =
+    useContentCollection<PartnerDoc>("partners", [], {
+      orderBy: { field: "name", direction: "asc" },
+    });
 
   const partnersList = partnerDocs.map((partner) => ({
     name: partner.name,
@@ -121,9 +96,9 @@ const PartnersPage = () => {
 
   const dynamicImpactNumbers = [
     { value: `${partnersList.length}`, label: "Active Partners" },
-    impactNumbers[1],
-    impactNumbers[2],
-    impactNumbers[3],
+    { value: "$240K", label: "Funds Mobilised" },
+    { value: "1,200+", label: "Students Supported" },
+    { value: "6", label: "Countries Represented" },
   ];
 
   useSpotlightCards(cardsRef);
@@ -350,26 +325,38 @@ const PartnersPage = () => {
           ref={partnersGridRef}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
         >
-          {partnersList.map(({ name, type, since }) => (
-            <div
-              key={name}
-              className="current-partner opacity-0 group p-6 border border-border rounded-2xl hover:border-accent/40 transition-all duration-500 magnetic-card"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <Handshake
-                  size={20}
-                  className="text-accent/60 group-hover:text-accent transition-colors duration-500"
-                />
-                <span className="font-body text-[10px] tracking-[0.2em] uppercase text-muted-foreground/60">
-                  Since {since}
-                </span>
+          {isLoading ? (
+            <p className="col-span-full text-center font-body text-sm text-muted-foreground py-12">
+              Loading partners...
+            </p>
+          ) : partnersList.length === 0 ? (
+            <p className="col-span-full text-center font-body text-sm text-muted-foreground py-12">
+              No partners added yet.
+            </p>
+          ) : (
+            partnersList.map(({ name, type, since }) => (
+              <div
+                key={name}
+                className="current-partner opacity-0 group p-6 border border-border rounded-2xl hover:border-accent/40 transition-all duration-500 magnetic-card"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <Handshake
+                    size={20}
+                    className="text-accent/60 group-hover:text-accent transition-colors duration-500"
+                  />
+                  <span className="font-body text-[10px] tracking-[0.2em] uppercase text-muted-foreground/60">
+                    Since {since}
+                  </span>
+                </div>
+                <h3 className="font-heading text-xl font-light text-foreground mb-1">
+                  {name}
+                </h3>
+                <p className="font-body text-xs text-muted-foreground">
+                  {type}
+                </p>
               </div>
-              <h3 className="font-heading text-xl font-light text-foreground mb-1">
-                {name}
-              </h3>
-              <p className="font-body text-xs text-muted-foreground">{type}</p>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </section>
 

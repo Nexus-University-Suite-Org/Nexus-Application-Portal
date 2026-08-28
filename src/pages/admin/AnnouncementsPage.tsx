@@ -47,6 +47,7 @@ const AnnouncementsPage = () => {
       fields={fields}
       searchPlaceholder="Search announcements..."
       token={token}
+      clientSideSearch
     />
   );
 };

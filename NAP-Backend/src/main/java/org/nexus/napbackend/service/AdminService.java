@@ -1,6 +1,7 @@
 package org.nexus.napbackend.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import org.nexus.napbackend.model.Admin;
 import org.nexus.napbackend.repository.AdminRepository;
@@ -30,5 +31,9 @@ public class AdminService {
 
     public boolean existsByEmail(String email) {
         return repository.existsByEmail(email);
+    }
+
+    public List<Admin> findAll() {
+        return repository.findAll();
     }
 }

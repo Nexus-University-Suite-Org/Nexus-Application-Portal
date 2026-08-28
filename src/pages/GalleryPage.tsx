@@ -6,19 +6,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useContentCollection } from "@/hooks/useContentCollection";
 
-import tailoringClass from "@/assets/gallery/tailoring-class.jpg";
-import graduationCeremony from "@/assets/gallery/graduation-ceremony.jpg";
-import electricalTraining from "@/assets/gallery/electrical-training.jpg";
-import communityOutreach from "@/assets/gallery/community-outreach.jpg";
-import soapProducts from "@/assets/gallery/soap-products.jpg";
-import beautyTherapy from "@/assets/gallery/beauty-therapy.jpg";
-import weldingWorkshop from "@/assets/gallery/welding-workshop.jpg";
-import graduatesGroup from "@/assets/gallery/graduates-group.jpg";
-import plumbingTraining from "@/assets/gallery/plumbing-training.jpg";
-import communityMarket from "@/assets/gallery/community-market.jpg";
-import autoMechanics from "@/assets/gallery/auto-mechanics.jpg";
-import tailoringBusiness from "@/assets/gallery/tailoring-business.jpg";
-
 gsap.registerPlugin(ScrollTrigger);
 
 type Category = string;
@@ -32,122 +19,15 @@ interface GalleryItem extends Record<string, unknown> {
   span?: "tall" | "wide" | "normal";
 }
 
-const fallbackGalleryItems: GalleryItem[] = [
-  {
-    id: "tailoring-class",
-    src: tailoringClass,
-    alt: "Tailoring class in session",
-    caption: "Tailoring students perfecting their craft",
-    category: "Training",
-    span: "wide",
-  },
-  {
-    id: "graduation-ceremony",
-    src: graduationCeremony,
-    alt: "Graduation ceremony",
-    caption: "Class of 2024 Graduation Day",
-    category: "Graduation",
-    span: "normal",
-  },
-  {
-    id: "electrical-training",
-    src: electricalTraining,
-    alt: "Electrical installation training",
-    caption: "Students practice electrical wiring",
-    category: "Training",
-    span: "tall",
-  },
-  {
-    id: "community-outreach",
-    src: communityOutreach,
-    alt: "Community outreach event",
-    caption: "Outreach day in Nakawa",
-    category: "Community",
-    span: "wide",
-  },
-  {
-    id: "soap-products",
-    src: soapProducts,
-    alt: "Handmade soap products",
-    caption: "Graduate showcases her soap business",
-    category: "Projects",
-    span: "tall",
-  },
-  {
-    id: "beauty-therapy",
-    src: beautyTherapy,
-    alt: "Beauty therapy class",
-    caption: "Beauty therapy practical session",
-    category: "Training",
-    span: "normal",
-  },
-  {
-    id: "welding-workshop",
-    src: weldingWorkshop,
-    alt: "Welding in workshop",
-    caption: "Welding fabrication workshop",
-    category: "Training",
-    span: "wide",
-  },
-  {
-    id: "graduates-group",
-    src: graduatesGroup,
-    alt: "Graduation group photo",
-    caption: "Proud graduates with certificates",
-    category: "Graduation",
-    span: "wide",
-  },
-  {
-    id: "plumbing-training",
-    src: plumbingTraining,
-    alt: "Plumbing training",
-    caption: "Students in plumbing practical session",
-    category: "Training",
-    span: "tall",
-  },
-  {
-    id: "community-market",
-    src: communityMarket,
-    alt: "Community market",
-    caption: "Graduates sell products at community market",
-    category: "Projects",
-    span: "normal",
-  },
-  {
-    id: "auto-mechanics",
-    src: autoMechanics,
-    alt: "Auto mechanics training",
-    caption: "Auto mechanics hands-on learning",
-    category: "Training",
-    span: "normal",
-  },
-  {
-    id: "tailoring-business",
-    src: tailoringBusiness,
-    alt: "Graduate running her business",
-    caption: "A graduate runs her own tailoring shop",
-    category: "Projects",
-    span: "tall",
-  },
-];
-
-const fallbackCategories: Category[] = [
-  "All",
-  "Training",
-  "Graduation",
-  "Community",
-  "Projects",
-];
-
 const GalleryPage = () => {
   const [activeCategory, setActiveCategory] = useState<Category>("All");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const lightboxRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
-  const { data: galleryItems } = useContentCollection<GalleryItem>(
+  const { data: galleryItems, isLoading } = useContentCollection<GalleryItem>(
     "gallery",
-    fallbackGalleryItems,
+    [],
     { orderBy: { field: "created_at", direction: "desc" } },
   );
 
@@ -157,8 +37,6 @@ const GalleryPage = () => {
       new Set(galleryItems.map((item) => item.category).filter(Boolean)),
     ),
   ];
-  const visibleCategories =
-    categories.length > 1 ? categories : fallbackCategories;
 
   const filtered =
     activeCategory === "All"
@@ -301,11 +179,7 @@ const GalleryPage = () => {
         ref={heroRef}
         className="relative min-h-[55vh] flex items-end overflow-hidden"
       >
-        <img
-          src={graduatesGroup}
-          alt="Gallery hero"
-          className="gallery-hero-img absolute inset-0 w-full h-full object-cover rounded-none"
-        />
+        <div className="gallery-hero-img absolute inset-0 w-full h-full bg-primary rounded-none" />
         <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/60 to-primary/20 rounded-none" />
         <div className="relative z-10 px-8 md:px-16 pb-20 pt-40 gallery-hero-text max-w-4xl">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-5 opacity-0">
@@ -327,7 +201,7 @@ const GalleryPage = () => {
       <div className="sticky top-16 z-30 bg-background/80 backdrop-blur-lg border-b border-border/50">
         <div className="px-8 md:px-16 py-5">
           <div className="flex flex-wrap gap-2.5">
-            {visibleCategories.map((cat) => (
+            {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
@@ -351,8 +225,17 @@ const GalleryPage = () => {
 
       {/* Gallery Grid — masonry-inspired */}
       <div ref={gridRef} className="px-6 md:px-12 lg:px-16 py-12 md:py-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-[280px] gap-3">
-          {filtered.map(({ src, alt, caption, span }, i) => (
+        {isLoading ? (
+          <p className="text-center text-muted-foreground font-body text-sm">
+            Loading gallery...
+          </p>
+        ) : filtered.length === 0 ? (
+          <p className="text-center text-muted-foreground font-body text-sm">
+            No gallery items yet.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-[280px] gap-3">
+            {filtered.map(({ src, alt, caption, span }, i) => (
             <button
               key={src || `${activeCategory}-${i}`}
               className={`gallery-item opacity-0 group relative overflow-hidden rounded-2xl cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${getSpanClass(span)}`}
@@ -381,6 +264,7 @@ const GalleryPage = () => {
             </button>
           ))}
         </div>
+        )}
       </div>
 
       {/* Lightbox */}

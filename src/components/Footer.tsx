@@ -303,6 +303,13 @@ const Footer = () => {
               <span className="absolute -bottom-0.5 left-0 w-full h-px bg-accent scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
             </Link>
           ))}
+          <Link
+            to="/admin/login"
+            className="group font-body text-xs text-primary-foreground/30 tracking-wider transition-colors duration-500 hover:text-primary-foreground/70 relative"
+          >
+            Admin
+            <span className="absolute -bottom-0.5 left-0 w-full h-px bg-accent scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
+          </Link>
         </div>
       </div>
     </footer>

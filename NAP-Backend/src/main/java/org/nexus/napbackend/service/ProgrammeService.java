@@ -3,6 +3,7 @@ package org.nexus.napbackend.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Optional;
+import org.nexus.napbackend.dto.ProgrammeRequest;
 import org.nexus.napbackend.dto.ProgrammeResponse;
 import org.nexus.napbackend.model.Programme;
 import org.nexus.napbackend.repository.ProgrammeRepository;
@@ -459,6 +460,42 @@ public class ProgrammeService {
 
     public List<Programme> findActiveEntities() {
         return repository.findAllByIsActiveTrue();
+    }
+
+    public ProgrammeResponse create(ProgrammeRequest request) {
+        Programme entity = new Programme(
+                request.code(), request.name(), request.faculty(), request.cutoffScore(),
+                request.essentialSubjects(), request.relevantSubjects(), request.desirableSubjects());
+        entity.setMinimumUcePasses(request.minimumUcePasses());
+        entity.setEntryRequirements(request.entryRequirements());
+        entity.setActive(request.isActive());
+        entity.setCapacity(request.capacity());
+        entity.setIntakeYear(request.intakeYear());
+        Programme saved = repository.save(entity);
+        return toDto(saved);
+    }
+
+    public Optional<ProgrammeResponse> update(Long id, ProgrammeRequest request) {
+        return repository.findById(id).map(entity -> {
+            entity.setCode(request.code());
+            entity.setName(request.name());
+            entity.setFaculty(request.faculty());
+            entity.setMinimumUcePasses(request.minimumUcePasses());
+            entity.setCutoffScore(request.cutoffScore());
+            entity.setEssentialSubjects(request.essentialSubjects());
+            entity.setRelevantSubjects(request.relevantSubjects());
+            entity.setDesirableSubjects(request.desirableSubjects());
+            entity.setEntryRequirements(request.entryRequirements());
+            entity.setActive(request.isActive());
+            entity.setCapacity(request.capacity());
+            entity.setIntakeYear(request.intakeYear());
+            Programme saved = repository.save(entity);
+            return toDto(saved);
+        });
+    }
+
+    public void delete(Long id) {
+        repository.deleteById(id);
     }
 
     private ProgrammeResponse toDto(Programme p) {

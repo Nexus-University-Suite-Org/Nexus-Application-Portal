@@ -4,7 +4,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useContentCollection } from "@/hooks/useContentCollection";
-import { getNewsArticleBySlug, newsArticles } from "@/lib/newsContent";
 
 type Article = {
   id: string;
@@ -33,23 +32,6 @@ type RemoteNewsArticle = Record<string, unknown> & {
   published?: boolean;
 };
 
-const makeFallbackArticles = (portalName: string): Article[] =>
-  newsArticles.map((item) => ({
-    id: item.slug,
-    slug: item.slug,
-    title: item.title.replace(/University Application Portal/g, portalName),
-    date: item.date,
-    category: item.category,
-    excerpt: item.excerpt.replace(/University Application Portal/g, portalName),
-    readTime: item.readTime,
-    body: item.body.map((paragraph) =>
-      paragraph.replace(/University Application Portal/g, portalName),
-    ),
-    highlights: item.highlights.map((highlight) =>
-      highlight.replace(/University Application Portal/g, portalName),
-    ),
-  }));
-
 const toParagraphs = (article: Article): string[] => {
   if (Array.isArray(article.body) && article.body.length > 0) {
     return article.body;
@@ -75,7 +57,7 @@ const toSlug = (value: string) =>
 const NewsArticlePage = () => {
   const { slug } = useParams();
   const [portalName] = useState("University Application Portal");
-  const { data: remoteArticles } =
+  const { data: remoteArticles, isLoading } =
     useContentCollection<RemoteNewsArticle>("NewsArticles", [], {
       orderBy: { field: "createdAt", direction: "desc" },
     });
@@ -124,17 +106,15 @@ const NewsArticlePage = () => {
                   : undefined,
             };
           })
-      : makeFallbackArticles(portalName);
+      : [];
 
   const article =
-    (slug ? allArticles.find((item) => item.slug === slug) : undefined) ??
-    (slug ? getNewsArticleBySlug(slug) : undefined);
+    slug ? allArticles.find((item) => item.slug === slug) : undefined;
 
   if (!article) {
     return <Navigate to="/not-found" replace />;
   }
 
-  // Normalize article to Article type
   const normalizedArticle: Article = {
     id: (article as any).id || slug || "",
     slug: (article as any).slug || slug || "",

@@ -4,24 +4,6 @@ import Footer from "@/components/Footer";
 import { ArrowRight } from "lucide-react";
 import { useContentCollection } from "@/hooks/useContentCollection";
 
-const opportunityTracks = [
-  {
-    title: "Research Assistantships",
-    description:
-      "Embedded roles in faculty labs and field projects for students who want direct exposure to research workflows and publication culture.",
-  },
-  {
-    title: "Industry Collaboration Projects",
-    description:
-      "Applied partnerships where academic teams work with companies, agencies, and civic institutions on defined implementation problems.",
-  },
-  {
-    title: "Postgraduate Research Pathways",
-    description:
-      "Structured routes for master's and doctoral candidates seeking supervision, funding alignment, and interdisciplinary research communities.",
-  },
-];
-
 type ResearchOpportunityDoc = {
   id: string;
   title: string;
@@ -29,16 +11,18 @@ type ResearchOpportunityDoc = {
 };
 
 const ResearchOpportunitiesPage = () => {
-  const { data: opportunities } =
+  const { data: opportunities, isLoading } =
     useContentCollection<ResearchOpportunityDoc>(
-      "research_opportunities",
-      opportunityTracks.map((track) => ({
-        id: track.title,
-        title: track.title,
-        description: track.description,
-      })),
-      { orderBy: { field: "published_date", direction: "desc" }, limit: 6 },
+      "page_sections",
+      [],
     );
+
+  const researchOpportunities = opportunities.filter(
+    (item) => item.title && item.title.toLowerCase().includes("research"),
+  );
+
+  const displayOpportunities =
+    researchOpportunities.length > 0 ? researchOpportunities : opportunities;
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,8 +42,16 @@ const ResearchOpportunitiesPage = () => {
             academic standards and measurable public value.
           </p>
 
+          {isLoading && displayOpportunities.length === 0 && (
+            <p className="font-body text-sm text-muted-foreground">Loading research opportunities...</p>
+          )}
+
+          {!isLoading && displayOpportunities.length === 0 && (
+            <p className="font-body text-sm text-muted-foreground">No research opportunities available yet.</p>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-14">
-            {opportunities.map((track) => (
+            {displayOpportunities.map((track) => (
               <div
                 key={track.id}
                 className="p-6 border border-border rounded-[24px] bg-secondary/20"
@@ -68,7 +60,7 @@ const ResearchOpportunitiesPage = () => {
                   {track.title}
                 </h2>
                 <p className="font-body text-sm text-muted-foreground leading-relaxed">
-                  {track.description}
+                  {track.description || "Explore this research area for more details."}
                 </p>
               </div>
             ))}

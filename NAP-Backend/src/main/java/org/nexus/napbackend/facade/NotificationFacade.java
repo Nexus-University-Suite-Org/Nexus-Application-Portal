@@ -31,10 +31,14 @@ public class NotificationFacade {
     @Transactional
     public List<NotificationResponse> list(Long userId, Boolean isRead) {
         List<Notification> notifications;
-        if (isRead != null) {
-            notifications = service.findByUserIdAndRead(userId, isRead);
+        if (userId != null) {
+            if (isRead != null) {
+                notifications = service.findByUserIdAndRead(userId, isRead);
+            } else {
+                notifications = service.findByUserId(userId);
+            }
         } else {
-            notifications = service.findByUserId(userId);
+            notifications = service.findAll();
         }
         return notifications.stream()
                 .map(NotificationMapper::toDto)
@@ -85,5 +89,17 @@ public class NotificationFacade {
     @Transactional
     public void deleteAnnouncement(Long id) {
         service.deleteAnnouncement(id);
+    }
+
+    @Transactional
+    public AnnouncementResponse updateAnnouncement(Long id, java.util.Map<String, Object> body) {
+        Announcement entity = service.findAnnouncementById(id)
+                .orElseThrow(() -> new RuntimeException("Announcement not found with id: " + id));
+        if (body.containsKey("title")) entity.setTitle((String) body.get("title"));
+        if (body.containsKey("body")) entity.setBody((String) body.get("body"));
+        if (body.containsKey("courseId")) entity.setCourseId(body.get("courseId") != null ? ((Number) body.get("courseId")).longValue() : null);
+        if (body.containsKey("isSystemWide")) entity.setIsSystemWide((Boolean) body.get("isSystemWide"));
+        Announcement updated = service.updateAnnouncement(entity);
+        return NotificationMapper.toAnnouncementDto(updated);
     }
 }

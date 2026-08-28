@@ -7,15 +7,18 @@ import Footer from "@/components/Footer";
 import aboutHero from "@/assets/about-hero.jpg";
 import { Heart, ArrowRight } from "lucide-react";
 import { useSpotlightCards, useParallax } from "@/hooks/useScrollReveal";
+import { useContentCollection } from "@/hooks/useContentCollection";
+
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  subtitle?: string;
+  body?: string;
+};
 
 gsap.registerPlugin(ScrollTrigger);
-
-const values = [
-  { title: "Empowerment", desc: "We believe every person has untapped potential. Our role is to unlock it through practical education and mentorship." },
-  { title: "Dignity", desc: "We treat every student with respect and dignity, creating a safe and nurturing environment for growth." },
-  { title: "Practical Education", desc: "Theory alone doesn't feed a family. We focus on hands-on, market-relevant skills that translate directly into income." },
-  { title: "Community Impact", desc: "When one person rises, the whole community benefits. We measure our success by the livelihoods transformed." },
-];
 
 const AboutPage = () => {
   const navigate = useNavigate();
@@ -27,6 +30,18 @@ const AboutPage = () => {
 
   useSpotlightCards(valuesRef);
   useParallax(pageRef);
+
+  const { data: sections, isLoading } = useContentCollection<PageSection>("page_sections", []);
+
+  const aboutSections = sections.filter((s) => s.page_key === "about");
+  const values = aboutSections.length > 0
+    ? aboutSections.filter((s) => s.section_key?.startsWith("value")).map((s) => ({ title: s.title || "Value", desc: s.body || s.subtitle || "" }))
+    : [
+        { title: "Empowerment", desc: "We believe every person has the potential to transform their life through education and practical skills." },
+        { title: "Dignity", desc: "We treat every student with respect and create an environment where they feel valued and supported." },
+        { title: "Practical Education", desc: "Our programs are designed to give students immediately applicable skills for the real world." },
+        { title: "Community Impact", desc: "When we invest in one person, we invest in their entire community. Our graduates create ripple effects of change." },
+      ];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -166,14 +181,20 @@ const AboutPage = () => {
           <h2 className="font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">Our Core Values</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {values.map((v) => (
-            <div key={v.title} className="value-card spotlight-card opacity-0 group p-10 border border-border bg-background rounded-[20px]">
-              <div className="relative z-10">
-                <h3 className="font-heading text-3xl font-light text-foreground mb-4 group-hover:text-accent transition-colors duration-500">{v.title}</h3>
-                <p className="font-body text-sm text-muted-foreground leading-relaxed">{v.desc}</p>
+          {isLoading ? (
+            <p className="font-body text-sm text-muted-foreground col-span-2">Loading...</p>
+          ) : values.length === 0 ? (
+            <p className="font-body text-sm text-muted-foreground col-span-2">Content coming soon.</p>
+          ) : (
+            values.map((v) => (
+              <div key={v.title} className="value-card spotlight-card opacity-0 group p-10 border border-border bg-background rounded-[20px]">
+                <div className="relative z-10">
+                  <h3 className="font-heading text-3xl font-light text-foreground mb-4 group-hover:text-accent transition-colors duration-500">{v.title}</h3>
+                  <p className="font-body text-sm text-muted-foreground leading-relaxed">{v.desc}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 

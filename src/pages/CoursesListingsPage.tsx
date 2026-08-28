@@ -10,49 +10,6 @@ import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const colleges = [
-  {
-    name: "College of Science & Technology",
-    programs: 28,
-    focus: "Engineering, IT, Math, Physics",
-  },
-  {
-    name: "College of Business",
-    programs: 16,
-    focus: "Finance, Management, Economics",
-  },
-  {
-    name: "College of Humanities",
-    programs: 22,
-    focus: "Literature, History, Philosophy",
-  },
-  {
-    name: "College of Medicine & Health Sciences",
-    programs: 18,
-    focus: "Medicine, Nursing, Public Health",
-  },
-  {
-    name: "College of Law",
-    programs: 12,
-    focus: "Law, International Relations",
-  },
-  {
-    name: "College of Agriculture",
-    programs: 14,
-    focus: "Agronomy, Animal Science",
-  },
-  {
-    name: "College of Environmental Studies",
-    programs: 11,
-    focus: "Ecology, Conservation",
-  },
-  {
-    name: "College of Education",
-    programs: 13,
-    focus: "Teacher Training, Curriculum",
-  },
-];
-
 type CourseDoc = {
   id: string;
   title?: string;
@@ -72,7 +29,7 @@ const CoursesListingsPage = () => {
   const imageRef = useRef<HTMLImageElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
   const collegesRef = useRef<HTMLDivElement>(null);
-  const { data: courseDocs } = useContentCollection<CourseDoc>(
+  const { data: courseDocs, isLoading } = useContentCollection<CourseDoc>(
     "courses",
     [],
     {
@@ -111,7 +68,7 @@ const CoursesListingsPage = () => {
             return acc;
           }, {}),
         ).map(({ levels: _levels, ...college }) => college)
-      : colleges;
+      : [];
 
   const totalPrograms = collegesData.reduce(
     (sum, college) => sum + college.programs,
@@ -218,6 +175,16 @@ const CoursesListingsPage = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {isLoading && collegesData.length === 0 && (
+            <p className="font-body text-muted-foreground col-span-full text-center py-12">
+              Loading courses...
+            </p>
+          )}
+          {!isLoading && collegesData.length === 0 && (
+            <p className="font-body text-muted-foreground col-span-full text-center py-12">
+              No courses available yet.
+            </p>
+          )}
           {collegesData.map((college) => (
             <div key={college.name} className="college-card opacity-0">
               <Link
@@ -253,13 +220,13 @@ const CoursesListingsPage = () => {
         <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="p-8 rounded-[24px] border border-accent/30 bg-accent/5 text-center">
             <p className="font-heading text-5xl font-light text-accent mb-3">
-              {totalPrograms > 0 ? `${totalPrograms}+` : "143+"}
+              {totalPrograms > 0 ? `${totalPrograms}+` : "0"}
             </p>
             <p className="font-body text-muted-foreground">Total Programs</p>
           </div>
           <div className="p-8 rounded-[24px] border border-accent/30 bg-accent/5 text-center">
             <p className="font-heading text-5xl font-light text-accent mb-3">
-              {totalColleges > 0 ? totalColleges : 10}
+              {totalColleges > 0 ? totalColleges : 0}
             </p>
             <p className="font-body text-muted-foreground">Academic Colleges</p>
           </div>

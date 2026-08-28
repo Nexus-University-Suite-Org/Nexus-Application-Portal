@@ -11,7 +11,10 @@ import {
   Sparkles,
   Users,
   BookOpen,
+  Car,
+  Flame,
 } from "lucide-react";
+import { useContentCollection } from "@/hooks/useContentCollection";
 import LoadingWrapper from "@/components/LoadingScreen";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
@@ -20,20 +23,19 @@ import { useSpotlightCards, useParallax } from "@/hooks/useScrollReveal";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const programPreviews = [
-  { icon: Scissors, title: "Tailoring & Design", duration: "6 months", outcome: "Start your own clothing business" },
-  { icon: Zap, title: "Electrical Installation", duration: "8 months", outcome: "Become a certified electrician" },
-  { icon: Wrench, title: "Plumbing", duration: "8 months", outcome: "Run a plumbing contracting business" },
-  { icon: Sparkles, title: "Beauty Therapy", duration: "4 months", outcome: "Open your own beauty salon" },
-  { icon: Users, title: "Hairdressing", duration: "4 months", outcome: "Work in salons or self-employment" },
-  { icon: BookOpen, title: "Soap Making", duration: "3 months", outcome: "Sell locally or to retailers" },
-];
+type RemoteProgram = Record<string, unknown> & {
+  id: string;
+  programName?: string;
+  department?: string;
+  description?: string;
+};
 
-const storyFeature = {
-  name: "Mary Nakato",
-  program: "Tailoring Program",
-  quote: "I joined the tailoring program as a single mother with no income. Today I run a small clothing business and can support my three children. This school changed my life.",
-  outcome: "Now runs a tailoring shop in Kampala, employing 2 other women.",
+type RemoteStory = Record<string, unknown> & {
+  id: string;
+  student_name?: string;
+  program?: string;
+  title?: string;
+  content?: string;
 };
 
 const donationTiers = [
@@ -49,6 +51,33 @@ const Index = () => {
   const storyRef = useRef<HTMLDivElement>(null);
   const donateRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
+
+  const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
+  const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
+
+  const iconMap: Record<string, typeof Scissors> = {
+    tailor: Scissors, plumb: Wrench, electric: Zap, weld: Flame, hair: Users, beauty: Sparkles, auto: Car, soap: BookOpen,
+  };
+
+  const programPreviews = remotePrograms.length > 0
+    ? remotePrograms.slice(0, 6).map((p) => {
+        const name = (typeof p.programName === "string" && p.programName.trim()) || "Program";
+        const lower = name.toLowerCase();
+        const icon = Object.entries(iconMap).find(([k]) => lower.includes(k))?.[1] || BookOpen;
+        return { icon, title: name, duration: "", outcome: (typeof p.description === "string" && p.description.slice(0, 100)) || "Practical skills for real careers" };
+      })
+    : [
+        { icon: Scissors, title: "Tailoring & Design", duration: "6 months", outcome: "Run your own shop" },
+        { icon: Zap, title: "Electrical Installation", duration: "8 months", outcome: "Certified electrician" },
+        { icon: Wrench, title: "Plumbing", duration: "8 months", outcome: "Start a plumbing business" },
+        { icon: Flame, title: "Welding & Fabrication", duration: "6 months", outcome: "Fabrication workshop owner" },
+        { icon: Users, title: "Hairdressing", duration: "4 months", outcome: "Open your own salon" },
+        { icon: Sparkles, title: "Beauty Therapy", duration: "4 months", outcome: "Freelance beauty therapist" },
+      ];
+
+  const storyFeature = remoteStories.length > 0
+    ? { name: remoteStories[0].student_name || "Graduate", program: remoteStories[0].program || "Vocational Training", quote: remoteStories[0].title || "This program changed my life.", outcome: "Now earning a stable income" }
+    : { name: "Mary Nakato", program: "Tailoring & Design", quote: "I went from nothing to owning my own business.", outcome: "Now runs a successful tailoring shop" };
 
   useSpotlightCards(programsRef);
   useSpotlightCards(donateRef);

@@ -3,7 +3,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useContentCollection } from "@/hooks/useContentCollection";
-import { getResourceGuideBySlug, quickLinkGroups } from "@/lib/resourceContent";
 
 type QuickLinkDoc = {
   id: string;
@@ -16,60 +15,66 @@ type QuickLinkDoc = {
 
 const QuickLinkDetailPage = () => {
   const { slug } = useParams();
-  const staticGuide = slug ? getResourceGuideBySlug(slug) : undefined;
-  const { data: quickLinks } = useContentCollection<QuickLinkDoc>(
+  const { data: quickLinks, isLoading } = useContentCollection<QuickLinkDoc>(
     "quick_links",
     [],
-    {
-      where: { field: "slug", operator: "==", value: slug ?? "" },
-      limit: 1,
-    },
   );
 
   const remoteLink = slug
     ? quickLinks.find((item) => item.slug === slug)
     : undefined;
 
-  const guide =
-    staticGuide ??
-    (remoteLink
-      ? {
-          slug: remoteLink.slug,
-          title: remoteLink.title,
-          category: remoteLink.category,
-          excerpt:
-            remoteLink.description ??
-            "Resource detail and access information.",
-          overview:
-            remoteLink.description ??
-            "This resource is maintained in the institute portal and can be accessed from the link below.",
-          highlights: [
-            "Sourced from the platform quick links collection.",
-            "Use this as the fastest path to the intended service.",
-            "Contact support if the destination is unavailable.",
-          ],
-          sections: [
-            {
-              title: "How to Use",
-              body: "Open the primary action below to access the target resource. If you need additional support, use Contact Us from the quick links directory.",
-            },
-          ],
-          primaryAction: remoteLink.link_url
-            ? { label: "Open Resource", href: remoteLink.link_url }
-            : undefined,
-          secondaryAction: {
-            label: "Back to Quick Links",
-            href: "/quick-links",
+  const guide = remoteLink
+    ? {
+        slug: remoteLink.slug,
+        title: remoteLink.title,
+        category: remoteLink.category,
+        excerpt:
+          remoteLink.description ??
+          "Resource detail and access information.",
+        overview:
+          remoteLink.description ??
+          "This resource is maintained in the institute portal and can be accessed from the link below.",
+        highlights: [
+          "Sourced from the platform quick links collection.",
+          "Use this as the fastest path to the intended service.",
+          "Contact support if the destination is unavailable.",
+        ],
+        sections: [
+          {
+            title: "How to Use",
+            body: "Open the primary action below to access the target resource. If you need additional support, use Contact Us from the quick links directory.",
           },
-        }
-      : undefined);
+        ],
+        primaryAction: remoteLink.link_url
+          ? { label: "Open Resource", href: remoteLink.link_url }
+          : undefined,
+        secondaryAction: {
+          label: "Back to Quick Links",
+          href: "/quick-links",
+        },
+      }
+    : undefined;
 
-  if (!guide) {
+  if (!isLoading && !guide) {
     return <Navigate to="/not-found" replace />;
   }
 
-  const relatedGuides = quickLinkGroups
-    .flatMap((group) => group.links)
+  if (isLoading && !guide) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="px-8 md:px-16 pt-36 pb-24">
+          <p className="font-body text-sm text-muted-foreground">Loading...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!guide) return null;
+
+  const relatedGuides = quickLinks
     .filter((item) => item.slug !== guide.slug)
     .slice(0, 4);
   const isExternalUrl = (href: string) => /^https?:\/\//i.test(href);
@@ -188,10 +193,10 @@ const QuickLinkDetailPage = () => {
                 className="group p-5 border border-border rounded-[18px] transition-all duration-300 hover:border-accent/40 hover:bg-accent/5"
               >
                 <h3 className="font-heading text-xl font-light text-foreground mb-2 group-hover:text-accent transition-colors duration-300">
-                  {item.label}
+                  {item.title}
                 </h3>
                 <p className="font-body text-sm text-muted-foreground leading-relaxed">
-                  {item.desc}
+                  {item.description || "Visit this resource"}
                 </p>
               </Link>
             ))}

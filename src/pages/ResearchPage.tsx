@@ -12,60 +12,45 @@ import {
   Atom,
   Globe,
   ArrowRight,
+  BookOpen,
 } from "lucide-react";
+import { useContentCollection } from "@/hooks/useContentCollection";
 import researchHero from "@/assets/research-hero.jpg";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const areas = [
-  {
-    icon: Brain,
-    title: "Artificial Intelligence & Data Science",
-    desc: "Pioneering ethical AI, machine learning, and data-driven solutions for healthcare, agriculture, and governance.",
-    papers: "340+ papers",
-  },
-  {
-    icon: Leaf,
-    title: "Climate & Environmental Science",
-    desc: "Investigating sustainable energy, biodiversity conservation, and climate resilience across East Africa.",
-    papers: "210+ papers",
-  },
-  {
-    icon: Microscope,
-    title: "Biomedical Research",
-    desc: "Advancing diagnostics, drug discovery, and public health interventions for tropical diseases.",
-    papers: "280+ papers",
-  },
-  {
-    icon: Cpu,
-    title: "Engineering & Technology",
-    desc: "Developing smart infrastructure, IoT systems, and renewable energy technologies for emerging markets.",
-    papers: "190+ papers",
-  },
-  {
-    icon: Atom,
-    title: "Quantum & Materials Science",
-    desc: "Exploring quantum computing applications and novel materials for next-generation electronics.",
-    papers: "120+ papers",
-  },
-  {
-    icon: Globe,
-    title: "Social Sciences & Policy",
-    desc: "Informing governance, economic development, and social justice through rigorous interdisciplinary research.",
-    papers: "260+ papers",
-  },
-];
-
-const stats = [
-  { value: "$47M", label: "Annual Research Funding" },
-  { value: "1,400+", label: "Published Papers (2024)" },
-  { value: "32", label: "Research Centers" },
-  { value: "96", label: "Industry Partners" },
-];
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  subtitle?: string;
+  body?: string;
+};
 
 const ResearchPage = () => {
   const imageRef = useRef<HTMLImageElement>(null);
   const areasRef = useRef<HTMLDivElement>(null);
+  const { data: sections, isLoading } = useContentCollection<PageSection>("page_sections", []);
+
+  const researchSections = sections.filter((s) => s.page_key === "research");
+  const areas = researchSections.length > 0
+    ? researchSections.filter((s) => s.section_key?.startsWith("area")).map((s) => ({ icon: BookOpen, title: s.title || "Research Area", desc: s.body || s.subtitle || "", papers: 0 }))
+    : [
+        { icon: BookOpen, title: "Agriculture & Food Security", desc: "Sustainable farming, crop science, and food security solutions.", papers: 45 },
+        { icon: BookOpen, title: "Public Health", desc: "Community health, disease prevention, and healthcare delivery.", papers: 38 },
+        { icon: BookOpen, title: "Renewable Energy", desc: "Solar, wind, and biomass energy solutions for communities.", papers: 29 },
+        { icon: BookOpen, title: "Education Technology", desc: "Digital learning tools and educational access.", papers: 33 },
+        { icon: BookOpen, title: "Water & Sanitation", desc: "Clean water access and sanitation infrastructure.", papers: 27 },
+        { icon: BookOpen, title: "Small Business Development", desc: "Microfinance, entrepreneurship, and market access.", papers: 41 },
+      ];
+
+  const stats = [
+    { value: "$47M", label: "Annual Research Funding" },
+    { value: "1,400+", label: "Published Papers (2024)" },
+    { value: "32", label: "Research Centers" },
+    { value: "96", label: "Industry Partners" },
+  ];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -182,6 +167,12 @@ const ResearchPage = () => {
           </h2>
         </div>
         <div className="space-y-4">
+          {isLoading && areas.length === 0 && (
+            <p className="font-body text-sm text-muted-foreground">Loading research areas...</p>
+          )}
+          {!isLoading && areas.length === 0 && (
+            <p className="font-body text-sm text-muted-foreground">Research areas coming soon.</p>
+          )}
           {areas.map((a) => {
             const Icon = a.icon;
             return (

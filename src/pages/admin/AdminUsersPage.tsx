@@ -26,7 +26,7 @@ const AdminUsersPage = () => {
   return (
     <AdminCrudPage<AdminUser>
       title="Admin Users"
-      apiEndpoint="/api/v1/admin/auth/me"
+      apiEndpoint="/api/v1/admin/users"
       columns={columns}
       fields={fields}
       searchPlaceholder="Search admin users..."
@@ -34,6 +34,7 @@ const AdminUsersPage = () => {
       hideCreate
       hideEdit
       hideDelete
+      clientSideSearch
     />
   );
 };

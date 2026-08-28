@@ -9,16 +9,28 @@ import {
   Compass,
   GraduationCap,
   HandHeart,
-  MapPin,
   Newspaper,
   Sparkles,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { newsArticles } from "@/lib/newsContent";
+import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const currentYear = new Date().getFullYear();
+type NewsDoc = {
+  id: string;
+  title?: string;
+  slug?: string;
+  excerpt?: string;
+  publishedAt?: string;
+};
+
+type EventDoc = {
+  id: string;
+  title?: string;
+  description?: string;
+  eventDate?: string;
+};
 
 const quickOptions = [
   "Prospective student: admissions and programs",
@@ -26,39 +38,6 @@ const quickOptions = [
   "Parent/guardian: tuition and campus life",
   "Research partner: labs and innovation",
   "Alumni: events and giving",
-];
-
-const events = [
-  {
-    day: "13",
-    month: "Mar",
-    mode: "Hybrid (Physical & Virtual)",
-    title: "Public Dialogue: Women Leading Public Institutions",
-    venue: "Senate Hall and Online Stream",
-  },
-  {
-    day: "18",
-    month: "Mar",
-    mode: "Physical",
-    title: "Satellite Data & Interferometry Professional Course",
-    venue: "GIS Center, Innovation Building",
-  },
-  {
-    day: "22",
-    month: "Mar",
-    mode: "Hybrid (Physical & Virtual)",
-    title: `National Conference on Communication ${currentYear}`,
-    venue: "Main Auditorium and Online",
-  },
-];
-
-const innovationArticles = [
-  "University partners with manufacturing leaders to accelerate practical innovation",
-  "Researchers awarded grant for crop safety using plant-based antifungal systems",
-  "Cross-border research lecture spotlights collaboration opportunities in Africa",
-  `Innovation Office publishes ${currentYear} research and enterprise report`,
-  "Data science lab launches open guide for ethical AI in higher education",
-  "Medical engineering team unveils maternal safety monitoring prototype",
 ];
 
 const audienceGuides: Record<
@@ -107,7 +86,10 @@ const UniversityPortalSection = () => {
   const innovationRef = useRef<HTMLDivElement>(null);
   const newsletterRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const stories = newsArticles.slice(0, 3);
+  const { data: newsDocs } = useContentCollection<NewsDoc>("news", []);
+  const { data: eventDocs } = useContentCollection<EventDoc>("events", []);
+  const stories = newsDocs.slice(0, 3);
+  const innovationArticles = newsDocs.slice(0, 6);
 
   const handleNewsletterSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -506,12 +488,12 @@ const UniversityPortalSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
           {stories.map((story) => (
             <article
-              key={story.title}
+              key={story.id}
               className="story-card group relative border border-border/50 rounded-[20px] p-6 md:p-7 bg-background overflow-hidden transition-all duration-500 hover:border-accent/50 hover:shadow-[0_16px_48px_rgba(0,0,0,0.1)]"
             >
               <div className="absolute top-0 left-0 w-1 h-0 bg-accent group-hover:h-full transition-all duration-500" />
               <p className="font-body text-xs tracking-[0.15em] uppercase text-accent mb-4 font-medium">
-                {story.date}
+                {story.publishedAt ? new Date(story.publishedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
               </p>
               <h4 className="font-heading text-2xl font-light text-foreground mb-3 leading-tight group-hover:text-accent transition-colors duration-300">
                 {story.title}
@@ -558,49 +540,51 @@ const UniversityPortalSection = () => {
         </div>
 
         <div className="space-y-4 md:space-y-5">
-          {events.map((event) => (
-            <article
-              key={event.title}
-              className="event-card group relative border border-border/50 rounded-[20px] p-5 md:p-6 bg-background overflow-hidden transition-all duration-500 hover:border-accent/50 hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-accent/5 to-transparent -translate-x-full group-hover:translate-x-0 transition-transform duration-700" />
-              <div className="relative grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 items-center">
-                <div className="md:col-span-2 flex md:flex-col items-center md:items-start gap-3">
-                  <div className="w-16 h-16 md:w-14 md:h-14 rounded-[14px] border border-accent/30 flex flex-col items-center justify-center bg-accent/8 group-hover:bg-accent/15 transition-colors duration-300 shrink-0">
-                    <span className="font-heading text-2xl md:text-xl leading-none text-foreground font-light">
-                      {event.day}
-                    </span>
-                    <span className="font-body text-[9px] uppercase tracking-wider text-muted-foreground mt-1">
-                      {event.month}
-                    </span>
+          {eventDocs.map((event) => {
+            const eventDate = event.eventDate ? new Date(event.eventDate) : null;
+            const day = eventDate ? eventDate.getDate() : "";
+            const month = eventDate ? eventDate.toLocaleDateString("en-US", { month: "short" }) : "";
+            return (
+              <article
+                key={event.id}
+                className="event-card group relative border border-border/50 rounded-[20px] p-5 md:p-6 bg-background overflow-hidden transition-all duration-500 hover:border-accent/50 hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-accent/5 to-transparent -translate-x-full group-hover:translate-x-0 transition-transform duration-700" />
+                <div className="relative grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 items-center">
+                  <div className="md:col-span-2 flex md:flex-col items-center md:items-start gap-3">
+                    <div className="w-16 h-16 md:w-14 md:h-14 rounded-[14px] border border-accent/30 flex flex-col items-center justify-center bg-accent/8 group-hover:bg-accent/15 transition-colors duration-300 shrink-0">
+                      <span className="font-heading text-2xl md:text-xl leading-none text-foreground font-light">
+                        {day}
+                      </span>
+                      <span className="font-body text-[9px] uppercase tracking-wider text-muted-foreground mt-1">
+                        {month}
+                      </span>
+                    </div>
                   </div>
-                  <span className="font-body text-[10px] tracking-[0.14em] uppercase text-accent font-medium md:text-center">
-                    {event.mode}
-                  </span>
+                  <div className="md:col-span-7">
+                    <h4 className="font-heading text-xl md:text-2xl font-light text-foreground mb-1.5 group-hover:text-accent transition-colors duration-300">
+                      {event.title}
+                    </h4>
+                    <p className="font-body text-xs md:text-sm text-muted-foreground inline-flex items-center gap-2">
+                      {event.description}
+                    </p>
+                  </div>
+                  <div className="md:col-span-3 md:text-right">
+                    <Link
+                      to="/quick-links/upcoming-events"
+                      className="w-full md:w-auto inline-flex items-center justify-center md:justify-end gap-2 font-body text-xs tracking-[0.15em] uppercase text-accent border border-accent/30 px-4 py-2.5 rounded-[12px] group-hover:bg-accent/10 transition-all duration-300"
+                    >
+                      View Details
+                      <ArrowRight
+                        size={13}
+                        className="group-hover:translate-x-1 transition-transform duration-300"
+                      />
+                    </Link>
+                  </div>
                 </div>
-                <div className="md:col-span-7">
-                  <h4 className="font-heading text-xl md:text-2xl font-light text-foreground mb-1.5 group-hover:text-accent transition-colors duration-300">
-                    {event.title}
-                  </h4>
-                  <p className="font-body text-xs md:text-sm text-muted-foreground inline-flex items-center gap-2">
-                    <MapPin size={14} className="shrink-0" /> {event.venue}
-                  </p>
-                </div>
-                <div className="md:col-span-3 md:text-right">
-                  <Link
-                    to="/quick-links/upcoming-events"
-                    className="w-full md:w-auto inline-flex items-center justify-center md:justify-end gap-2 font-body text-xs tracking-[0.15em] uppercase text-accent border border-accent/30 px-4 py-2.5 rounded-[12px] group-hover:bg-accent/10 transition-all duration-300"
-                  >
-                    View Details
-                    <ArrowRight
-                      size={13}
-                      className="group-hover:translate-x-1 transition-transform duration-300"
-                    />
-                  </Link>
-                </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       </div>
 
@@ -629,7 +613,7 @@ const UniversityPortalSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
           {innovationArticles.map((article) => (
             <Link
-              key={article}
+              key={article.id}
               to="/research/opportunities"
               className="article-card group relative border border-border/50 rounded-[20px] p-6 bg-background overflow-hidden transition-all duration-500 hover:border-accent/50 hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]"
             >
@@ -647,7 +631,7 @@ const UniversityPortalSection = () => {
                   </span>
                 </div>
                 <p className="font-body text-sm leading-relaxed text-foreground group-hover:text-accent transition-colors duration-300">
-                  {article}
+                  {article.title}
                 </p>
               </div>
             </Link>

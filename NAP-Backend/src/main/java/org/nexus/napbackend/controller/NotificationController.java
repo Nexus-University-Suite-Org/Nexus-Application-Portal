@@ -37,7 +37,7 @@ public class NotificationController {
 
     @GetMapping("/notifications")
     public ResponseEntity<List<NotificationResponse>> list(
-            @RequestParam Long userId,
+            @RequestParam(required = false) Long userId,
             @RequestParam(required = false) Boolean isRead) {
         return ResponseEntity.ok(facade.list(userId, isRead));
     }
@@ -86,5 +86,12 @@ public class NotificationController {
     public ResponseEntity<Void> deleteAnnouncement(@PathVariable Long id) {
         facade.deleteAnnouncement(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/announcements/{id}")
+    public ResponseEntity<AnnouncementResponse> updateAnnouncement(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, Object> body) {
+        return ResponseEntity.ok(facade.updateAnnouncement(id, body));
     }
 }

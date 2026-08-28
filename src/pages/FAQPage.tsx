@@ -9,119 +9,6 @@ import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const faqCategories = [
-  {
-    category: "Admissions",
-    icon: HelpCircle,
-    questions: [
-      {
-        q: "What are the application deadlines?",
-        a: "Undergraduate applications close on March 31, Postgraduate on April 30, Professional on May 15, and Exchange students on June 30. Early applications are encouraged as spots fill quickly.",
-      },
-      {
-        q: "What is the minimum GPA requirement?",
-        a: "We require a minimum 3.0 GPA for undergraduate programs. However, we also consider the strength of your application holistically, including test scores, essays, and extracurricular activities.",
-      },
-      {
-        q: "Do you accept international students?",
-        a: "Yes! We welcome international students from all over the world. International applicants need to demonstrate English language proficiency through TOEFL or IELTS scores.",
-      },
-      {
-        q: "Is financial aid available for international students?",
-        a: "Yes, we offer merit-based scholarships and need-based financial aid to qualified international students. We also have partnerships with external organizations for additional funding.",
-      },
-    ],
-  },
-  {
-    category: "Academics",
-    icon: HelpCircle,
-    questions: [
-      {
-        q: "How many colleges and schools are at the institute?",
-        a: "The institute has 10 colleges and schools offering 143+ academic programs across undergraduate, graduate, and professional levels.",
-      },
-      {
-        q: "Can I change my major after admission?",
-        a: "Yes, you can change your major during your first year without penalties. After that, changes are still possible but may require additional coursework or delay graduation.",
-      },
-      {
-        q: "What is the average class size?",
-        a: "Our average class size is 25-30 students for introductory courses and 15-20 for upper-level courses. We prioritize personal attention and mentorship.",
-      },
-      {
-        q: "Does University Application Portal offer online learning options?",
-        a: "Yes! We offer fully online degrees, hybrid programs, and certificates through our Learning Online platform. All programs maintain the same academic rigor as on-campus options.",
-      },
-    ],
-  },
-  {
-    category: "Campus Life",
-    icon: HelpCircle,
-    questions: [
-      {
-        q: "Is on-campus housing available?",
-        a: "Yes, we provide on-campus housing for all students. First-year students are required to live on campus. Housing is guaranteed for 4 years of undergraduate study.",
-      },
-      {
-        q: "What student organizations are available?",
-        a: "University Application Portal has 150+ student clubs and organizations covering academic, cultural, sports, and social interests. You're welcome to start new clubs with 5+ interested members.",
-      },
-      {
-        q: "What food options are available?",
-        a: "We offer multiple dining halls with diverse cuisine options, accommodating vegetarian, vegan, halal, and other dietary restrictions. We also have a student meal plan system.",
-      },
-      {
-        q: "Are there sports programs?",
-        a: "Yes! University Application Portal competes in 20 varsity sports and has intramural programs for all skill levels. We have Olympic-standard facilities and strong academic athlete support.",
-      },
-    ],
-  },
-  {
-    category: "Fees & Payments",
-    icon: HelpCircle,
-    questions: [
-      {
-        q: "What is the total cost of attendance?",
-        a: "Annual costs vary by program. Undergraduate tuition is approximately $15,000 (domestic) to $30,000 (international), plus room, board, and fees. Check our Fees Payment page for detailed breakdowns.",
-      },
-      {
-        q: "What payment plans are available?",
-        a: "We offer semester, quarterly, and monthly payment plans to ease financial burden. We also provide deferred payment options for students with demonstrated need.",
-      },
-      {
-        q: "Is there a refund policy?",
-        a: "Yes, we have a tiered refund policy. Refunds are processed based on withdrawal date: 100% before classes start, 75% first month, 50% second month, 25% third month, and none after.",
-      },
-      {
-        q: "Do you offer payment plans through partner lenders?",
-        a: "Yes, we partner with several educational loan providers. We also accept federal student loans, private loans, and have financing options through our financial aid office.",
-      },
-    ],
-  },
-  {
-    category: "General",
-    icon: HelpCircle,
-    questions: [
-      {
-        q: "Where is the institute located?",
-        a: "The institute is located in a vibrant urban area with excellent public transportation. Our 200-acre campus combines historical architecture with modern facilities.",
-      },
-      {
-        q: "How can I visit the campus?",
-        a: "We offer daily campus tours at 10 AM and 2 PM. You can also schedule private tours or attend our open house events held quarterly. Virtual tours are available on our website.",
-      },
-      {
-        q: "How many students attend University Application Portal?",
-        a: "University Application Portal has approximately 12,400 students: 8,500 undergraduates and 3,900 graduate students. Our student-to-faculty ratio is 1:15.",
-      },
-      {
-        q: "What career services are available?",
-        a: "University Application Portal offers comprehensive career services including resume review, interview coaching, job fairs, alumni networking events, and internship placements. 92% of graduates secure employment within 6 months.",
-      },
-    ],
-  },
-];
-
 type RemoteFaq = {
   id: string;
   category: string;
@@ -130,24 +17,14 @@ type RemoteFaq = {
   order?: number;
 };
 
-const fallbackFaqs: RemoteFaq[] = faqCategories.flatMap((category) =>
-  category.questions.map((question, index) => ({
-    id: `${category.category}-${index}`,
-    category: category.category,
-    question: question.q,
-    answer: question.a,
-    order: index,
-  })),
-);
-
 const FAQPage = () => {
   const imageRef = useRef<HTMLImageElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
   const faqRef = useRef<HTMLDivElement>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const { data: faqs } = useContentCollection<RemoteFaq>(
+  const { data: faqs, isLoading } = useContentCollection<RemoteFaq>(
     "faqs",
-    fallbackFaqs,
+    [],
     {
       orderBy: { field: "order", direction: "asc" },
     },
@@ -267,6 +144,19 @@ const FAQPage = () => {
 
       {/* FAQ Sections */}
       <div ref={faqRef} className="px-8 md:px-16 py-24 bg-background">
+        {isLoading && dynamicFaqCategories.length === 0 ? (
+          <div className="text-center">
+            <p className="font-body text-lg text-muted-foreground">
+              Loading frequently asked questions...
+            </p>
+          </div>
+        ) : dynamicFaqCategories.length === 0 ? (
+          <div className="text-center">
+            <p className="font-body text-lg text-muted-foreground">
+              No FAQs available yet.
+            </p>
+          </div>
+        ) : (
         <div className="space-y-20">
           {dynamicFaqCategories.map((category) => (
             <div key={category.category} className="max-w-4xl mx-auto">
@@ -326,6 +216,7 @@ const FAQPage = () => {
             </div>
           ))}
         </div>
+        )}
 
         {/* Additional Help Section */}
         <div className="mt-24 max-w-4xl mx-auto p-8 rounded-[24px] border border-accent/30 bg-accent/5">

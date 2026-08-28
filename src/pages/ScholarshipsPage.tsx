@@ -10,33 +10,6 @@ import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const scholarshipTypes = [
-  {
-    name: "Merit Scholarships",
-    amount: "Up to $12,000/year",
-    criteria: "Based on academic excellence and test scores",
-    count: "500+ awards",
-  },
-  {
-    name: "Need-Based Scholarships",
-    amount: "Varies by need",
-    criteria: "Based on financial circumstances",
-    count: "300+ awards",
-  },
-  {
-    name: "Leadership Scholarships",
-    amount: "Up to $8,000/year",
-    criteria: "Community service and leadership potential",
-    count: "150+ awards",
-  },
-  {
-    name: "Subject-Specific Scholarships",
-    amount: "Up to $10,000/year",
-    criteria: "Excellence in STEM, Arts, or other specializations",
-    count: "200+ awards",
-  },
-];
-
 type ScholarshipDoc = {
   id: string;
   name: string;
@@ -46,18 +19,12 @@ type ScholarshipDoc = {
   level?: string;
 };
 
-const stats = [
-  { label: "Total Scholarships", value: "$18M+", desc: "Distributed annually" },
-  { label: "Coverage", value: "80%", desc: "Of student population" },
-  { label: "Award Options", value: "50+", desc: "Different scholarship types" },
-];
-
 const ScholarshipsPage = () => {
   const imageRef = useRef<HTMLImageElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const typesRef = useRef<HTMLDivElement>(null);
-  const { data: scholarshipDocs } = useContentCollection<ScholarshipDoc>(
+  const { data: scholarshipDocs, isLoading } = useContentCollection<ScholarshipDoc>(
     "scholarships",
     [],
     { orderBy: { field: "amount", direction: "desc" } },
@@ -76,7 +43,7 @@ const ScholarshipsPage = () => {
             "See scholarship details for eligibility and requirements.",
           count: item.level ? `${item.level} level` : "Open category",
         }))
-      : scholarshipTypes;
+      : [];
 
   const totalAmount = scholarshipDocs.reduce(
     (sum, item) => sum + (typeof item.amount === "number" ? item.amount : 0),
@@ -88,15 +55,19 @@ const ScholarshipsPage = () => {
       value:
         totalAmount > 0
           ? `$${Math.round(totalAmount).toLocaleString()}`
-          : "$18M+",
+          : "—",
       desc: "Recorded in database",
     },
     {
       label: "Coverage",
-      value: scholarshipDocs.length > 0 ? `${scholarshipDocs.length}` : "80%",
+      value: scholarshipDocs.length > 0 ? `${scholarshipDocs.length}` : "—",
       desc: "Available scholarship records",
     },
-    stats[2],
+    {
+      label: "Award Options",
+      value: scholarshipDocs.length > 0 ? `${scholarshipDocs.length}` : "—",
+      desc: "Different scholarship types",
+    },
   ];
 
   useEffect(() => {
@@ -239,7 +210,16 @@ const ScholarshipsPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {scholarshipData.map((scholarship) => (
+          {isLoading && scholarshipData.length === 0 ? (
+            <p className="col-span-full text-center py-12 font-body text-muted-foreground">
+              Loading scholarships...
+            </p>
+          ) : !isLoading && scholarshipData.length === 0 ? (
+            <p className="col-span-full text-center py-12 font-body text-muted-foreground">
+              No scholarships available yet.
+            </p>
+          ) : (
+            scholarshipData.map((scholarship) => (
             <div key={scholarship.name} className="scholarship-card opacity-0">
               <div className="group card-hover h-full p-8 rounded-[24px] border border-border/50 bg-gradient-to-br from-secondary/20 to-background hover:border-accent/40 transition-all duration-500">
                 <Award
@@ -289,7 +269,8 @@ const ScholarshipsPage = () => {
                 </Link>
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
 
         {/* Application Timeline */}

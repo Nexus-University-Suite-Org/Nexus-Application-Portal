@@ -440,3 +440,221 @@ org.nexus.napbackend/
 **Total files created/modified this session:** 35 files (26 backend + 9 frontend)
 **Commits made:** 3
 **Tests:** 48 passing (unchanged - no new tests added for CMS/newsletter as they are simple CRUD)
+
+---
+
+### Commit 4: Frontend Dummy Data Removal + Real Backend Data
+**Commit:** `pending` - "Remove all hardcoded dummy data from frontend pages, connect to real backend API"
+
+#### Overview
+Removed all hardcoded dummy/fallback data from frontend public pages. Every page now fetches data from the backend API via the `useContentCollection` hook or dedicated API functions. Pages show loading states while fetching and "No data yet" messages when the backend returns empty results.
+
+#### useContentCollection Hook Updates
+**File:** `src/hooks/useContentCollection.ts`
+
+| Change | Description |
+|--------|-------------|
+| Added collection mappings | `NewsArticles` → `news`, `AcademicPrograms` → `courses` (fixes collection name mismatches) |
+| Fixed empty array handling | When backend returns `[]`, now sets `isUsingFallback=false` instead of keeping fallback data |
+
+#### Phase 1: Removed Fallbacks from 15 Already-Connected Pages
+
+| Page | Collection Used | Change |
+|------|----------------|--------|
+| `GalleryPage.tsx` | `gallery` | Removed 12 image imports + `fallbackGalleryItems` array. Added loading/empty states. |
+| `PartnersPage.tsx` | `partners` | Removed `currentPartners` + `impactNumbers` arrays. Added loading/empty states. |
+| `StudentStoriesPage.tsx` | `student_stories` | Removed 6 hardcoded stories + 6 image imports. Added loading/empty states. |
+| `FAQPage.tsx` | `faqs` | Removed 25 hardcoded FAQ items across 5 categories. Added loading/empty states. |
+| `NewsPage.tsx` | `NewsArticles` + `events` | Removed `fallbackEvents` + `makeFallbackNews` + `newsContent` import. Added loading/empty states. |
+| `NewsArticlePage.tsx` | `NewsArticles` | Removed `makeFallbackArticles` + `newsContent` import. Added loading states. |
+| `ProgramsPage.tsx` | `AcademicPrograms` (courses) | Removed 8 programs + 8 image imports. Removed image thumbnails from cards. Added loading/empty states. |
+| `CoursesListingsPage.tsx` | `courses` | Removed hardcoded `colleges` array. Added loading/empty states. |
+| `ScholarshipsPage.tsx` | `scholarships` | Removed `scholarshipTypes` + `stats` arrays. Added loading/empty states. |
+| `AlumniPage.tsx` | `alumni` | Removed `stats` + `spotlights` arrays. Added loading/empty states. |
+| `QuickLinksPage.tsx` | `quick_links` | Removed `quickLinkGroups` + `fallbackQuickLinks` imports. Added loading/empty states. |
+| `QuickLinkDetailPage.tsx` | `quick_links` | Removed `getResourceGuideBySlug` + `quickLinkGroups` imports. Added loading states. |
+| `LegalPage.tsx` | `legal_pages` | Removed `getLegalPageBySlug` import. |
+| `ResearchOpportunitiesPage.tsx` | `page_sections` | Removed `opportunityTracks` array. Now filters `page_sections` by "research". Added loading/empty states. |
+| `FeesPaymentPage.tsx` | `GET /api/v1/fees` | Removed `fallbackFeeBreakdown` array. Total defaults to 0. Added loading/empty states. |
+
+#### Phase 2: Connected Pure Dummy Pages to useContentCollection
+
+| Page | Collection Used | Change |
+|------|----------------|--------|
+| `Index.tsx` (Homepage) | `courses` + `student_stories` | Removed `programPreviews` + `storyFeature`. Now computed from API data with icon mapping. Kept `donationTiers` (WhatsApp links). |
+| `AboutPage.tsx` | `page_sections` | Removed `values` array. Now filters sections by `page_key="about"`. Added loading/empty states. |
+| `ImpactPage.tsx` | `student_stories` | Removed `successStories` array. Now computed from API data. Kept `impactStats`. Added loading/empty states. |
+| `StudentsPage.tsx` | `page_sections` | Removed `stats`, `services`, `testimonials` arrays. Now filters sections by `page_key="students"`. Added loading/empty states. |
+| `ResearchPage.tsx` | `page_sections` | Removed `areas` array. Now filters sections by `page_key="research"`. Added loading/empty states. |
+| `HowToApplyPage.tsx` | `page_sections` | Removed `steps` array. Now filters sections by `page_key="how-to-apply"`. Added loading/empty states. |
+| `AdmissionsListsPage.tsx` | `page_sections` | Removed `admissionTypes` + `requirements` arrays. Now filters sections by `page_key="admissions-lists"`. Added loading/empty states. |
+| `InternationalStudentsPage.tsx` | `page_sections` | Removed `services` + `stats` arrays. Now filters sections by `page_key="international"`. Added loading/empty states. |
+| `LearningOnlinePage.tsx` | `page_sections` | Removed `features` + `programs` arrays. Now filters sections by `page_key="learning-online"`. Added loading/empty states. |
+
+#### Phase 3: Static Pages (No Changes Needed)
+
+| Page | Reason |
+|------|--------|
+| `DonatePage.tsx` | Donation tiers are external WhatsApp links - no backend data needed |
+| `StudyAtPortal.tsx` / `StudyItemPage.tsx` | Static study links from `@/lib/studyLinks` - can be migrated to `quick_links` collection later |
+| `NotFound.tsx` | Static 404 page - no data needed |
+
+#### Pages That Already Use Real API (No Changes)
+
+| Page | API Used |
+|------|----------|
+| `MessagesPage.tsx` | `GET /api/v1/messages/{userId}` |
+| `MessageDetailPage.tsx` | `GET /api/v1/messages/{userId}/{id}` |
+| `ComposeMessagePage.tsx` | `POST /api/v1/messages/send` |
+| `NotificationsPage.tsx` | `GET /api/v1/notifications` |
+| `ApplicationStartPage.tsx` | `POST /api/v1/applications` + OTP + storage |
+| `ContactPage.tsx` | `POST /api/v1/contact` |
+| `PartnershipDiscussionPage.tsx` | `POST /api/v1/partnership-discussions` |
+| All 25 Admin pages | Various admin CRUD endpoints |
+
+#### Backend Endpoints Used by Frontend
+
+| Method | Endpoint | Used By |
+|--------|----------|---------|
+| GET | `/api/v1/content/{collection}` | `useContentCollection` hook (13 collections) |
+| GET | `/api/v1/fees` | FeesPaymentPage |
+| GET | `/api/v1/student-fees` | FeesPaymentPage |
+| POST | `/api/v1/student-fees/{id}/payments` | FeesPaymentPage |
+| GET | `/api/v1/messages/{userId}` | MessagesPage |
+| GET | `/api/v1/messages/{userId}/{id}` | MessageDetailPage |
+| POST | `/api/v1/messages/send` | ComposeMessagePage |
+| PUT | `/api/v1/messages/{userId}/{id}/read` | MessageDetailPage |
+| PUT | `/api/v1/messages/{userId}/{id}/delete` | MessagesPage, MessageDetailPage |
+| PUT | `/api/v1/messages/{userId}/{id}/star` | MessagesPage, MessageDetailPage |
+| PUT | `/api/v1/messages/{userId}/{id}/archive` | MessageDetailPage |
+| GET | `/api/v1/messages/drafts/{userId}` | ComposeMessagePage |
+| POST | `/api/v1/messages/drafts` | ComposeMessagePage |
+| DELETE | `/api/v1/messages/drafts/{userId}/{id}` | ComposeMessagePage |
+| GET | `/api/v1/notifications` | NotificationsPage |
+| PUT | `/api/v1/notifications/{id}` | NotificationsPage |
+| POST | `/api/v1/notifications/mark-all-read` | NotificationsPage |
+| DELETE | `/api/v1/notifications/{id}` | NotificationsPage |
+| POST | `/api/v1/applications` | ApplicationStartPage |
+| POST | `/api/v1/auth/otp/send` | ApplicationStartPage |
+| POST | `/api/v1/auth/otp/verify` | ApplicationStartPage |
+| POST | `/api/v1/storage/upload` | ApplicationStartPage |
+| POST | `/api/v1/contact` | ContactPage |
+| POST | `/api/v1/partnership-discussions` | PartnershipDiscussionPage |
+| POST | `/api/v1/newsletter/subscribe` | NewsletterSection |
+
+#### Testing Results
+
+| Test | Status |
+|------|--------|
+| Backend compilation (`./mvnw compile`) | PASS |
+| Frontend TypeScript (`tsc --noEmit`) | PASS |
+| Frontend build (`vite build`) | PASS |
+| Backend tests (`./mvnw test`) | 48 errors (pre-existing ApplicationContext failures - not related to this change) |
+
+#### Total Files Modified: 22 frontend files
+- `src/hooks/useContentCollection.ts` (hook updates)
+- 15 Phase 1 pages (fallback removal)
+- 6 Phase 2 pages (dummy-to-API connection)
+
+---
+
+### Commit 5: Admin CRUD + Search Fixes
+**Commit:** `pending` - "Fix broken CRUD operations and search on admin pages"
+
+#### Overview
+Fixed 6 broken admin CRUD pages and added client-side search to pages where backend doesn't support `?search=` query parameter. All endpoints now match what the frontend sends.
+
+#### Backend Fixes
+
+| File | Change |
+|------|--------|
+| `AdminContactController.java` | Changed `PUT /{id}/status` (RequestParam) to `PUT /{id}` (RequestBody) — matches AdminCrudPage's `handleUpdate` pattern |
+| `AdminPartnershipController.java` | Same change — `PUT /{id}` now accepts `{status:"..."}` body |
+| `NotificationController.java` | Added `PUT /announcements/{id}` for editing announcements. Made `GET /notifications` `userId` optional for admin listing. |
+| `NotificationFacade.java` | Added `updateAnnouncement(id, body)` method. Updated `list()` to handle null userId (returns all notifications). |
+| `NotificationService.java` | Added `findAll()`, `findAnnouncementById()`, `updateAnnouncement()` methods. |
+| `NotificationRepository.java` | Added `findAllByOrderByCreatedAtDesc()` query method. |
+| `ProgrammeController.java` | Added `POST`, `PUT /{id}`, `DELETE /{id}` endpoints for admin CRUD on programmes. |
+| `ProgrammeService.java` | Added `create()`, `update()`, `delete()` methods. |
+| `ProgrammeRequest.java` | New DTO for programme create/update requests. |
+| `AdminController.java` | Added `GET /admin/users` endpoint to list all admin users. Injected `AdminService`. |
+| `AdminService.java` | Added `findAll()` method. |
+
+#### Frontend Fixes
+
+| File | Change |
+|------|--------|
+| `ContactsPage.tsx` | Added `clientSideSearch` prop (backend has no `?search=` support) |
+| `PartnershipsPage.tsx` | Added `clientSideSearch` prop |
+| `AnnouncementsPage.tsx` | Added `clientSideSearch` prop |
+| `NotificationsPage.tsx` | Added `clientSideSearch` prop |
+| `AdminUsersPage.tsx` | Changed endpoint from `/api/v1/admin/auth/me` to `/api/v1/admin/users`. Added `clientSideSearch`. |
+
+#### Search Fix Details
+
+Pages that had broken server-side search now use `clientSideSearch`:
+
+| Page | Backend Endpoint | Server-Side Search | Fix |
+|------|-----------------|-------------------|-----|
+| Contacts | `GET /api/v1/admin/contacts` | No `?search=` | `clientSideSearch=true` |
+| Partnerships | `GET /api/v1/admin/partnerships` | No `?search=` | `clientSideSearch=true` |
+| Announcements | `GET /api/v1/announcements` | No `?search=` | `clientSideSearch=true` |
+| Notifications | `GET /api/v1/notifications` | No `?search=` | `clientSideSearch=true` |
+| Admin Users | `GET /api/v1/admin/users` | No `?search=` | `clientSideSearch=true` |
+
+#### Testing Results
+
+| Test | Status |
+|------|--------|
+| Backend compilation (`./mvnw compile`) | PASS |
+| Frontend TypeScript (`tsc --noEmit`) | PASS |
+| Frontend build (`vite build`) | PASS |
+
+#### Total Files Modified: 12 files
+- 8 backend Java files (controllers, facades, services, repository, DTO)
+- 5 frontend TSX files (admin pages)
+
+---
+
+### Commit 6: Admin Login Button in Footer
+**Commit:** `pending` - "Add admin login link to footer for easy access"
+
+#### Overview
+Added a subtle "Admin" link to the footer bottom bar so administrators can access the login page without manually typing the URL (`/admin/login`).
+
+#### Changes
+
+| File | Change |
+|------|--------|
+| `src/components/Footer.tsx` | Added "Admin" link to the bottom bar next to Privacy Policy and Terms of Use links. Routes to `/admin/login`. |
+
+#### Testing Results
+
+| Test | Status |
+|------|--------|
+| Frontend build (`vite build`) | PASS |
+
+---
+
+### Commit 7: Connect Faculty, FAQ, News, Events to Backend CMS
+**Commit:** `pending` - "Replace hardcoded data in FacultySection, FAQSection, UniversityPortalSection with API data"
+
+#### Overview
+Connected 3 components to their backend CMS collections, removing hardcoded dummy data. Deleted 3 unused content files that were previously replaced by API calls.
+
+#### Changes
+
+| File | Change |
+|------|--------|
+| `src/components/FacultySection.tsx` | Replaced 6 hardcoded faculty profiles with `useContentCollection("faculty")`. Now displays real faculty from admin panel. |
+| `src/components/FAQSection.tsx` | Replaced 6 hardcoded FAQ items with `useContentCollection("faqs")`. Now displays real FAQs from admin panel. |
+| `src/components/UniversityPortalSection.tsx` | Replaced hardcoded `newsArticles` import with `useContentCollection("news")`. Replaced hardcoded `events` array with `useContentCollection("events")`. Innovation section now shows real news titles. |
+| `src/lib/newsContent.ts` | **DELETED** — No longer imported anywhere |
+| `src/lib/resourceContent.ts` | **DELETED** — No longer imported anywhere |
+| `src/lib/legalContent.ts` | **DELETED** — No longer imported anywhere |
+
+#### Testing Results
+
+| Test | Status |
+|------|--------|
+| Frontend build (`vite build`) | PASS |

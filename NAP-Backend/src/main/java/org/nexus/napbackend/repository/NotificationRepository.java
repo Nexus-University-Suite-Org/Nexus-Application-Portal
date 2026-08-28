@@ -13,6 +13,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     List<Notification> findByUserIdAndReadOrderByCreatedAtDesc(Long userId, Boolean read);
 
+    List<Notification> findAllByOrderByCreatedAtDesc();
+
     @Modifying
     @Query("UPDATE Notification n SET n.read = :read WHERE n.userId = :userId AND n.read = :currentRead")
     int markAll(@Param("userId") Long userId, @Param("read") Boolean read, @Param("currentRead") Boolean currentRead);

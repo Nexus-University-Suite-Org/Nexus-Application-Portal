@@ -2,7 +2,6 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ArrowLeft } from "lucide-react";
-import { getLegalPageBySlug } from "@/lib/legalContent";
 import { useContentCollection } from "@/hooks/useContentCollection";
 
 type LegalPageDoc = {
@@ -39,7 +38,7 @@ const LegalPage = () => {
       }
     : undefined;
 
-  const page = remotePage ?? (slug ? getLegalPageBySlug(slug) : undefined);
+  const page = legalDocs.length > 0 ? remotePage : undefined;
 
   if (!page) {
     return <Navigate to="/not-found" replace />;

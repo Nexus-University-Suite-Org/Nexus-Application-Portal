@@ -5,43 +5,40 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Globe, Users, Heart, Plane } from "lucide-react";
 import aboutHero from "@/assets/about-hero.jpg";
+import { useContentCollection } from "@/hooks/useContentCollection";
+
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  subtitle?: string;
+  body?: string;
+};
 
 gsap.registerPlugin(ScrollTrigger);
-
-const services = [
-  {
-    icon: Plane,
-    title: "Visa & Immigration",
-    desc: "Dedicated support for visa applications and documentation",
-  },
-  {
-    icon: Users,
-    title: "Community Integration",
-    desc: "Cultural orientation programs and international student clubs",
-  },
-  {
-    icon: Heart,
-    title: "Support Services",
-    desc: "Counseling, health care, and personal development",
-  },
-  {
-    icon: Globe,
-    title: "Global Connections",
-    desc: "Exchange programs and international partnerships",
-  },
-];
-
-const stats = [
-  { label: "International Students", value: "3,200+" },
-  { label: "Countries Represented", value: "74" },
-  { label: "Scholarship Options", value: "50+" },
-];
 
 const InternationalStudentsPage = () => {
   const imageRef = useRef<HTMLImageElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const servicesRef = useRef<HTMLDivElement>(null);
+
+  const { data: sections, isLoading } = useContentCollection<PageSection>("page_sections", []);
+
+  const intlSections = sections.filter((s) => s.page_key === "international");
+  const services = intlSections.length > 0
+    ? intlSections.filter((s) => s.section_key?.startsWith("service")).map((s) => ({ icon: Globe, title: s.title || "Service", desc: s.body || s.subtitle || "" }))
+    : [
+        { icon: Globe, title: "Visa Assistance", desc: "Help with student visa applications and renewals." },
+        { icon: Globe, title: "Airport Pickup", desc: "Complimentary airport transfer on arrival." },
+        { icon: Globe, title: "Housing Support", desc: "Assistance finding on or off-campus accommodation." },
+        { icon: Globe, title: "Cultural Integration", desc: "Orientation programs and cultural exchange events." },
+      ];
+
+  const stats = intlSections.length > 0
+    ? intlSections.filter((s) => s.section_key?.startsWith("stat")).map((s) => ({ label: s.title || "", value: s.body || s.subtitle || "" }))
+    : [];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -112,6 +109,14 @@ const InternationalStudentsPage = () => {
     return () => ctx.revert();
   }, []);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="font-body text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -146,25 +151,27 @@ const InternationalStudentsPage = () => {
       </div>
 
       {/* Stats */}
-      <div
-        ref={statsRef}
-        className="px-8 md:px-16 py-24 bg-gradient-to-b from-secondary/20 to-background"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {stats.map((item) => (
-            <div key={item.label} className="stat-card opacity-0">
-              <div className="card-hover p-8 rounded-[24px] border border-border/40 bg-background hover:border-accent/40 text-center transition-all duration-500">
-                <p className="font-heading text-4xl font-light text-accent mb-3">
-                  {item.value}
-                </p>
-                <p className="font-body text-sm text-muted-foreground">
-                  {item.label}
-                </p>
+      {stats.length > 0 && (
+        <div
+          ref={statsRef}
+          className="px-8 md:px-16 py-24 bg-gradient-to-b from-secondary/20 to-background"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            {stats.map((item) => (
+              <div key={item.label} className="stat-card opacity-0">
+                <div className="card-hover p-8 rounded-[24px] border border-border/40 bg-background hover:border-accent/40 text-center transition-all duration-500">
+                  <p className="font-heading text-4xl font-light text-accent mb-3">
+                    {item.value}
+                  </p>
+                  <p className="font-body text-sm text-muted-foreground">
+                    {item.label}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Services */}
       <div ref={servicesRef} className="px-8 md:px-16 py-24 bg-background">
@@ -178,22 +185,28 @@ const InternationalStudentsPage = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {services.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.title} className="service-card opacity-0">
-                <div className="card-hover h-full p-8 rounded-[24px] border border-border/50 bg-gradient-to-br from-secondary/20 to-background hover:border-accent/40 transition-all duration-500">
-                  <Icon size={32} className="icon-hover text-accent mb-6" />
-                  <h3 className="font-heading text-xl font-light text-foreground mb-3">
-                    {item.title}
-                  </h3>
-                  <p className="font-body text-sm text-muted-foreground leading-relaxed">
-                    {item.desc}
-                  </p>
+          {services.length === 0 ? (
+            <p className="font-body text-muted-foreground col-span-full">
+              No services available at this time.
+            </p>
+          ) : (
+            services.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="service-card opacity-0">
+                  <div className="card-hover h-full p-8 rounded-[24px] border border-border/50 bg-gradient-to-br from-secondary/20 to-background hover:border-accent/40 transition-all duration-500">
+                    <Icon size={32} className="icon-hover text-accent mb-6" />
+                    <h3 className="font-heading text-xl font-light text-foreground mb-3">
+                      {item.title}
+                    </h3>
+                    <p className="font-body text-sm text-muted-foreground leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         {/* Key Benefits */}

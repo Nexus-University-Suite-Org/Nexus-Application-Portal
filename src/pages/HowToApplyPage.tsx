@@ -6,43 +6,34 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ArrowRight } from "lucide-react";
 import aboutHero from "@/assets/about-hero.jpg";
+import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const steps = [
-  {
-    number: "01",
-    title: "Create Your Account",
-    desc: "Register on our admissions portal with your email. You'll receive a confirmation link to activate your account.",
-  },
-  {
-    number: "02",
-    title: "Complete Application",
-    desc: "Fill out the comprehensive application form with your academic history, personal background, and program preferences.",
-  },
-  {
-    number: "03",
-    title: "Upload Documents",
-    desc: "Submit required documents including transcripts, test scores, essays, and letters of recommendation.",
-  },
-  {
-    number: "04",
-    title: "Pay Application Fee",
-    desc: "Non-refundable application fee ($75 for domestic, $150 for international applicants).",
-  },
-  {
-    number: "05",
-    title: "Interview (Optional)",
-    desc: "Selected candidates will be invited for interviews conducted online or in-person at our campus.",
-  },
-  {
-    number: "06",
-    title: "Decision",
-    desc: "Receive your admission decision via email. Awarded students have 30 days to confirm enrollment.",
-  },
-];
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  subtitle?: string;
+  body?: string;
+};
 
 const HowToApplyPage = () => {
+  const { data: sections, isLoading } = useContentCollection<PageSection>("page_sections", []);
+
+  const howToApplySections = sections.filter((s) => s.page_key === "how-to-apply");
+  const steps = howToApplySections.length > 0
+    ? howToApplySections.filter((s) => s.section_key?.startsWith("step")).map((s, i) => ({ number: i + 1, title: s.title || "Step", desc: s.body || s.subtitle || "" }))
+    : [
+        { number: 1, title: "Research Programs", desc: "Browse available programs and find one that matches your goals." },
+        { number: 2, title: "Check Requirements", desc: "Review admission requirements for your chosen program." },
+        { number: 3, title: "Gather Documents", desc: "Prepare academic transcripts, identification, and references." },
+        { number: 4, title: "Submit Application", desc: "Complete the online application form with all required details." },
+        { number: 5, title: "Pay Application Fee", desc: "Submit the application fee through our secure payment system." },
+        { number: 6, title: "Await Decision", desc: "Track your application status and wait for the admissions decision." },
+      ];
+
   const imageRef = useRef<HTMLImageElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
   const stepsRef = useRef<HTMLDivElement>(null);
@@ -145,39 +136,47 @@ const HowToApplyPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl">
-          {steps.map((step, index) => (
-            <div key={step.number} className="step-card opacity-0">
-              <div className="card-hover relative p-8 rounded-[24px] border border-border/50 bg-gradient-to-br from-secondary/20 to-background hover:border-accent/40 transition-all duration-500 h-full">
-                {/* Step number background */}
-                <div className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center">
-                  <span className="font-heading text-3xl font-light text-accent/60">
-                    {step.number}
-                  </span>
-                </div>
+          {isLoading ? (
+            <div className="col-span-full text-center py-12">
+              <p className="font-body text-muted-foreground">Loading steps...</p>
+            </div>
+          ) : steps.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <p className="font-body text-muted-foreground">No application steps available at this time.</p>
+            </div>
+          ) : (
+            steps.map((step, index) => (
+              <div key={step.number} className="step-card opacity-0">
+                <div className="card-hover relative p-8 rounded-[24px] border border-border/50 bg-gradient-to-br from-secondary/20 to-background hover:border-accent/40 transition-all duration-500 h-full">
+                  <div className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center">
+                    <span className="font-heading text-3xl font-light text-accent/60">
+                      {String(step.number).padStart(2, "0")}
+                    </span>
+                  </div>
 
-                <div className="relative pt-8">
-                  <h3 className="font-heading text-2xl font-light text-foreground mb-4">
-                    {step.title}
-                  </h3>
-                  <p className="font-body text-muted-foreground leading-relaxed mb-6">
-                    {step.desc}
-                  </p>
+                  <div className="relative pt-8">
+                    <h3 className="font-heading text-2xl font-light text-foreground mb-4">
+                      {step.title}
+                    </h3>
+                    <p className="font-body text-muted-foreground leading-relaxed mb-6">
+                      {step.desc}
+                    </p>
 
-                  {/* Step indicator */}
-                  <div className="inline-flex items-center gap-2 text-accent font-body text-xs tracking-widest uppercase font-semibold">
-                    {index < steps.length - 1 ? (
-                      <>
-                        Next Step
-                        <ArrowRight size={16} className="icon-hover" />
-                      </>
-                    ) : (
-                      <>✓ Complete</>
-                    )}
+                    <div className="inline-flex items-center gap-2 text-accent font-body text-xs tracking-widest uppercase font-semibold">
+                      {index < steps.length - 1 ? (
+                        <>
+                          Next Step
+                          <ArrowRight size={16} className="icon-hover" />
+                        </>
+                      ) : (
+                        <>✓ Complete</>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* Timeline visualization */}

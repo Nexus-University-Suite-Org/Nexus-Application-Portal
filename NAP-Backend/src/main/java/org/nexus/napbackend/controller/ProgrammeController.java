@@ -2,6 +2,7 @@ package org.nexus.napbackend.controller;
 
 import java.util.List;
 import java.util.Map;
+import org.nexus.napbackend.dto.ProgrammeRequest;
 import org.nexus.napbackend.dto.ProgrammeResponse;
 import org.nexus.napbackend.dto.QualificationResult;
 import org.nexus.napbackend.model.Application;
@@ -9,10 +10,14 @@ import org.nexus.napbackend.model.Programme;
 import org.nexus.napbackend.service.ApplicationService;
 import org.nexus.napbackend.service.ProgrammeService;
 import org.nexus.napbackend.service.WeightingService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,11 +42,30 @@ public class ProgrammeController {
         return ResponseEntity.ok(programmeService.findAllActive());
     }
 
+    @PostMapping
+    public ResponseEntity<ProgrammeResponse> create(@RequestBody ProgrammeRequest request) {
+        ProgrammeResponse created = programmeService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
     @GetMapping("/{code}")
     public ResponseEntity<ProgrammeResponse> getByCode(@PathVariable String code) {
         return programmeService.findByCode(code)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ProgrammeResponse> update(@PathVariable Long id, @RequestBody ProgrammeRequest request) {
+        return programmeService.update(id, request)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        programmeService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/application/{applicationId}/qualifications")

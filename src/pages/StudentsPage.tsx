@@ -4,87 +4,23 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useContentCollection } from "@/hooks/useContentCollection";
 import {
   Users,
-  Home,
-  BookOpen,
-  Globe,
-  Award,
-  Heart,
   ArrowRight,
 } from "lucide-react";
 import studentsHero from "@/assets/students-hero.jpg";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const currentYear = new Date().getFullYear();
-
-const stats = [
-  { value: "12,400+", label: "Students Enrolled" },
-  { value: "92%", label: "Graduate Employment" },
-  { value: "74", label: "Countries Represented" },
-  { value: "200+", label: "Student Organizations" },
-];
-
-const services = [
-  {
-    icon: Home,
-    title: "Housing & Residence",
-    desc: "Modern halls with single and shared rooms, dining facilities, and 24/7 security across 8 residential complexes.",
-    href: "/about/visit",
-  },
-  {
-    icon: BookOpen,
-    title: "Academic Support",
-    desc: "Tutoring centers, writing labs, and peer mentoring programs to help every student thrive academically.",
-    href: "/admissions/faq",
-  },
-  {
-    icon: Globe,
-    title: "International Office",
-    desc: "Visa support, cultural integration programs, and a dedicated team for our global student community.",
-    href: "/admissions/international",
-  },
-  {
-    icon: Award,
-    title: "Scholarships & Aid",
-    desc: "Over $18M in annual scholarships covering merit-based, need-based, and specialized program awards.",
-    href: "/admissions/scholarships",
-  },
-  {
-    icon: Heart,
-    title: "Health & Wellness",
-    desc: "On-campus clinic, counseling services, fitness center, and wellness workshops for holistic well-being.",
-    href: "/quick-links/health-safety",
-  },
-  {
-    icon: Users,
-    title: "Career Services",
-    desc: "Resume workshops, internship placements, employer networking events, and alumni mentorship programs.",
-    href: "/quick-links/jobs-careers",
-  },
-];
-
-const testimonials = [
-  {
-    name: "Amara Osei",
-    program: "MSc Computer Science, 2025",
-    quote:
-      "University Application Portal gave me the tools, the mentors, and the confidence to build technology that matters.",
-  },
-  {
-    name: "James Kariuki",
-    program: "BA Economics, 2024",
-    quote:
-      "The diversity of thought here is extraordinary. Every conversation pushes you to think bigger.",
-  },
-  {
-    name: "Sofia Nakamura",
-    program: `PhD Biomedical Engineering, ${currentYear}`,
-    quote:
-      "The research facilities are world-class. I've published three papers in my first two years.",
-  },
-];
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  subtitle?: string;
+  body?: string;
+};
 
 const StudentsPage = () => {
   const heroRef = useRef<HTMLDivElement>(null);
@@ -92,6 +28,33 @@ const StudentsPage = () => {
   const statsRef = useRef<HTMLDivElement>(null);
   const servicesRef = useRef<HTMLDivElement>(null);
   const testimonialsRef = useRef<HTMLDivElement>(null);
+
+  const { data: sections, isLoading } = useContentCollection<PageSection>("page_sections", []);
+
+  const studentSections = sections.filter((s) => s.page_key === "students");
+  const stats = studentSections.length > 0
+    ? studentSections.filter((s) => s.section_key?.startsWith("stat")).map((s) => ({ value: s.title || "0", label: s.subtitle || "" }))
+    : [
+        { value: "1,200+", label: "Active Students" },
+        { value: "85%", label: "Employment Rate" },
+        { value: "50+", label: "Partner Companies" },
+        { value: "4.8", label: "Student Rating" },
+      ];
+
+  const services = studentSections.length > 0
+    ? studentSections.filter((s) => s.section_key?.startsWith("service")).map((s, i) => ({ icon: Users, title: s.title || "Service", desc: s.body || s.subtitle || "", href: "/students" }))
+    : [
+        { icon: Users, title: "Academic Advising", desc: "One-on-one guidance from experienced advisors.", href: "/students" },
+        { icon: Users, title: "Career Services", desc: "Job placement, resume help, interview prep.", href: "/students" },
+        { icon: Users, title: "Counseling", desc: "Free mental health and wellness support.", href: "/students" },
+        { icon: Users, title: "Financial Aid", desc: "Scholarships, grants, and payment plans.", href: "/students" },
+        { icon: Users, title: "Housing", desc: "On-campus and off-campus accommodation.", href: "/students" },
+        { icon: Users, title: "Health Services", desc: "On-campus clinic and health insurance.", href: "/students" },
+      ];
+
+  const testimonials = studentSections.length > 0
+    ? studentSections.filter((s) => s.section_key?.startsWith("testimonial")).map((s) => ({ name: s.title || "", program: s.subtitle || "", quote: s.body || "" }))
+    : [];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -178,6 +141,21 @@ const StudentsPage = () => {
     });
     return () => ctx.revert();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="font-body text-sm text-muted-foreground">Loading student content...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

@@ -54,6 +54,7 @@ const ContactsPage = () => {
       searchPlaceholder="Search contacts..."
       token={token}
       hideCreate
+      clientSideSearch
     />
   );
 };

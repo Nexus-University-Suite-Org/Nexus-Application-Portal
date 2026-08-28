@@ -52,6 +52,7 @@ interface AdminCrudPageProps<T> {
   hideCreate?: boolean;
   hideEdit?: boolean;
   hideDelete?: boolean;
+  clientSideSearch?: boolean;
 }
 
 export function AdminCrudPage<T extends { id: number }>({
@@ -65,8 +66,9 @@ export function AdminCrudPage<T extends { id: number }>({
   hideCreate = false,
   hideEdit = false,
   hideDelete = false,
+  clientSideSearch = false,
 }: AdminCrudPageProps<T>) {
-  const [data, setData] = useState<T[]>([]);
+  const [rawData, setRawData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -79,11 +81,22 @@ export function AdminCrudPage<T extends { id: number }>({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const searchableKeys = columns.filter((c) => c.searchable).map((c) => c.key);
+
+  const data = clientSideSearch && search
+    ? rawData.filter((item) =>
+        searchableKeys.some((key) => {
+          const val = String((item as Record<string, unknown>)[key] ?? "").toLowerCase();
+          return val.includes(search.toLowerCase());
+        }),
+      )
+    : rawData;
+
   const fetchData = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (search) params.append("search", search);
+      if (!clientSideSearch && search) params.append("search", search);
       params.append("page", page.toString());
       params.append("size", "10");
 
@@ -94,13 +107,13 @@ export function AdminCrudPage<T extends { id: number }>({
       if (response.ok) {
         const result = await response.json();
         if (Array.isArray(result)) {
-          setData(result);
+          setRawData(result);
           setTotalPages(1);
         } else if (result.content) {
-          setData(result.content);
+          setRawData(result.content);
           setTotalPages(result.totalPages || 1);
         } else {
-          setData([]);
+          setRawData([]);
         }
       }
     } catch (error) {

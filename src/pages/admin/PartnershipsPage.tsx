@@ -59,6 +59,7 @@ const PartnershipsPage = () => {
       searchPlaceholder="Search partnerships..."
       token={token}
       hideCreate
+      clientSideSearch
     />
   );
 };

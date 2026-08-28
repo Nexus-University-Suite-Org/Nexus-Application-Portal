@@ -9,48 +9,6 @@ import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const stats = [
-  {
-    icon: Users,
-    label: "Alumni Worldwide",
-    value: "45,000+",
-    desc: "In 120 countries",
-  },
-  {
-    icon: Briefcase,
-    label: "Leadership Positions",
-    value: "8,500+",
-    desc: "C-level and senior roles",
-  },
-  {
-    icon: Award,
-    label: "Awards & Recognition",
-    value: "1,200+",
-    desc: "National and international",
-  },
-];
-
-const spotlights = [
-  {
-    name: "Dr. Amara Osei",
-    role: "CEO, Tech Innovation Labs",
-    year: "2015",
-    bio: "Leading digital transformation across Africa",
-  },
-  {
-    name: "Justice Samuel Kipchoge",
-    role: "Judge, Constitutional Court",
-    year: "2008",
-    bio: "Pioneering judicial reform and human rights",
-  },
-  {
-    name: "Prof. Dr. Helena Moreira",
-    role: "Director, Global Health Initiative",
-    year: "2010",
-    bio: "Advancing medical research in developing nations",
-  },
-];
-
 type AlumniDoc = {
   id: string;
   name: string;
@@ -66,7 +24,7 @@ const AlumniPage = () => {
   const heroTextRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const spotlightsRef = useRef<HTMLDivElement>(null);
-  const { data: alumniDocs } = useContentCollection<AlumniDoc>("alumni", [], {
+  const { data: alumniDocs, isLoading } = useContentCollection<AlumniDoc>("alumni", [], {
     orderBy: { field: "graduation_year", direction: "desc" },
   });
 
@@ -82,17 +40,27 @@ const AlumniPage = () => {
             bio:
               item.bio || "Alumni profile from the University Application Portal community network.",
           }))
-      : spotlights;
+      : [];
 
   const dynamicStats = [
     {
       icon: Users,
       label: "Alumni Records",
-      value: `${alumniDocs.length || 45}+`,
+      value: `${alumniDocs.length}+`,
       desc: "In our directory",
     },
-    stats[1],
-    stats[2],
+    {
+      icon: Briefcase,
+      label: "Featured Profiles",
+      value: `${spotlightData.length}`,
+      desc: "Spotlighted alumni",
+    },
+    {
+      icon: Award,
+      label: "Total Profiles",
+      value: `${alumniDocs.length}`,
+      desc: "In the community",
+    },
   ];
 
   useEffect(() => {
@@ -242,6 +210,16 @@ const AlumniPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {isLoading && spotlightData.length === 0 && (
+            <p className="col-span-full text-center font-body text-muted-foreground py-12">
+              Loading alumni...
+            </p>
+          )}
+          {!isLoading && spotlightData.length === 0 && (
+            <p className="col-span-full text-center font-body text-muted-foreground py-12">
+              No alumni profiles available yet.
+            </p>
+          )}
           {spotlightData.map((alumni) => (
             <div key={alumni.name} className="spotlight-card opacity-0">
               <div className="card-hover p-8 rounded-[24px] border border-border/50 bg-gradient-to-br from-secondary/20 to-background hover:border-accent/40 transition-all duration-500">

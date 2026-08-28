@@ -6,12 +6,6 @@ import { Quote, ArrowRight, Heart, ChevronDown } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import storiesHero from "@/assets/stories-hero.jpg";
-import storySamuel from "@/assets/story-samuel.jpg";
-import storyGrace from "@/assets/story-grace.jpg";
-import storyEsther from "@/assets/story-esther.jpg";
-import tailoringBusiness from "@/assets/gallery/tailoring-business.jpg";
-import soapProducts from "@/assets/gallery/soap-products.jpg";
-import communityMarket from "@/assets/gallery/community-market.jpg";
 import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -29,105 +23,6 @@ interface Story {
   fullStory: string;
 }
 
-const stories: Story[] = [
-  {
-    name: "Mary Nakato",
-    age: 29,
-    program: "Tailoring & Design",
-    graduated: "2022",
-    image: tailoringBusiness,
-    tag: "Single Mother",
-    quote:
-      "I joined with nothing — no skills, no income, no hope. Today I own a shop and employ two other women.",
-    before:
-      "Single mother of three with no marketable skills, relying on relatives for basic needs.",
-    after:
-      "Runs a tailoring business in Nakawa Market, employs 2 people, pays school fees for all three children.",
-    fullStory:
-      "Mary came to University Application Portal after her husband left the family. With three children under age eight, she had no way to earn income. A community elder referred her to our tailoring program. During the six-month course, Mary discovered a natural talent for design. She practiced evenings and weekends, creating school uniforms for the local primary school. After graduating, she received a start-up kit with a sewing machine and basic materials. Within four months, she had enough regular customers to rent a small shop space. Two years later, Mary employs two other women from the program and is paying school fees for all her children.",
-  },
-  {
-    name: "Samuel Opio",
-    age: 23,
-    program: "Electrical Installation",
-    graduated: "2023",
-    image: storySamuel,
-    tag: "Vulnerable Youth",
-    quote:
-      "I went from doing odd jobs for pennies to being a lead electrician. This training gave me a future.",
-    before:
-      "School dropout doing casual labour for minimal pay, no clear future or stable income.",
-    after:
-      "Lead electrician at a construction firm, mentors youth in his village, earns a stable salary.",
-    fullStory:
-      "Samuel dropped out of school at 15 when his family could no longer afford fees. For three years, he survived on casual labour — carrying bricks, digging ditches — earning less than $2 a day. A friend told him about the free electrical installation course at University Application Portal. Samuel was hesitant at first, but the promise of real skills drew him in. He excelled in the program, particularly in industrial wiring. The instructors connected him with a construction firm for his practical placement. The company was so impressed they hired him permanently. Within a year, Samuel was promoted to lead electrician. He now returns to the institute on weekends to mentor new students.",
-  },
-  {
-    name: "Grace Achieng",
-    age: 21,
-    program: "Welding & Fabrication",
-    graduated: "2023",
-    image: storyGrace,
-    tag: "Breaking Barriers",
-    quote:
-      "People said welding is not for women. I proved them wrong. Now I teach other girls they can do it too.",
-    before:
-      "Orphaned at 16, living with distant relatives, told women cannot do technical work.",
-    after:
-      "Certified welder, works on construction projects, advocates for women in trades.",
-    fullStory:
-      "When Grace told her relatives she wanted to learn welding, they laughed. 'That's men's work,' they said. But Grace had watched welders on construction sites since she was a child and knew she could do it. At University Application Portal, she was the only woman in her welding class. The first weeks were tough — some classmates questioned whether she belonged. But Grace's determination and skill quickly earned respect. She graduated top of her class and now works on construction projects across Kampala. She regularly visits schools to encourage young girls to consider technical trades, and has inspired four other women to enrol in the welding program.",
-  },
-  {
-    name: "Esther Kemigisha",
-    age: 26,
-    program: "Hairdressing",
-    graduated: "2022",
-    image: storyEsther,
-    tag: "Entrepreneur",
-    quote:
-      "I started with one chair borrowed from the institute. Now I have a salon with five stations.",
-    before:
-      "Unemployed for two years after completing secondary school, no capital to start a business.",
-    after:
-      "Owns a salon with five stations, employs three stylists, trains new graduates.",
-    fullStory:
-      "Esther completed secondary school but couldn't afford university. Two years of unemployment followed, during which she grew increasingly discouraged. A friend who had graduated from University Application Portal convinced her to try the hairdressing program. Esther discovered a passion for hair styling and customer service. She practised on anyone willing — neighbours, fellow students, even instructors. After graduating, the institute lent her a salon chair and basic supplies. She started doing hair from her home, building a loyal customer base through word of mouth. Within 18 months she had saved enough to rent a proper space. Today, Esther's salon has five styling stations and employs three other graduates from the program.",
-  },
-  {
-    name: "Joseph Ssemakula",
-    age: 34,
-    program: "Soap Making",
-    graduated: "2023",
-    image: soapProducts,
-    tag: "Community Leader",
-    quote:
-      "Soap making taught me business, not just a skill. I supply three shops now and train others in my village.",
-    before:
-      "Subsistence farmer with unpredictable seasonal income, struggling to feed his family.",
-    after:
-      "Produces and sells soap to three local shops, trains community members, stable year-round income.",
-    fullStory:
-      "Joseph was a farmer whose income depended entirely on the rains. In bad seasons, his family went hungry. He heard about the soap-making course on a community radio programme and decided to try something new. The three-month course taught him not just soap production but business fundamentals — costing, packaging, marketing. After graduating, he started making soap at home using locally available ingredients. He went door to door at first, then convinced a small shop to stock his products. Word spread about the quality, and two more shops placed regular orders. Joseph now runs weekly soap-making workshops for others in his community, creating a ripple effect of income generation.",
-  },
-  {
-    name: "Amina Watende",
-    age: 20,
-    program: "Beauty Therapy",
-    graduated: "2024",
-    image: communityMarket,
-    tag: "Young Achiever",
-    quote:
-      "At 20, I already have my own income. My mother cried when I gave her money for the first time.",
-    before:
-      "Dropped out of school at 16, no prospects, living in poverty with her widowed mother.",
-    after:
-      "Works at a beauty spa in Kampala, sends money home monthly, saving to open her own business.",
-    fullStory:
-      "Amina's father passed away when she was 14, and by 16 she had dropped out of school because her mother couldn't afford fees. She spent two years helping her mother sell vegetables at a roadside stand, earning barely enough for food. A social worker referred her to the beauty therapy program at University Application Portal. Amina was nervous — she had never used beauty products herself. But the structured learning environment and supportive instructors helped her flourish. She specialised in skincare and nail art. A high-end spa in Kampala recruited her straight from her practical placement. She now sends money home every month and is saving to eventually open her own small beauty business.",
-  },
-];
-
 type StudentStoryDoc = {
   id: string;
   title: string;
@@ -143,7 +38,7 @@ const StudentStoriesPage = () => {
   const [expandedStory, setExpandedStory] = useState<number | null>(null);
   const [portalName] = useState("University Application Portal");
   const storiesRef = useRef<HTMLDivElement>(null);
-  const { data: storyDocs } = useContentCollection<StudentStoryDoc>(
+  const { data: storyDocs, isLoading } = useContentCollection<StudentStoryDoc>(
     "student_stories",
     [],
     { orderBy: { field: "published_date", direction: "desc" } },
@@ -162,16 +57,7 @@ const StudentStoriesPage = () => {
             graduated: doc.graduation_year
               ? String(doc.graduation_year)
               : "Recent",
-            image:
-              doc.image_url ||
-              [
-                tailoringBusiness,
-                storySamuel,
-                storyGrace,
-                storyEsther,
-                soapProducts,
-                communityMarket,
-              ][index % 6],
+            image: doc.image_url || "",
             tag: "Featured Story",
             quote: doc.title,
             before: "Learner preparing for better livelihood opportunities.",
@@ -179,10 +65,7 @@ const StudentStoriesPage = () => {
             fullStory: content,
           };
         })
-      : stories.map((story) => ({
-          ...story,
-          fullStory: story.fullStory.replace(/University Application Portal/g, portalName),
-        }));
+      : [];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -288,6 +171,12 @@ const StudentStoriesPage = () => {
         </div>
 
         <div ref={storiesRef} className="space-y-8 max-w-5xl">
+          {isLoading && dynamicStories.length === 0 && (
+            <p className="font-body text-sm text-muted-foreground">Loading student stories...</p>
+          )}
+          {!isLoading && dynamicStories.length === 0 && (
+            <p className="font-body text-sm text-muted-foreground">No student stories available yet.</p>
+          )}
           {dynamicStories.map((story, i) => (
             <div
               key={story.name}

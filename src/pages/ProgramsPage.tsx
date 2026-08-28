@@ -20,180 +20,9 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import aboutHero from "@/assets/about-hero.jpg";
-import academicsImage from "@/assets/academics.jpg";
-import campusLifeImage from "@/assets/campus-life.jpg";
-import donateHeroImage from "@/assets/donate-hero.jpg";
-import researchHeroImage from "@/assets/research-hero.jpg";
-import researchImage from "@/assets/research.jpg";
-import studentsHeroImage from "@/assets/students-hero.jpg";
-import heroCampusImage from "@/assets/hero-campus.jpg";
-import newsHeroImage from "@/assets/news-hero.jpg";
 import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
-
-const fallbackPrograms = [
-  {
-    id: "tailoring",
-    icon: Scissors,
-    title: "Tailoring & Garment Design",
-    duration: "6 months",
-    image: academicsImage,
-    skills: [
-      "Sewing techniques",
-      "Pattern making",
-      "Clothing repair & alterations",
-      "Fashion design basics",
-    ],
-    careers: [
-      "Run your own tailoring shop",
-      "Work as a designer for boutiques",
-      "Clothing repairs & alterations business",
-    ],
-    description:
-      "One of our most popular programs. Students learn to design, cut, and sew garments professionally. Many graduates open small tailoring shops or work for clothing manufacturers.",
-  },
-  {
-    id: "plumbing",
-    icon: Wrench,
-    title: "Plumbing",
-    duration: "8 months",
-    image: campusLifeImage,
-    skills: [
-      "Pipe fitting & installation",
-      "Drainage systems",
-      "Water supply systems",
-      "Maintenance & repair",
-    ],
-    careers: [
-      "Start a plumbing contracting business",
-      "Work with construction companies",
-      "Maintenance technician roles",
-    ],
-    description:
-      "Skilled plumbers are always in demand. This program trains students to install, maintain, and repair water and drainage systems in residential and commercial buildings.",
-  },
-  {
-    id: "electrical",
-    icon: Zap,
-    title: "Electrical Installation",
-    duration: "8 months",
-    image: donateHeroImage,
-    skills: [
-      "Wiring & circuitry",
-      "Safety standards",
-      "Solar installation basics",
-      "Fault diagnosis & repair",
-    ],
-    careers: [
-      "Certified electrician",
-      "Solar installation business",
-      "Electrical maintenance technician",
-    ],
-    description:
-      "Electricity needs are growing rapidly. Graduates leave ready to wire buildings, install solar panels, and troubleshoot electrical faults — all high-demand skills.",
-  },
-  {
-    id: "welding",
-    icon: Flame,
-    title: "Welding & Fabrication",
-    duration: "6 months",
-    image: researchHeroImage,
-    skills: [
-      "Arc welding",
-      "Gas welding",
-      "Metal fabrication",
-      "Structural welding",
-    ],
-    careers: [
-      "Fabrication workshop owner",
-      "Construction site welder",
-      "Custom metalwork business",
-    ],
-    description:
-      "Welding is one of the most in-demand trades in Uganda. From construction to furniture fabrication, trained welders find steady work and can build lucrative businesses.",
-  },
-  {
-    id: "hairdressing",
-    icon: Users,
-    title: "Hairdressing",
-    duration: "4 months",
-    image: studentsHeroImage,
-    skills: [
-      "Cutting & styling",
-      "Braiding & weaves",
-      "Hair treatment & care",
-      "Salon management",
-    ],
-    careers: [
-      "Open your own salon",
-      "Work in established salons",
-      "Mobile hairdressing services",
-    ],
-    description:
-      "Hair care is a booming industry. Our program trains students in modern styles and techniques, equipping them to serve both urban and rural clients effectively.",
-  },
-  {
-    id: "beauty",
-    icon: Sparkles,
-    title: "Beauty Therapy",
-    duration: "4 months",
-    image: newsHeroImage,
-    skills: [
-      "Skincare & facials",
-      "Manicure & pedicure",
-      "Make-up artistry",
-      "Waxing & threading",
-    ],
-    careers: [
-      "Open a beauty salon",
-      "Freelance beauty therapist",
-      "Work in hotels or spas",
-    ],
-    description:
-      "From skincare to makeup artistry, this program covers the full range of beauty services. Graduates can work independently or establish their own beauty studios.",
-  },
-  {
-    id: "auto",
-    icon: Car,
-    title: "Auto Mechanics",
-    duration: "9 months",
-    image: researchImage,
-    skills: [
-      "Engine repair & maintenance",
-      "Brake & suspension systems",
-      "Electrical diagnostics",
-      "Bodywork basics",
-    ],
-    careers: [
-      "Run your own garage",
-      "Work with transport companies",
-      "Fleet maintenance roles",
-    ],
-    description:
-      "With Uganda's growing vehicle numbers, trained mechanics are in high demand. Graduates gain hands-on experience with real vehicles and leave ready to earn immediately.",
-  },
-  {
-    id: "soap",
-    icon: BookOpen,
-    title: "Soap & Cosmetics Making",
-    duration: "3 months",
-    image: heroCampusImage,
-    skills: [
-      "Soap formulation",
-      "Packaging & branding",
-      "Quality control",
-      "Business & marketing basics",
-    ],
-    careers: [
-      "Home-based soap business",
-      "Supply to local shops & markets",
-      "Build a beauty products brand",
-    ],
-    description:
-      "A low-cost, high-return business opportunity. Students learn to make and brand quality soaps and cosmetics, with a strong focus on turning the skill into a viable income source.",
-  },
-];
 
 type ProgramCard = {
   id: string;
@@ -204,7 +33,6 @@ type ProgramCard = {
   careers?: string[];
   level?: string;
   icon: LucideIcon;
-  image: string;
 };
 
 type RemoteProgram = Record<string, unknown> & {
@@ -222,16 +50,15 @@ type RemoteProgram = Record<string, unknown> & {
 const iconByKeyword: Array<{
   keyword: string;
   icon: LucideIcon;
-  image: string;
 }> = [
-  { keyword: "tailor", icon: Scissors, image: academicsImage },
-  { keyword: "plumb", icon: Wrench, image: campusLifeImage },
-  { keyword: "electric", icon: Zap, image: donateHeroImage },
-  { keyword: "weld", icon: Flame, image: researchHeroImage },
-  { keyword: "hair", icon: Users, image: studentsHeroImage },
-  { keyword: "beauty", icon: Sparkles, image: newsHeroImage },
-  { keyword: "auto", icon: Car, image: researchImage },
-  { keyword: "soap", icon: BookOpen, image: heroCampusImage },
+  { keyword: "tailor", icon: Scissors },
+  { keyword: "plumb", icon: Wrench },
+  { keyword: "electric", icon: Zap },
+  { keyword: "weld", icon: Flame },
+  { keyword: "hair", icon: Users },
+  { keyword: "beauty", icon: Sparkles },
+  { keyword: "auto", icon: Car },
+  { keyword: "soap", icon: BookOpen },
 ];
 
 const resolveProgramVisuals = (title: string) => {
@@ -239,7 +66,6 @@ const resolveProgramVisuals = (title: string) => {
   const matched = iconByKeyword.find((item) => lower.includes(item.keyword));
   return {
     icon: matched?.icon ?? BookOpen,
-    image: matched?.image ?? academicsImage,
   };
 };
 
@@ -249,8 +75,7 @@ const ProgramsPage = () => {
   const cardsRef = useRef<HTMLDivElement>(null);
   const {
     data: remotePrograms,
-    error: remoteProgramsError,
-    isUsingFallback,
+    isLoading,
   } = useContentCollection<RemoteProgram>("AcademicPrograms", []);
 
   const programs: ProgramCard[] =
@@ -311,24 +136,9 @@ const ProgramsPage = () => {
               careers,
               level: program.department,
               icon: visuals.icon,
-              image: visuals.image,
             };
           })
-      : fallbackPrograms;
-
-  useEffect(() => {
-    if (remoteProgramsError) {
-      console.error(
-        "Failed to fetch AcademicPrograms:",
-        remoteProgramsError,
-      );
-    }
-    if (isUsingFallback && remotePrograms.length === 0) {
-      console.warn(
-        "Programs page is using bundled fallback data. Remote programs are unavailable.",
-      );
-    }
-  }, [remoteProgramsError, isUsingFallback, remotePrograms.length]);
+      : [];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -429,6 +239,14 @@ const ProgramsPage = () => {
           </p>
         </div>
 
+        {isLoading && programs.length === 0 && (
+          <p className="font-body text-sm text-muted-foreground">Loading programs...</p>
+        )}
+
+        {!isLoading && programs.length === 0 && (
+          <p className="font-body text-sm text-muted-foreground">No programs available yet.</p>
+        )}
+
         <div className="space-y-4">
           {programs.map(
             ({
@@ -436,7 +254,6 @@ const ProgramsPage = () => {
               icon: Icon,
               title,
               duration,
-              image,
               skills,
               careers,
               description,
@@ -452,15 +269,6 @@ const ProgramsPage = () => {
                     className="w-full flex items-center justify-between p-5 md:p-6 text-left group"
                   >
                     <div className="flex items-center gap-4 md:gap-6 min-w-0">
-                      <div className="relative h-20 w-24 md:h-24 md:w-32 shrink-0 overflow-hidden rounded-[14px] img-zoom">
-                        <img
-                          src={image}
-                          alt={title}
-                          className="h-full w-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/35 via-primary/10 to-transparent opacity-80 transition-opacity duration-500 group-hover:opacity-60" />
-                        <div className="absolute inset-0 ring-1 ring-primary-foreground/20 rounded-[14px]" />
-                      </div>
                       <div className="w-11 h-11 rounded-full bg-accent/10 flex items-center justify-center shrink-0 icon-bounce">
                         <Icon size={20} className="text-accent" />
                       </div>

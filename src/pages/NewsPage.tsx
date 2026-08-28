@@ -7,38 +7,11 @@ import Footer from "@/components/Footer";
 import { ArrowRight, Calendar } from "lucide-react";
 import newsHero from "@/assets/news-hero.jpg";
 import { useContentCollection } from "@/hooks/useContentCollection";
-import {
-  featuredNewsSlug,
-  getNewsArticleBySlug,
-  newsArticles,
-} from "@/lib/newsContent";
+
 
 gsap.registerPlugin(ScrollTrigger);
 
 const currentYear = new Date().getFullYear();
-
-const fallbackEvents = [
-  {
-    title: `Open Day ${currentYear}`,
-    date: `April 15, ${currentYear}`,
-    type: "Admissions",
-  },
-  {
-    title: "Research Symposium",
-    date: `April 22, ${currentYear}`,
-    type: "Academic",
-  },
-  {
-    title: "Alumni Gala Dinner",
-    date: `May 10, ${currentYear}`,
-    type: "Community",
-  },
-  {
-    title: "International Culture Week",
-    date: `May 18–24, ${currentYear}`,
-    type: "Student Life",
-  },
-];
 
 type NewsItem = {
   id: string;
@@ -87,33 +60,22 @@ const toSlug = (value: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 
-const makeFallbackNews = (portalName: string): NewsItem[] =>
-  newsArticles.map((article) => ({
-    id: article.slug,
-    slug: article.slug,
-    title: article.title.replace(/University Application Portal/g, portalName),
-    excerpt: article.excerpt.replace(/University Application Portal/g, portalName),
-    category: article.category,
-    date: article.date,
-    featured: article.slug === featuredNewsSlug,
-  }));
-
 const NewsPage = () => {
   const imageRef = useRef<HTMLImageElement>(null);
   const newsRef = useRef<HTMLDivElement>(null);
   const eventsRef = useRef<HTMLDivElement>(null);
   const [portalName] = useState("University Application Portal");
 
-  const { data: rawNewsData } = useContentCollection<RemoteNewsArticle>(
+  const { data: rawNewsData, isLoading: newsLoading } = useContentCollection<RemoteNewsArticle>(
     "NewsArticles",
     [],
     {
       orderBy: { field: "createdAt", direction: "desc" },
     },
   );
-  const { data: eventsData } = useContentCollection<EventItem>(
+  const { data: eventsData, isLoading: eventsLoading } = useContentCollection<EventItem>(
     "events",
-    fallbackEvents.map((item) => ({ ...item, id: item.title })),
+    [],
     { orderBy: { field: "date", direction: "asc" } },
   );
 
@@ -152,14 +114,12 @@ const NewsPage = () => {
               featured: Boolean(item.featured),
             };
           })
-      : makeFallbackNews(portalName);
+      : [];
 
   const featuredNews =
-    newsData.find((article) => article.featured) ??
-    newsData[0] ??
-    getNewsArticleBySlug(featuredNewsSlug)!;
+    newsData.find((article) => article.featured) ?? newsData[0] ?? null;
   const newsItems = newsData.filter(
-    (article) => article.slug !== featuredNews.slug,
+    (article) => article.slug !== featuredNews?.slug,
   );
   const events = eventsData.map((item) => ({
     ...item,
@@ -253,6 +213,7 @@ const NewsPage = () => {
       </div>
 
       {/* Featured */}
+      {featuredNews && (
       <div className="px-8 md:px-16 py-24 border-b border-border">
         <div className="max-w-4xl">
           <span className="inline-block font-body text-[10px] tracking-[0.3em] uppercase text-accent border border-accent/30 px-3 py-1 rounded-full mb-6">
@@ -281,9 +242,15 @@ const NewsPage = () => {
           </div>
         </div>
       </div>
+      )}
 
       {/* News Grid */}
       <div ref={newsRef} className="px-8 md:px-16 py-32">
+        {newsLoading && newsItems.length === 0 ? (
+          <p className="font-body text-sm text-muted-foreground">Loading news...</p>
+        ) : newsItems.length === 0 ? (
+          <p className="font-body text-sm text-muted-foreground">No news articles yet.</p>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {newsItems.map((n) => (
             <Link
@@ -312,6 +279,7 @@ const NewsPage = () => {
             </Link>
           ))}
         </div>
+        )}
       </div>
 
       {/* Events */}

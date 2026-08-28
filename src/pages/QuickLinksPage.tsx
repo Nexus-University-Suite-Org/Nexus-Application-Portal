@@ -18,7 +18,6 @@ import {
   Shield,
   Users,
 } from "lucide-react";
-import { quickLinkGroups } from "@/lib/resourceContent";
 import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -38,14 +37,6 @@ const iconMap = {
   "Forms & Documents": FileText,
 } as const;
 
-const fallbackLinkGroups = quickLinkGroups.map((group) => ({
-  ...group,
-  links: group.links.map((link) => ({
-    ...link,
-    icon: iconMap[link.label as keyof typeof iconMap],
-  })),
-}));
-
 type QuickLinkDoc = {
   id: string;
   title: string;
@@ -56,23 +47,11 @@ type QuickLinkDoc = {
   order?: number;
 };
 
-const fallbackQuickLinks: QuickLinkDoc[] = quickLinkGroups.flatMap((group) =>
-  group.links.map((link, index) => ({
-    id: `${group.title}-${link.slug}`,
-    title: link.label,
-    slug: link.slug,
-    category: group.title,
-    description: link.desc,
-    icon: link.label,
-    order: index,
-  })),
-);
-
 const QuickLinksPage = () => {
   const gridRef = useRef<HTMLDivElement>(null);
-  const { data: quickLinks } = useContentCollection<QuickLinkDoc>(
+  const { data: quickLinks, isLoading } = useContentCollection<QuickLinkDoc>(
     "quick_links",
-    fallbackQuickLinks,
+    [],
     { orderBy: { field: "order", direction: "asc" } },
   );
 
@@ -102,7 +81,7 @@ const QuickLinksPage = () => {
       }),
   }));
 
-  const sections = linkGroups.length > 0 ? linkGroups : fallbackLinkGroups;
+  const sections = linkGroups.length > 0 ? linkGroups : [];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -159,6 +138,16 @@ const QuickLinksPage = () => {
 
       {/* Links Grid */}
       <div ref={gridRef} className="px-8 md:px-16 py-32 space-y-24">
+        {isLoading && sections.length === 0 && (
+          <p className="font-body text-lg text-muted-foreground text-center">
+            Loading quick links...
+          </p>
+        )}
+        {!isLoading && sections.length === 0 && (
+          <p className="font-body text-lg text-muted-foreground text-center">
+            No quick links available yet.
+          </p>
+        )}
         {sections.map((group) => (
           <div key={group.title} className="ql-group opacity-0">
             <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-10">

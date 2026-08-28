@@ -29,6 +29,7 @@ const buildUrl = (path: string) =>
 
 const collectionApiMap: Record<string, string> = {
   news: "news",
+  NewsArticles: "news",
   events: "events",
   gallery: "gallery",
   faqs: "faqs",
@@ -39,6 +40,7 @@ const collectionApiMap: Record<string, string> = {
   legal_pages: "legal_pages",
   quick_links: "quick_links",
   courses: "courses",
+  AcademicPrograms: "courses",
   faculty: "faculty",
   page_sections: "page_sections",
 };
@@ -70,7 +72,7 @@ export const useContentCollection = <T extends Record<string, unknown>>(
           throw new Error(`Content API returned ${response.status}`);
         }
         const result = await response.json();
-        if (!cancelled && Array.isArray(result) && result.length > 0) {
+        if (!cancelled && Array.isArray(result)) {
           setData(result as T[]);
           setIsUsingFallback(false);
         }

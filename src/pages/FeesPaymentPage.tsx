@@ -9,29 +9,6 @@ import { getFeeAssignments, type FeeAssignment } from "@/lib/fees";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const fallbackFeeBreakdown = [
-  {
-    category: "Tuition Fee",
-    amount: "$12,000/year",
-    note: "Core academic instruction",
-  },
-  {
-    category: "Accommodation",
-    amount: "$3,000/year",
-    note: "On-campus residence (optional)",
-  },
-  {
-    category: "Technology Fee",
-    amount: "$500/year",
-    note: "Lab & digital resources",
-  },
-  {
-    category: "Student Services",
-    amount: "$800/year",
-    note: "Health, counseling, activities",
-  },
-];
-
 const paymentPlans = [
   {
     name: "Full Payment",
@@ -72,12 +49,12 @@ const FeesPaymentPage = () => {
           amount: `$${fa.amount.toLocaleString()}`,
           note: `${fa.college} - ${fa.academicYear}`,
         }))
-      : fallbackFeeBreakdown;
+      : [];
 
   const totalAmount =
     feeAssignments.length > 0
       ? feeAssignments.reduce((sum, fa) => sum + fa.amount, 0)
-      : 16300;
+      : 0;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -197,6 +174,14 @@ const FeesPaymentPage = () => {
         </div>
 
         <div className="max-w-3xl space-y-4 mb-12">
+          {loading && feeBreakdown.length === 0 && (
+            <p className="font-body text-sm text-muted-foreground">Loading fee information...</p>
+          )}
+
+          {!loading && feeBreakdown.length === 0 && (
+            <p className="font-body text-sm text-muted-foreground">No fee information available yet.</p>
+          )}
+
           {feeBreakdown.map((item) => (
             <div key={item.category} className="fee-item opacity-0">
               <div className="card-hover flex items-center justify-between p-6 rounded-[20px] border border-border/40 hover:border-accent/40 bg-background transition-all duration-500">

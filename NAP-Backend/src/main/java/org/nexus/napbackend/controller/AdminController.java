@@ -1,6 +1,8 @@
 package org.nexus.napbackend.controller;
 
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.Map;
 import org.nexus.napbackend.configuration.JwtAuthFilter;
 import org.nexus.napbackend.dto.AdminLoginRequest;
 import org.nexus.napbackend.dto.AdminLoginResponse;
@@ -9,6 +11,8 @@ import org.nexus.napbackend.dto.DashboardStatsResponse;
 import org.nexus.napbackend.dto.PaginatedApplicationsResponse;
 import org.nexus.napbackend.dto.ReviewRequest;
 import org.nexus.napbackend.facade.AdminFacade;
+import org.nexus.napbackend.model.Admin;
+import org.nexus.napbackend.service.AdminService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,9 +29,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
 
     private final AdminFacade adminFacade;
+    private final AdminService adminService;
 
-    public AdminController(AdminFacade adminFacade) {
+    public AdminController(AdminFacade adminFacade, AdminService adminService) {
         this.adminFacade = adminFacade;
+        this.adminService = adminService;
     }
 
     @PostMapping("/auth/login")
@@ -40,6 +46,21 @@ public class AdminController {
         JwtAuthFilter.AdminPrincipal principal = (JwtAuthFilter.AdminPrincipal) authentication.getPrincipal();
         AdminLoginResponse response = new AdminLoginResponse(null, principal.email(), null);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<Map<String, Object>>> listUsers() {
+        List<Map<String, Object>> users = adminService.findAll().stream()
+                .map(admin -> {
+                    Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("id", admin.getId());
+                    map.put("email", admin.getEmail());
+                    map.put("fullName", admin.getFullName());
+                    map.put("createdAt", admin.getCreatedAt());
+                    return map;
+                })
+                .toList();
+        return ResponseEntity.ok(users);
     }
 
     @GetMapping("/dashboard/stats")

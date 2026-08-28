@@ -64,6 +64,7 @@ const NotificationsPage = () => {
       token={token}
       hideCreate
       hideEdit
+      clientSideSearch
     />
   );
 };

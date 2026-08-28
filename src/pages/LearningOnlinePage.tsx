@@ -5,54 +5,34 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Monitor, Users, Clock, Award } from "lucide-react";
 import aboutHero from "@/assets/about-hero.jpg";
+import { useContentCollection } from "@/hooks/useContentCollection";
+
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  subtitle?: string;
+  body?: string;
+};
 
 gsap.registerPlugin(ScrollTrigger);
 
-const features = [
-  {
-    icon: Monitor,
-    title: "Flexible Schedule",
-    desc: "Access courses anytime, anywhere at your own pace",
-  },
-  {
-    icon: Users,
-    title: "Interactive Community",
-    desc: "Connect with peers and instructors globally",
-  },
-  {
-    icon: Clock,
-    title: "Self-Paced Learning",
-    desc: "Progress at your own speed with no fixed deadlines",
-  },
-  {
-    icon: Award,
-    title: "Recognized Credentials",
-    desc: "Earn certificates and degrees with full recognition",
-  },
-];
-
-const programs = [
-  {
-    name: "Online Certificates",
-    duration: "3-6 months",
-    students: "2,500+",
-    desc: "Professional development programs",
-  },
-  {
-    name: "Online Degrees",
-    duration: "24-36 months",
-    students: "1,800+",
-    desc: "Bachelor's and Master's programs",
-  },
-  {
-    name: "Hybrid Courses",
-    duration: "Flexible",
-    students: "3,200+",
-    desc: "Blend of online and campus experiences",
-  },
-];
-
 const LearningOnlinePage = () => {
+  const { data: sections, isLoading } = useContentCollection<PageSection>("page_sections", []);
+
+  const onlineSections = sections.filter((s) => s.page_key === "learning-online");
+  const features = onlineSections.length > 0
+    ? onlineSections.filter((s) => s.section_key?.startsWith("feature")).map((s) => ({ icon: Monitor, title: s.title || "Feature", desc: s.body || s.subtitle || "" }))
+    : [
+        { icon: Monitor, title: "Flexible Schedule", desc: "Access courses anytime, anywhere at your own pace" },
+        { icon: Users, title: "Interactive Community", desc: "Connect with peers and instructors globally" },
+        { icon: Clock, title: "Self-Paced Learning", desc: "Progress at your own speed with no fixed deadlines" },
+        { icon: Award, title: "Recognized Credentials", desc: "Earn certificates and degrees with full recognition" },
+      ];
+  const programs = onlineSections.length > 0
+    ? onlineSections.filter((s) => s.section_key?.startsWith("program")).map((s) => ({ name: s.title || "Program", duration: "", students: "", desc: s.body || s.subtitle || "" }))
+    : [];
   const imageRef = useRef<HTMLImageElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
@@ -129,6 +109,18 @@ const LearningOnlinePage = () => {
     return () => ctx.revert();
   }, []);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Navbar />
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto mb-4" />
+          <p className="font-body text-sm text-muted-foreground">Loading content...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -177,22 +169,28 @@ const LearningOnlinePage = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {features.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.title} className="feature-card opacity-0">
-                <div className="card-hover h-full p-8 rounded-[24px] border border-border/50 bg-background hover:border-accent/40 transition-all duration-500">
-                  <Icon size={32} className="icon-hover text-accent mb-6" />
-                  <h3 className="font-heading text-xl font-light text-foreground mb-3">
-                    {item.title}
-                  </h3>
-                  <p className="font-body text-sm text-muted-foreground leading-relaxed">
-                    {item.desc}
-                  </p>
+          {features.length > 0 ? (
+            features.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="feature-card opacity-0">
+                  <div className="card-hover h-full p-8 rounded-[24px] border border-border/50 bg-background hover:border-accent/40 transition-all duration-500">
+                    <Icon size={32} className="icon-hover text-accent mb-6" />
+                    <h3 className="font-heading text-xl font-light text-foreground mb-3">
+                      {item.title}
+                    </h3>
+                    <p className="font-body text-sm text-muted-foreground leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="font-body text-sm text-muted-foreground">No features available at the moment.</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -208,50 +206,56 @@ const LearningOnlinePage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {programs.map((program) => (
-            <div key={program.name} className="program-card opacity-0">
-              <div className="card-hover h-full p-8 rounded-[24px] border border-border/50 bg-gradient-to-br from-secondary/20 to-background hover:border-accent/40 transition-all duration-500">
-                <h3 className="font-heading text-2xl font-light text-foreground mb-6">
-                  {program.name}
-                </h3>
+          {programs.length > 0 ? (
+            programs.map((program) => (
+              <div key={program.name} className="program-card opacity-0">
+                <div className="card-hover h-full p-8 rounded-[24px] border border-border/50 bg-gradient-to-br from-secondary/20 to-background hover:border-accent/40 transition-all duration-500">
+                  <h3 className="font-heading text-2xl font-light text-foreground mb-6">
+                    {program.name}
+                  </h3>
 
-                <div className="space-y-5 mb-8">
-                  <div className="pb-5 border-b border-border/50">
-                    <p className="font-body text-xs text-muted-foreground tracking-widest uppercase mb-2">
-                      Duration
-                    </p>
-                    <p className="font-body text-sm text-foreground font-semibold">
-                      {program.duration}
-                    </p>
+                  <div className="space-y-5 mb-8">
+                    <div className="pb-5 border-b border-border/50">
+                      <p className="font-body text-xs text-muted-foreground tracking-widest uppercase mb-2">
+                        Duration
+                      </p>
+                      <p className="font-body text-sm text-foreground font-semibold">
+                        {program.duration}
+                      </p>
+                    </div>
+
+                    <div className="pb-5 border-b border-border/50">
+                      <p className="font-body text-xs text-muted-foreground tracking-widest uppercase mb-2">
+                        Active Students
+                      </p>
+                      <p className="font-body text-sm text-foreground font-semibold">
+                        {program.students}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="font-body text-xs text-muted-foreground tracking-widest uppercase mb-2">
+                        Description
+                      </p>
+                      <p className="font-body text-sm text-muted-foreground leading-relaxed">
+                        {program.desc}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="pb-5 border-b border-border/50">
-                    <p className="font-body text-xs text-muted-foreground tracking-widest uppercase mb-2">
-                      Active Students
-                    </p>
-                    <p className="font-body text-sm text-foreground font-semibold">
-                      {program.students}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="font-body text-xs text-muted-foreground tracking-widest uppercase mb-2">
-                      Description
-                    </p>
-                    <p className="font-body text-sm text-muted-foreground leading-relaxed">
-                      {program.desc}
-                    </p>
-                  </div>
+                  <button className="w-full py-3 rounded-[16px] border border-accent/50 hover:bg-accent/10 transition-all duration-300">
+                    <span className="font-body text-xs tracking-[0.15em] uppercase text-accent font-semibold">
+                      Explore Programs
+                    </span>
+                  </button>
                 </div>
-
-                <button className="w-full py-3 rounded-[16px] border border-accent/50 hover:bg-accent/10 transition-all duration-300">
-                  <span className="font-body text-xs tracking-[0.15em] uppercase text-accent font-semibold">
-                    Explore Programs
-                  </span>
-                </button>
               </div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="font-body text-sm text-muted-foreground">No programs available at the moment.</p>
             </div>
-          ))}
+          )}
         </div>
 
         {/* Technology Platform */}

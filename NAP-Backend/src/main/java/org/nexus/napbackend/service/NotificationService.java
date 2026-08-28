@@ -41,6 +41,10 @@ public class NotificationService {
         return notificationRepository.findByUserIdAndReadOrderByCreatedAtDesc(userId, read);
     }
 
+    public List<Notification> findAll() {
+        return notificationRepository.findAllByOrderByCreatedAtDesc();
+    }
+
     public Notification update(Notification entity) {
         return notificationRepository.save(entity);
     }
@@ -73,5 +77,13 @@ public class NotificationService {
 
     public void deleteAnnouncement(Long id) {
         announcementRepository.deleteById(id);
+    }
+
+    public Optional<Announcement> findAnnouncementById(Long id) {
+        return announcementRepository.findById(id);
+    }
+
+    public Announcement updateAnnouncement(Announcement entity) {
+        return announcementRepository.save(entity);
     }
 }
