@@ -699,6 +699,7 @@ All components fall back to hardcoded defaults when CMS is empty.
 
 | Test | Status |
 |------|--------|
+| Frontend type-check (`tsc --noEmit`) | PASS |
 | Frontend build (`vite build`) | PASS |
 
 ### Commit 9: Connect Partners, Contact, PartnershipDiscussion to page_sections CMS
@@ -722,6 +723,38 @@ Connected partner type and partnership track cards in 3 pages to the `page_secti
 | `src/pages/PartnersPage.tsx` | Added `useContentCollection("page_sections")`, filters by `partners`/`partner_types`. Icons mapped via `iconMap` lookup. |
 | `src/pages/ContactPage.tsx` | Same pattern with `contact`/`partner_types`. |
 | `src/pages/PartnershipDiscussionPage.tsx` | Same pattern with `partnership_discussion`/`tracks`. Added `useContentCollection` import. |
+
+All components fall back to hardcoded defaults when CMS is empty.
+
+#### Testing Results
+
+| Test | Status |
+|------|--------|
+| Frontend type-check (`tsc --noEmit`) | PASS |
+| Frontend build (`vite build`) | PASS |
+
+### Commit 10: Connect DonatePage, Index, FeesPaymentPage to page_sections CMS
+**Commit:** `41421aa` - "feat: connect DonatePage, Index donation tiers, FeesPaymentPage payment plans to CMS"
+
+#### Overview
+Connected donation tiers, FAQs, and payment plans to the `page_sections` CMS collection.
+
+#### CMS Data Format
+
+| Page | page_key | section_key | body format |
+|------|----------|-------------|-------------|
+| DonatePage | `donate` | `donation_tiers` | JSON array of `{amount, usd, label, description, impact, color, featured}` |
+| DonatePage | `donate` | `faqs` | JSON array of `{q, a}` |
+| Index | `home` | `donation_tiers` | JSON array of `{amount, impact}` |
+| FeesPaymentPage | `fees_payment` | `payment_plans` | JSON array of `{name, desc, discount, interest, flexible}` |
+
+#### Changes
+
+| File | Change |
+|------|--------|
+| `src/pages/DonatePage.tsx` | Added `useContentCollection("page_sections")`, filters by `donate`/`donation_tiers` + `donate`/`faqs`. |
+| `src/pages/Index.tsx` | Same pattern with `home`/`donation_tiers`. |
+| `src/pages/FeesPaymentPage.tsx` | Same pattern with `fees_payment`/`payment_plans`. |
 
 All components fall back to hardcoded defaults when CMS is empty.
 
