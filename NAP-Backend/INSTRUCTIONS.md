@@ -700,3 +700,34 @@ All components fall back to hardcoded defaults when CMS is empty.
 | Test | Status |
 |------|--------|
 | Frontend build (`vite build`) | PASS |
+
+### Commit 9: Connect Partners, Contact, PartnershipDiscussion to page_sections CMS
+**Commit:** `01dc776` - "feat: connect Partners, Contact, PartnershipDiscussion to page_sections CMS"
+
+#### Overview
+Connected partner type and partnership track cards in 3 pages to the `page_sections` CMS collection.
+
+#### CMS Data Format
+
+| Page | page_key | section_key | body format |
+|------|----------|-------------|-------------|
+| PartnersPage | `partners` | `partner_types` | JSON array of `{title, description, benefits[]}` |
+| ContactPage | `contact` | `partner_types` | JSON array of `{title, description}` |
+| PartnershipDiscussionPage | `partnership_discussion` | `tracks` | JSON array of `{title, description}` |
+
+#### Changes
+
+| File | Change |
+|------|--------|
+| `src/pages/PartnersPage.tsx` | Added `useContentCollection("page_sections")`, filters by `partners`/`partner_types`. Icons mapped via `iconMap` lookup. |
+| `src/pages/ContactPage.tsx` | Same pattern with `contact`/`partner_types`. |
+| `src/pages/PartnershipDiscussionPage.tsx` | Same pattern with `partnership_discussion`/`tracks`. Added `useContentCollection` import. |
+
+All components fall back to hardcoded defaults when CMS is empty.
+
+#### Testing Results
+
+| Test | Status |
+|------|--------|
+| Frontend type-check (`tsc --noEmit`) | PASS |
+| Frontend build (`vite build`) | PASS |
