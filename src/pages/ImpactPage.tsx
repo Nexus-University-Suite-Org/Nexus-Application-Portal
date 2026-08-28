@@ -17,9 +17,17 @@ type StudentStory = Record<string, unknown> & {
   content?: string;
 };
 
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  body?: string;
+};
+
 gsap.registerPlugin(ScrollTrigger);
 
-const impactStats = [
+const fallbackStats = [
   { value: 1200, suffix: "+", label: "Total Graduates" },
   { value: 300, suffix: "+", label: "Businesses Started" },
   { value: 70, suffix: "%", label: "Women & Single Mothers" },
@@ -33,6 +41,12 @@ const ImpactPage = () => {
   const statsRef = useRef<HTMLDivElement>(null);
   const storiesRef = useRef<HTMLDivElement>(null);
   const { data: remoteStories, isLoading } = useContentCollection<StudentStory>("student_stories", []);
+  const { data: sections } = useContentCollection<PageSection>("page_sections", []);
+  const impactSections = sections.filter((s) => s.page_key === "impact");
+  const statsSection = impactSections.find((s) => s.section_key === "stats");
+  const impactStats = statsSection?.body
+    ? (() => { try { return JSON.parse(statsSection.body); } catch { return fallbackStats; } })()
+    : fallbackStats;
 
   useCountUp(statsRef);
   useSpotlightCards(storiesRef, ".story-card");

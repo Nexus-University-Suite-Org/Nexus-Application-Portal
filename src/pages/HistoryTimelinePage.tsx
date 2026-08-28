@@ -4,56 +4,44 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import aboutHero from "@/assets/about-hero.jpg";
+import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const timeline = [
-  {
-    year: "1922",
-    title: "Foundation Era",
-    desc: "Established as the East African Institute of Higher Learning with 47 students and 6 faculty members.",
-  },
-  {
-    year: "1948",
-    title: "University Charter",
-    desc: "Became a fully chartered university, expanding to include schools of law, medicine, and engineering.",
-  },
-  {
-    year: "1965",
-    title: "Independent Growth",
-    desc: "Post-independence expansion with scholarships for students across Africa.",
-  },
-  {
-    year: "1971",
-    title: "Research Pioneer",
-    desc: "Established the first research center in sub-Saharan Africa dedicated to tropical medicine.",
-  },
-  {
-    year: "1995",
-    title: "Global Partnerships",
-    desc: "Launched international partnerships with universities across Europe, Asia, and North America.",
-  },
-  {
-    year: "2010",
-    title: "Innovation Hub",
-    desc: "Opened the Innovation Hub, a 50,000 sq ft facility bridging academia and industry.",
-  },
-  {
-    year: "2020",
-    title: "Digital Transformation",
-    desc: "Rapid transition to digital learning and research platforms during global challenges.",
-  },
-  {
-    year: "2024",
-    title: "World Recognition",
-    desc: "Ranked among the top 200 universities globally, with research output growing 34% year-over-year.",
-  },
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  body?: string;
+};
+
+const fallbackTimeline = [
+  { year: "1922", title: "Foundation Era", desc: "Established as the East African Institute of Higher Learning with 47 students and 6 faculty members." },
+  { year: "1948", title: "University Charter", desc: "Became a fully chartered university, expanding to include schools of law, medicine, and engineering." },
+  { year: "1965", title: "Independent Growth", desc: "Post-independence expansion with scholarships for students across Africa." },
+  { year: "1971", title: "Research Pioneer", desc: "Established the first research center in sub-Saharan Africa dedicated to tropical medicine." },
+  { year: "1995", title: "Global Partnerships", desc: "Launched international partnerships with universities across Europe, Asia, and North America." },
+  { year: "2010", title: "Innovation Hub", desc: "Opened the Innovation Hub, a 50,000 sq ft facility bridging academia and industry." },
+  { year: "2020", title: "Digital Transformation", desc: "Rapid transition to digital learning and research platforms during global challenges." },
+  { year: "2024", title: "World Recognition", desc: "Ranked among the top 200 universities globally, with research output growing 34% year-over-year." },
 ];
+
+const parseJson = (body: string | undefined, fallback: unknown) => {
+  if (!body) return fallback;
+  try { return JSON.parse(body); } catch { return fallback; }
+};
 
 const HistoryTimelinePage = () => {
   const imageRef = useRef<HTMLImageElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
+
+  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const timelineSections = pageSections.filter(s => s.page_key === "history_timeline" && s.section_key === "timeline");
+  const timeline = timelineSections.length > 0
+    ? parseJson(timelineSections[0].body, fallbackTimeline) as { year: string; title: string; desc: string }[]
+    : fallbackTimeline;
 
   useEffect(() => {
     window.scrollTo(0, 0);

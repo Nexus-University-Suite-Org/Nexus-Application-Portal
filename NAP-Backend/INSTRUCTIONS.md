@@ -658,3 +658,30 @@ Connected 3 components to their backend CMS collections, removing hardcoded dumm
 | Test | Status |
 |------|--------|
 | Frontend build (`vite build`) | PASS |
+
+---
+
+### Commit 8: Connect HeroSection + ImpactPage stats to page_sections CMS
+**Commit:** `pending` - "Replace hardcoded impact stats with page_sections CMS data"
+
+#### Overview
+Connected HeroSection and ImpactPage impact statistics to the `page_sections` CMS collection. Stats are stored as JSON in the `body` field.
+
+#### CMS Data Format
+
+**HeroSection stats:** `page_key="home"`, `section_key="impact-stats"`, body = JSON array of `{value, label}` objects.
+
+**ImpactPage stats:** `page_key="impact"`, `section_key="stats"`, body = JSON array of `{value, suffix, label}` objects.
+
+#### Changes
+
+| File | Change |
+|------|--------|
+| `src/components/HeroSection.tsx` | Added `useContentCollection("page_sections")`, filters by page_key + section_key, parses JSON body. Falls back to hardcoded defaults when CMS is empty. |
+| `src/pages/ImpactPage.tsx` | Same pattern with `page_key="impact"` + `section_key="stats"`. |
+
+#### Testing Results
+
+| Test | Status |
+|------|--------|
+| Frontend build (`vite build`) | PASS |

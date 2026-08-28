@@ -4,10 +4,19 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Heart, Users, ArrowRight } from "lucide-react";
 import heroCampus from "@/assets/hero-campus.jpg";
+import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const impactStats = [
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  body?: string;
+};
+
+const fallbackStats = [
   { value: "1,200+", label: "Students Trained" },
   { value: "70%", label: "Women & Single Mothers" },
   { value: "300+", label: "Graduates Running Businesses" },
@@ -25,6 +34,12 @@ const HeroSection = () => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const heroGlowRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { data: sections } = useContentCollection<PageSection>("page_sections", []);
+  const homeSections = sections.filter((s) => s.page_key === "home");
+  const statsSection = homeSections.find((s) => s.section_key === "impact-stats");
+  const impactStats = statsSection?.body
+    ? (() => { try { return JSON.parse(statsSection.body); } catch { return fallbackStats; } })()
+    : fallbackStats;
 
   useEffect(() => {
     let handleMouseMove: ((event: MouseEvent) => void) | null = null;

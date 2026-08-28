@@ -3,53 +3,40 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Home, Users, BookOpen, Dumbbell, Leaf, Music } from "lucide-react";
 import campusLifeImg from "@/assets/campus-life.jpg";
+import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const highlights = [
-  {
-    icon: Home,
-    title: "Residential Halls",
-    stat: "12",
-    description:
-      "Heritage residences with private courtyards, libraries, and faculty-in-residence programs.",
-  },
-  {
-    icon: Users,
-    title: "Student Organizations",
-    stat: "85+",
-    description:
-      "From the Dialectic Society to the Experimental Theatre Collective—every passion finds its people.",
-  },
-  {
-    icon: BookOpen,
-    title: "Libraries & Archives",
-    stat: "4",
-    description:
-      "Including the rare manuscripts vault housing over 12,000 pre-modern texts.",
-  },
-  {
-    icon: Dumbbell,
-    title: "Athletic Facilities",
-    stat: "6",
-    description:
-      "Olympic-grade aquatic center, fencing salle, and 200-acre cross-country trails.",
-  },
-  {
-    icon: Leaf,
-    title: "Botanical Gardens",
-    stat: "30 acres",
-    description:
-      "A living laboratory and contemplative retreat at the heart of campus.",
-  },
-  {
-    icon: Music,
-    title: "Performance Venues",
-    stat: "3",
-    description:
-      "Concert hall, black-box theatre, and open-air amphitheatre for 1,200.",
-  },
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  body?: string;
+};
+
+const fallbackHighlights = [
+  { title: "Residential Halls", stat: "12", description: "Heritage residences with private courtyards, libraries, and faculty-in-residence programs." },
+  { title: "Student Organizations", stat: "85+", description: "From the Dialectic Society to the Experimental Theatre Collective—every passion finds its people." },
+  { title: "Libraries & Archives", stat: "4", description: "Including the rare manuscripts vault housing over 12,000 pre-modern texts." },
+  { title: "Athletic Facilities", stat: "6", description: "Olympic-grade aquatic center, fencing salle, and 200-acre cross-country trails." },
+  { title: "Botanical Gardens", stat: "30 acres", description: "A living laboratory and contemplative retreat at the heart of campus." },
+  { title: "Performance Venues", stat: "3", description: "Concert hall, black-box theatre, and open-air amphitheatre for 1,200." },
 ];
+
+const iconMap: Record<string, typeof Home> = {
+  "Residential Halls": Home,
+  "Student Organizations": Users,
+  "Libraries & Archives": BookOpen,
+  "Athletic Facilities": Dumbbell,
+  "Botanical Gardens": Leaf,
+  "Performance Venues": Music,
+};
+
+const parseJson = (body: string | undefined, fallback: unknown) => {
+  if (!body) return fallback;
+  try { return JSON.parse(body); } catch { return fallback; }
+};
 
 const CampusLifeSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -57,6 +44,12 @@ const CampusLifeSection = () => {
   const imageRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
   const statsBarRef = useRef<HTMLDivElement>(null);
+
+  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const highlightsSections = pageSections.filter(s => s.page_key === "campus_life" && s.section_key === "highlights");
+  const highlights = highlightsSections.length > 0
+    ? parseJson(highlightsSections[0].body, fallbackHighlights) as { title: string; stat: string; description: string }[]
+    : fallbackHighlights;
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -216,7 +209,7 @@ const CampusLifeSection = () => {
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12"
       >
         {highlights.map((item) => {
-          const Icon = item.icon;
+          const Icon = iconMap[item.title] || Home;
           return (
             <div
               key={item.title}

@@ -5,23 +5,30 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { CheckCircle2 } from "lucide-react";
 import aboutHero from "@/assets/about-hero.jpg";
+import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const highlights = [
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  body?: string;
+};
+
+const fallbackHighlights = [
   { title: "Founded 1922", desc: "Over a century of academic excellence" },
   { title: "143+ Programs", desc: "Across 10 colleges and schools" },
   { title: "12,400+ Students", desc: "From 74 countries worldwide" },
-  {
-    title: "Top 200 Global",
-    desc: "Ranked among world's leading universities",
-  },
+  { title: "Top 200 Global", desc: "Ranked among world's leading universities" },
 ];
 
-const mission = {
-  title: "Our Mission",
-  desc: (instituteName: string) =>
-    `${instituteName} is dedicated to fostering intellectual inquiry, advancing knowledge through research, and developing leaders who contribute meaningfully to society. We believe in the transformative power of education and the responsibility of institutions to serve the greater good.`,
+const fallbackMission = "University Application Portal is dedicated to fostering intellectual inquiry, advancing knowledge through research, and developing leaders who contribute meaningfully to society.";
+
+const parseJson = (body: string | undefined, fallback: unknown) => {
+  if (!body) return fallback;
+  try { return JSON.parse(body); } catch { return fallback; }
 };
 
 const AboutInstitutePage = () => {
@@ -30,6 +37,16 @@ const AboutInstitutePage = () => {
   const highlightsRef = useRef<HTMLDivElement>(null);
   const missionRef = useRef<HTMLDivElement>(null);
   const [portalName] = useState("University Application Portal");
+
+  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const highlightsSections = pageSections.filter(s => s.page_key === "about_institute" && s.section_key === "highlights");
+  const highlights = highlightsSections.length > 0
+    ? parseJson(highlightsSections[0].body, fallbackHighlights) as { title: string; desc: string }[]
+    : fallbackHighlights;
+  const missionSections = pageSections.filter(s => s.page_key === "about_institute" && s.section_key === "mission");
+  const missionDesc = missionSections.length > 0 && missionSections[0].body
+    ? missionSections[0].body
+    : fallbackMission;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -163,10 +180,10 @@ const AboutInstitutePage = () => {
             </p>
           </div>
           <h2 className="font-heading text-4xl md:text-5xl font-light text-foreground mb-8 leading-[1.1]">
-            {mission.title}
+            Our Mission
           </h2>
           <p className="font-body text-lg text-muted-foreground leading-relaxed mb-8">
-            {mission.desc(portalName)}
+            {missionDesc}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[

@@ -5,74 +5,51 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { TrendingUp, Users, BookOpen, Globe } from "lucide-react";
 import aboutHero from "@/assets/about-hero.jpg";
+import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const stats = [
-  {
-    icon: Users,
-    label: "Students Enrolled",
-    value: "12,400+",
-    trend: "↑ 8% YoY",
-  },
-  {
-    icon: BookOpen,
-    label: "Academic Programs",
-    value: "143+",
-    trend: "↑ New 12 programs",
-  },
-  {
-    icon: Globe,
-    label: "Countries Represented",
-    value: "74",
-    trend: "Expanding globally",
-  },
-  {
-    icon: TrendingUp,
-    label: "Research Growth",
-    value: "+34%",
-    trend: "Year-over-year",
-  },
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  body?: string;
+};
+
+const iconMap = [Users, BookOpen, Globe, TrendingUp];
+
+const fallbackStats = [
+  { label: "Students Enrolled", value: "12,400+", trend: "↑ 8% YoY" },
+  { label: "Academic Programs", value: "143+", trend: "↑ New 12 programs" },
+  { label: "Countries Represented", value: "74", trend: "Expanding globally" },
+  { label: "Research Growth", value: "+34%", trend: "Year-over-year" },
 ];
 
-const facts = [
-  {
-    category: "Faculty",
-    stat: "1,200+",
-    desc: "Highly qualified faculty members with advanced degrees",
-  },
-  {
-    category: "Libraries",
-    stat: "2.5M+",
-    desc: "Books, journals, and digital resources",
-  },
-  {
-    category: "Labs",
-    stat: "50+",
-    desc: "State-of-the-art research and teaching labs",
-  },
-  {
-    category: "Scholarships",
-    stat: "$18M+",
-    desc: "Annual financial aid distributed",
-  },
-  {
-    category: "Graduation Rate",
-    stat: "94%",
-    desc: "Four-year completion rate",
-  },
-  {
-    category: "Employment",
-    stat: "92%",
-    desc: "Graduate employment within 6 months",
-  },
+const fallbackFacts = [
+  { category: "Faculty", stat: "1,200+", desc: "Highly qualified faculty members with advanced degrees" },
+  { category: "Libraries", stat: "2.5M+", desc: "Books, journals, and digital resources" },
+  { category: "Labs", stat: "50+", desc: "State-of-the-art research and teaching labs" },
+  { category: "Scholarships", stat: "$18M+", desc: "Annual financial aid distributed" },
+  { category: "Graduation Rate", stat: "94%", desc: "Four-year completion rate" },
+  { category: "Employment", stat: "92%", desc: "Graduate employment within 6 months" },
 ];
+
+const parseJson = (body: string | undefined, fallback: unknown[]) => {
+  if (!body) return fallback;
+  try { return JSON.parse(body); } catch { return fallback; }
+};
 
 const FactsFiguresPage = () => {
   const imageRef = useRef<HTMLImageElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const factsRef = useRef<HTMLDivElement>(null);
+  const { data: sections } = useContentCollection<PageSection>("page_sections", []);
+  const ffSections = sections.filter((s) => s.page_key === "facts_figures");
+  const statsSection = ffSections.find((s) => s.section_key === "stats");
+  const factsSection = ffSections.find((s) => s.section_key === "facts");
+  const stats = parseJson(statsSection?.body, fallbackStats);
+  const facts = parseJson(factsSection?.body, fallbackFacts);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -184,8 +161,8 @@ const FactsFiguresPage = () => {
         className="px-8 md:px-16 py-24 bg-gradient-to-b from-secondary/20 to-background"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          {stats.map((item) => {
-            const Icon = item.icon;
+          {stats.map((item, index) => {
+            const Icon = iconMap[index % iconMap.length];
             return (
               <div key={item.label} className="stat-card opacity-0">
                 <div className="card-hover h-full p-8 rounded-[24px] border border-border/40 bg-background hover:border-accent/40 transition-all duration-500 relative overflow-hidden group">

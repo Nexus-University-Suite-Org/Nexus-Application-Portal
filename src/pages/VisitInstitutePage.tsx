@@ -5,37 +5,26 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { MapPin, Calendar, Clock, Users } from "lucide-react";
 import aboutHero from "@/assets/about-hero.jpg";
+import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const tours = [
-  {
-    name: "Campus Walking Tour",
-    duration: "2 hours",
-    group: "Up to 30 people",
-    frequency: "Daily at 10 AM & 2 PM",
-  },
-  {
-    name: "Academic Building Tour",
-    duration: "1.5 hours",
-    group: "Up to 25 people",
-    frequency: "Mon-Fri 11 AM",
-  },
-  {
-    name: "Residential Life Tour",
-    duration: "1 hour",
-    group: "Up to 20 people",
-    frequency: "Daily 3 PM",
-  },
-  {
-    name: "Lab & Innovation Hub",
-    duration: "2.5 hours",
-    group: "Up to 15 people",
-    frequency: "Wed & Fri 9 AM",
-  },
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  title?: string;
+  body?: string;
+};
+
+const fallbackTours = [
+  { name: "Campus Walking Tour", duration: "2 hours", group: "Up to 30 people", frequency: "Daily at 10 AM & 2 PM" },
+  { name: "Academic Building Tour", duration: "1.5 hours", group: "Up to 25 people", frequency: "Mon-Fri 11 AM" },
+  { name: "Residential Life Tour", duration: "1 hour", group: "Up to 20 people", frequency: "Daily 3 PM" },
+  { name: "Lab & Innovation Hub", duration: "2.5 hours", group: "Up to 15 people", frequency: "Wed & Fri 9 AM" },
 ];
 
-const highlights = [
+const fallbackHighlights = [
   "Four botanical gardens spanning 45 acres",
   "State-of-the-art library with 2.5M+ volumes",
   "Olympic-standard sports complex",
@@ -44,11 +33,26 @@ const highlights = [
   "Historic heritage buildings dating to 1922",
 ];
 
+const parseJson = (body: string | undefined, fallback: unknown) => {
+  if (!body) return fallback;
+  try { return JSON.parse(body); } catch { return fallback; }
+};
+
 const VisitInstitutePage = () => {
   const imageRef = useRef<HTMLImageElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
   const toursRef = useRef<HTMLDivElement>(null);
   const highlightsRef = useRef<HTMLDivElement>(null);
+
+  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const toursSections = pageSections.filter(s => s.page_key === "visit_institute" && s.section_key === "tours");
+  const tours = toursSections.length > 0
+    ? parseJson(toursSections[0].body, fallbackTours) as { name: string; duration: string; group: string; frequency: string }[]
+    : fallbackTours;
+  const highlightsSections = pageSections.filter(s => s.page_key === "visit_institute" && s.section_key === "highlights");
+  const highlights = highlightsSections.length > 0
+    ? parseJson(highlightsSections[0].body, fallbackHighlights) as string[]
+    : fallbackHighlights;
 
   useEffect(() => {
     window.scrollTo(0, 0);

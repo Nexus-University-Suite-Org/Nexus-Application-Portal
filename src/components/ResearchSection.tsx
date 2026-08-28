@@ -2,10 +2,18 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import researchImg from "@/assets/research.jpg";
+import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const stats = [
+type PageSection = Record<string, unknown> & {
+  id: string;
+  page_key?: string;
+  section_key?: string;
+  body?: string;
+};
+
+const fallbackStats = [
   { number: "147", label: "Research Labs" },
   { number: "2,300+", label: "Published Papers (2025)" },
   { number: "89%", label: "Faculty with Active Grants" },
@@ -17,6 +25,12 @@ const ResearchSection = () => {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
+  const { data: sections } = useContentCollection<PageSection>("page_sections", []);
+  const homeSections = sections.filter((s) => s.page_key === "home");
+  const statsSection = homeSections.find((s) => s.section_key === "research-stats");
+  const stats = statsSection?.body
+    ? (() => { try { return JSON.parse(statsSection.body); } catch { return fallbackStats; } })()
+    : fallbackStats;
 
   useEffect(() => {
     const ctx = gsap.context(() => {
