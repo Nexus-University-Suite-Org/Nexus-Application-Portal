@@ -23,9 +23,11 @@ const HowToApplyPage = () => {
   const { data: sections, isLoading } = useContentCollection<PageSection>("page_sections", []);
 
   const howToApplySections = sections.filter((s) => s.page_key === "how-to-apply");
-  const steps = howToApplySections.length > 0
-    ? howToApplySections.filter((s) => s.section_key?.startsWith("step")).map((s, i) => ({ number: i + 1, title: s.title || "Step", desc: s.body || s.subtitle || "" }))
-    : [
+  const fetchedSteps = howToApplySections
+    .filter((s) => s.section_key?.startsWith("step"))
+    .map((s, i) => ({ number: i + 1, title: s.title || "Step", desc: s.body || s.subtitle || "" }));
+  const steps =
+    fetchedSteps.length > 0 ? fetchedSteps : [
         { number: 1, title: "Research Programs", desc: "Browse available programs and find one that matches your goals." },
         { number: 2, title: "Check Requirements", desc: "Review admission requirements for your chosen program." },
         { number: 3, title: "Gather Documents", desc: "Prepare academic transcripts, identification, and references." },
