@@ -43,6 +43,8 @@ const HeroSection = () => {
   const [heroCtaSponsor, setHeroCtaSponsor] = useState("Sponsor a Student");
   const [heroCtaDonateVisible, setHeroCtaDonateVisible] = useState(true);
   const [heroCtaSponsorVisible, setHeroCtaSponsorVisible] = useState(true);
+  const [heroCtaLearnMore, setHeroCtaLearnMore] = useState("Learn More");
+  const [heroCtaLearnMoreVisible, setHeroCtaLearnMoreVisible] = useState(true);
   const { data: sections } = useContentCollection<PageSection>("page_sections", []);
   const homeSections = sections.filter((s) => s.page_key === "home");
   const statsSection = homeSections.find((s) => s.section_key === "impact-stats");
@@ -66,6 +68,8 @@ const HeroSection = () => {
         if (data.hero_cta_sponsor) setHeroCtaSponsor(data.hero_cta_sponsor);
         if (data.hero_cta_donate_visible !== undefined) setHeroCtaDonateVisible(data.hero_cta_donate_visible !== 'false');
         if (data.hero_cta_sponsor_visible !== undefined) setHeroCtaSponsorVisible(data.hero_cta_sponsor_visible !== 'false');
+        if (data.hero_cta_learn_more) setHeroCtaLearnMore(data.hero_cta_learn_more);
+        if (data.hero_cta_learn_more_visible !== undefined) setHeroCtaLearnMoreVisible(data.hero_cta_learn_more_visible !== 'false');
       })
       .catch(() => {});
   }, []);
@@ -247,16 +251,18 @@ const HeroSection = () => {
                 {heroCtaSponsor}
               </button>
             )}
-            <button
-              onClick={() => navigate("/about")}
-              className="group flex items-center gap-2 px-8 py-4 text-primary-foreground/70 font-body text-sm tracking-[0.2em] uppercase transition-all duration-500 hover:text-primary-foreground"
-            >
-              Learn More
-              <ArrowRight
-                size={16}
-                className="group-hover:translate-x-1 transition-transform duration-300"
-              />
-            </button>
+            {heroCtaLearnMoreVisible && (
+              <button
+                onClick={() => navigate("/about")}
+                className="group flex items-center gap-2 px-8 py-4 text-primary-foreground/70 font-body text-sm tracking-[0.2em] uppercase transition-all duration-500 hover:text-primary-foreground"
+              >
+                {heroCtaLearnMore}
+                <ArrowRight
+                  size={16}
+                  className="group-hover:translate-x-1 transition-transform duration-300"
+                />
+              </button>
+            )}
           </div>
         </div>
 
