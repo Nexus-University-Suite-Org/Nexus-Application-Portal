@@ -50,6 +50,14 @@ SELECT 1, 'hero_subtitle', 'We equip vulnerable youth and single mothers with vo
 WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'hero_subtitle');
 
 INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'hero_cta_donate', 'Donate Now', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'hero_cta_donate');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'hero_cta_sponsor', 'Sponsor a Student', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'hero_cta_sponsor');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
 SELECT 1, 'footer_mission', 'Empowering single mothers and vulnerable youth through practical vocational skills — building dignified livelihoods one graduate at a time.', NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'footer_mission');
 

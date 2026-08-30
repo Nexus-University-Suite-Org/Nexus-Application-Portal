@@ -39,6 +39,8 @@ const HeroSection = () => {
   const [heroHeading2, setHeroHeading2] = useState("& Vulnerable Youth");
   const [heroHeading3, setHeroHeading3] = useState("Through Practical Skills");
   const [heroSubtitle, setHeroSubtitle] = useState("We equip vulnerable youth and single mothers with vocational skills that enable them to earn sustainable livelihoods and build better futures.");
+  const [heroCtaDonate, setHeroCtaDonate] = useState("Donate Now");
+  const [heroCtaSponsor, setHeroCtaSponsor] = useState("Sponsor a Student");
   const { data: sections } = useContentCollection<PageSection>("page_sections", []);
   const homeSections = sections.filter((s) => s.page_key === "home");
   const statsSection = homeSections.find((s) => s.section_key === "impact-stats");
@@ -58,6 +60,8 @@ const HeroSection = () => {
         if (data.hero_heading_2) setHeroHeading2(data.hero_heading_2);
         if (data.hero_heading_3) setHeroHeading3(data.hero_heading_3);
         if (data.hero_subtitle) setHeroSubtitle(data.hero_subtitle);
+        if (data.hero_cta_donate) setHeroCtaDonate(data.hero_cta_donate);
+        if (data.hero_cta_sponsor) setHeroCtaSponsor(data.hero_cta_sponsor);
       })
       .catch(() => {});
   }, []);
@@ -226,14 +230,14 @@ const HeroSection = () => {
               className="group flex items-center gap-2 px-8 py-4 bg-accent text-accent-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 hover:scale-105"
             >
               <Heart size={16} className="fill-current" />
-              Donate Now
+              {heroCtaDonate}
             </button>
             <button
               onClick={() => navigate("/donate#sponsor")}
               className="group flex items-center gap-2 px-8 py-4 border border-primary-foreground/50 text-primary-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent"
             >
               <Users size={16} />
-              Sponsor a Student
+              {heroCtaSponsor}
             </button>
             <button
               onClick={() => navigate("/about")}
