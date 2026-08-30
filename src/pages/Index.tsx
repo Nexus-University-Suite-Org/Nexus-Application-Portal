@@ -68,6 +68,14 @@ const Index = () => {
   const [whatWeTeachHeading1, setWhatWeTeachHeading1] = useState("Practical Skills That");
   const [whatWeTeachHeading2, setWhatWeTeachHeading2] = useState("Create Real Livelihoods");
   const [whatWeTeachSubtitle, setWhatWeTeachSubtitle] = useState("Our vocational programs are designed for immediate employment and entrepreneurship. Each graduate leaves with the skills to earn income from day one.");
+  const [whatWeTeachPrograms, setWhatWeTeachPrograms] = useState([
+    { title: "Tailoring & Design", duration: "6 months", outcome: "Run your own shop" },
+    { title: "Electrical Installation", duration: "8 months", outcome: "Certified electrician" },
+    { title: "Plumbing", duration: "8 months", outcome: "Start a plumbing business" },
+    { title: "Welding & Fabrication", duration: "6 months", outcome: "Fabrication workshop owner" },
+    { title: "Hairdressing", duration: "4 months", outcome: "Open your own salon" },
+    { title: "Beauty Therapy", duration: "4 months", outcome: "Freelance beauty therapist" },
+  ]);
 
   const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
   const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
@@ -82,21 +90,11 @@ const Index = () => {
     tailor: Scissors, plumb: Wrench, electric: Zap, weld: Flame, hair: Users, beauty: Sparkles, auto: Car, soap: BookOpen,
   };
 
-  const programPreviews = remotePrograms.length > 0
-    ? remotePrograms.slice(0, 6).map((p) => {
-        const name = (typeof p.programName === "string" && p.programName.trim()) || "Program";
-        const lower = name.toLowerCase();
-        const icon = Object.entries(iconMap).find(([k]) => lower.includes(k))?.[1] || BookOpen;
-        return { icon, title: name, duration: "", outcome: (typeof p.description === "string" && p.description.slice(0, 100)) || "Practical skills for real careers" };
-      })
-    : [
-        { icon: Scissors, title: "Tailoring & Design", duration: "6 months", outcome: "Run your own shop" },
-        { icon: Zap, title: "Electrical Installation", duration: "8 months", outcome: "Certified electrician" },
-        { icon: Wrench, title: "Plumbing", duration: "8 months", outcome: "Start a plumbing business" },
-        { icon: Flame, title: "Welding & Fabrication", duration: "6 months", outcome: "Fabrication workshop owner" },
-        { icon: Users, title: "Hairdressing", duration: "4 months", outcome: "Open your own salon" },
-        { icon: Sparkles, title: "Beauty Therapy", duration: "4 months", outcome: "Freelance beauty therapist" },
-      ];
+  const programPreviews = whatWeTeachPrograms.map((p) => {
+    const lower = p.title.toLowerCase();
+    const icon = Object.entries(iconMap).find(([k]) => lower.includes(k))?.[1] || BookOpen;
+    return { icon, title: p.title, duration: p.duration, outcome: p.outcome };
+  });
 
   const storyFeature = remoteStories.length > 0
     ? { name: remoteStories[0].student_name || "Graduate", program: remoteStories[0].program || "Vocational Training", quote: remoteStories[0].title || "This program changed my life.", outcome: "Now earning a stable income" }
@@ -114,6 +112,12 @@ const Index = () => {
         if (data.what_we_teach_heading_1) setWhatWeTeachHeading1(data.what_we_teach_heading_1);
         if (data.what_we_teach_heading_2) setWhatWeTeachHeading2(data.what_we_teach_heading_2);
         if (data.what_we_teach_subtitle) setWhatWeTeachSubtitle(data.what_we_teach_subtitle);
+        if (data.what_we_teach_programs) {
+          try {
+            const parsed = JSON.parse(data.what_we_teach_programs);
+            if (Array.isArray(parsed) && parsed.length > 0) setWhatWeTeachPrograms(parsed);
+          } catch {}
+        }
       })
       .catch(() => {});
   }, []);

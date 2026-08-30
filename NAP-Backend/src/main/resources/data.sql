@@ -94,6 +94,10 @@ SELECT 1, 'what_we_teach_subtitle', 'Our vocational programs are designed for im
 WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'what_we_teach_subtitle');
 
 INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'what_we_teach_programs', '[{"title":"Tailoring & Design","duration":"6 months","outcome":"Run your own shop"},{"title":"Electrical Installation","duration":"8 months","outcome":"Certified electrician"},{"title":"Plumbing","duration":"8 months","outcome":"Start a plumbing business"},{"title":"Welding & Fabrication","duration":"6 months","outcome":"Fabrication workshop owner"},{"title":"Hairdressing","duration":"4 months","outcome":"Open your own salon"},{"title":"Beauty Therapy","duration":"4 months","outcome":"Freelance beauty therapist"}]', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'what_we_teach_programs');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
 SELECT 1, 'footer_mission', 'Empowering single mothers and vulnerable youth through practical vocational skills — building dignified livelihoods one graduate at a time.', NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'footer_mission');
 
