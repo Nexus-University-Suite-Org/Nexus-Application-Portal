@@ -79,6 +79,7 @@ const Index = () => {
   const [whatWeTeachBtnText, setWhatWeTeachBtnText] = useState("View All Programs");
   const [whatWeTeachBtnVisible, setWhatWeTeachBtnVisible] = useState(true);
   const [successStoryTagline, setSuccessStoryTagline] = useState("Student Success Story");
+  const [successStoryQuote, setSuccessStoryQuote] = useState("I went from nothing to owning my own business.");
 
   const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
   const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
@@ -124,6 +125,7 @@ const Index = () => {
         if (data.what_we_teach_btn_text) setWhatWeTeachBtnText(data.what_we_teach_btn_text);
         if (data.what_we_teach_btn_visible !== undefined) setWhatWeTeachBtnVisible(data.what_we_teach_btn_visible !== 'false');
         if (data.success_story_tagline) setSuccessStoryTagline(data.success_story_tagline);
+        if (data.success_story_quote) setSuccessStoryQuote(data.success_story_quote);
       })
       .catch(() => {});
   }, []);
@@ -265,7 +267,7 @@ const Index = () => {
               <div>
                 <p className="story-anim opacity-0 font-body text-xs tracking-[0.3em] uppercase text-accent mb-6">{successStoryTagline}</p>
                 <blockquote className="story-anim opacity-0 font-heading text-3xl md:text-5xl font-light text-primary-foreground leading-tight mb-8">
-                  "{storyFeature.quote}"
+                  "{successStoryQuote}"
                 </blockquote>
                 <p className="story-anim opacity-0 font-body text-sm text-primary-foreground/60 mb-2">— {storyFeature.name}, {storyFeature.program}</p>
                 <p className="story-anim opacity-0 font-body text-sm text-accent mb-10">{storyFeature.outcome}</p>
