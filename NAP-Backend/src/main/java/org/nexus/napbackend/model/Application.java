@@ -319,7 +319,7 @@ public class Application {
     @Column(name = "program_choice_4", length = 200)
     private String programChoice4;
 
-    @Column(name = "assigned_programme", length = 20)
+    @Column(name = "assigned_programme", length = 200)
     private String assignedProgramme;
 
     @Column(name = "total_weight_score")
