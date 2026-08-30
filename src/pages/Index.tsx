@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -64,6 +64,7 @@ const Index = () => {
   const storyRef = useRef<HTMLDivElement>(null);
   const donateRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
+  const [whatWeTeachTagline, setWhatWeTeachTagline] = useState("What We Teach");
 
   const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
   const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
@@ -101,6 +102,15 @@ const Index = () => {
   useSpotlightCards(programsRef);
   useSpotlightCards(donateRef);
   useParallax(pageRef);
+
+  useEffect(() => {
+    fetch("http://localhost:8080/api/v1/content/site-settings")
+      .then((res) => { if (!res.ok) throw new Error(""); return res.json(); })
+      .then((data: Record<string, string>) => {
+        if (data.what_we_teach_tagline) setWhatWeTeachTagline(data.what_we_teach_tagline);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -191,7 +201,7 @@ const Index = () => {
             <div className="parallax-el pointer-events-none absolute -top-24 -left-28 h-72 w-72 rounded-full bg-accent/10 blur-3xl" data-speed="0.3" />
             <div className="parallax-el pointer-events-none absolute -bottom-32 right-0 h-80 w-80 rounded-full bg-primary/10 blur-3xl" data-speed="0.5" />
             <div className="max-w-2xl mb-16">
-              <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">What We Teach</p>
+              <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">{whatWeTeachTagline}</p>
               <h2 className="section-heading font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">
                 Practical Skills That<br />Create Real Livelihoods
               </h2>
