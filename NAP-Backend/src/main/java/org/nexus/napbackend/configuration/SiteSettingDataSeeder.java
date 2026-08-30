@@ -47,6 +47,8 @@ public class SiteSettingDataSeeder implements CommandLineRunner {
             seedIfEmpty("what_we_teach_heading_2", "Create Real Livelihoods");
             seedIfEmpty("what_we_teach_subtitle", "Our vocational programs are designed for immediate employment and entrepreneurship. Each graduate leaves with the skills to earn income from day one.");
             seedIfEmpty("what_we_teach_programs", "[{\"title\":\"Tailoring & Design\",\"duration\":\"6 months\",\"outcome\":\"Run your own shop\"},{\"title\":\"Electrical Installation\",\"duration\":\"8 months\",\"outcome\":\"Certified electrician\"},{\"title\":\"Plumbing\",\"duration\":\"8 months\",\"outcome\":\"Start a plumbing business\"},{\"title\":\"Welding & Fabrication\",\"duration\":\"6 months\",\"outcome\":\"Fabrication workshop owner\"},{\"title\":\"Hairdressing\",\"duration\":\"4 months\",\"outcome\":\"Open your own salon\"},{\"title\":\"Beauty Therapy\",\"duration\":\"4 months\",\"outcome\":\"Freelance beauty therapist\"}]");
+            seedIfEmpty("what_we_teach_btn_text", "View All Programs");
+            seedIfEmpty("what_we_teach_btn_visible", "true");
             seedIfEmpty("footer_mission", "Empowering single mothers and vulnerable youth through practical vocational skills — building dignified livelihoods one graduate at a time.");
         } catch (Exception e) {
             log.warn("SiteSetting seeder skipped — table may not exist yet: {}", e.getMessage());

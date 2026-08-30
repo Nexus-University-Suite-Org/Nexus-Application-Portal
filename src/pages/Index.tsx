@@ -76,6 +76,8 @@ const Index = () => {
     { title: "Hairdressing", duration: "4 months", outcome: "Open your own salon" },
     { title: "Beauty Therapy", duration: "4 months", outcome: "Freelance beauty therapist" },
   ]);
+  const [whatWeTeachBtnText, setWhatWeTeachBtnText] = useState("View All Programs");
+  const [whatWeTeachBtnVisible, setWhatWeTeachBtnVisible] = useState(true);
 
   const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
   const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
@@ -118,6 +120,8 @@ const Index = () => {
             if (Array.isArray(parsed) && parsed.length > 0) setWhatWeTeachPrograms(parsed);
           } catch {}
         }
+        if (data.what_we_teach_btn_text) setWhatWeTeachBtnText(data.what_we_teach_btn_text);
+        if (data.what_we_teach_btn_visible !== undefined) setWhatWeTeachBtnVisible(data.what_we_teach_btn_visible !== 'false');
       })
       .catch(() => {});
   }, []);
@@ -241,13 +245,15 @@ const Index = () => {
                 </div>
               ))}
             </div>
-            <button
-              onClick={() => navigate("/programs")}
-              className="group flex items-center gap-2 font-body text-sm tracking-[0.2em] uppercase text-accent transition-all duration-300 hover:gap-4 btn-lift"
-            >
-              View All Programs
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
-            </button>
+            {whatWeTeachBtnVisible && (
+              <button
+                onClick={() => navigate("/programs")}
+                className="group flex items-center gap-2 font-body text-sm tracking-[0.2em] uppercase text-accent transition-all duration-300 hover:gap-4 btn-lift"
+              >
+                {whatWeTeachBtnText}
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
+              </button>
+            )}
           </section>
 
           {/* Featured Success Story */}
