@@ -5,6 +5,55 @@
 INSERT INTO tenants (code, name, created_at) SELECT 'demo', 'University Application Portal', NOW() WHERE NOT EXISTS (SELECT 1 FROM tenants WHERE code = 'demo');
 
 -- ============================================
+-- SITE SETTINGS (portal_name, nav_links, cta_buttons)
+-- ============================================
+CREATE TABLE IF NOT EXISTS site_settings (
+    id BIGSERIAL PRIMARY KEY,
+    tenant_id BIGINT NOT NULL,
+    setting_key VARCHAR(100) NOT NULL,
+    setting_value TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    UNIQUE (tenant_id, setting_key)
+);
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'portal_name', 'University Application Portal', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'portal_name');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'nav_links', '[{"label":"Home","href":"/","visible":true},{"label":"About","href":"/about","visible":true},{"label":"News","href":"/news","visible":true},{"label":"Programs","href":"/programs","visible":true},{"label":"Impact","href":"/impact","visible":true},{"label":"Stories","href":"/stories","visible":true},{"label":"Gallery","href":"/gallery","visible":true},{"label":"Partners","href":"/partners","visible":true},{"label":"Contact","href":"/contact","visible":true}]', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'nav_links');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'cta_buttons', '[{"label":"Apply Now","href":"/admissions/how-to-apply","style":"accent","visible":true},{"label":"Donate","href":"/donate","style":"outline","visible":true}]', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'cta_buttons');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'hero_tagline', 'Empowering Communities Since 2010', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'hero_tagline');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'hero_heading_1', 'Empowering Single Mothers', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'hero_heading_1');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'hero_heading_2', '& Vulnerable Youth', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'hero_heading_2');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'hero_heading_3', 'Through Practical Skills', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'hero_heading_3');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'hero_subtitle', 'We equip vulnerable youth and single mothers with vocational skills that enable them to earn sustainable livelihoods and build better futures.', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'hero_subtitle');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'footer_mission', 'Empowering single mothers and vulnerable youth through practical vocational skills — building dignified livelihoods one graduate at a time.', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'footer_mission');
+
+-- ============================================
 -- NEWS ARTICLES
 -- ============================================
 INSERT INTO news_articles (tenant_id, title, slug, excerpt, content, category, image_url, featured, published, published_at, created_at) VALUES

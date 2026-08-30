@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -34,12 +34,33 @@ const HeroSection = () => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const heroGlowRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const [heroTagline, setHeroTagline] = useState("Empowering Communities Since 2010");
+  const [heroHeading1, setHeroHeading1] = useState("Empowering Single Mothers");
+  const [heroHeading2, setHeroHeading2] = useState("& Vulnerable Youth");
+  const [heroHeading3, setHeroHeading3] = useState("Through Practical Skills");
+  const [heroSubtitle, setHeroSubtitle] = useState("We equip vulnerable youth and single mothers with vocational skills that enable them to earn sustainable livelihoods and build better futures.");
   const { data: sections } = useContentCollection<PageSection>("page_sections", []);
   const homeSections = sections.filter((s) => s.page_key === "home");
   const statsSection = homeSections.find((s) => s.section_key === "impact-stats");
   const impactStats = statsSection?.body
     ? (() => { try { return JSON.parse(statsSection.body); } catch { return fallbackStats; } })()
     : fallbackStats;
+
+  useEffect(() => {
+    fetch("http://localhost:8080/api/v1/content/site-settings")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch");
+        return res.json();
+      })
+      .then((data: Record<string, string>) => {
+        if (data.hero_tagline) setHeroTagline(data.hero_tagline);
+        if (data.hero_heading_1) setHeroHeading1(data.hero_heading_1);
+        if (data.hero_heading_2) setHeroHeading2(data.hero_heading_2);
+        if (data.hero_heading_3) setHeroHeading3(data.hero_heading_3);
+        if (data.hero_subtitle) setHeroSubtitle(data.hero_subtitle);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     let handleMouseMove: ((event: MouseEvent) => void) | null = null;
@@ -179,25 +200,23 @@ const HeroSection = () => {
         <div className="max-w-5xl">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6 flex items-center gap-2">
             <Heart size={12} className="fill-accent" />
-            Empowering Communities Since 2010
+            {heroTagline}
           </p>
           <h1
             ref={titleRef}
             className="font-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-primary-foreground leading-[0.92] max-w-4xl opacity-0"
           >
-            Empowering Single Mothers
+            {heroHeading1}
             <br />
-            <em className="text-accent">& Vulnerable Youth</em>
+            <em className="text-accent">{heroHeading2}</em>
             <br />
-            Through Practical Skills
+            {heroHeading3}
           </h1>
           <p
             ref={subtitleRef}
             className="font-body mt-8 text-primary-foreground/75 max-w-xl text-lg leading-relaxed opacity-0"
           >
-            We equip vulnerable youth and single mothers with vocational skills
-            that enable them to earn sustainable livelihoods and build better
-            futures.
+            {heroSubtitle}
           </p>
 
           {/* CTA Buttons */}

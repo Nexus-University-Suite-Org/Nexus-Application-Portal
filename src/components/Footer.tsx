@@ -48,9 +48,9 @@ const Footer = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [email, setEmail] = useState("");
-  const [portalName] = useState("University Application Portal");
+  const [portalName, setPortalName] = useState("University Application Portal");
   const [organizationEmail] = useState("");
-  const [organizationMission] = useState(
+  const [organizationMission, setOrganizationMission] = useState(
     "Empowering single mothers and vulnerable youth through practical vocational skills — building dignified livelihoods one graduate at a time.",
   );
   const [organizationWhatsappCta] = useState("WhatsApp Us");
@@ -71,6 +71,19 @@ const Footer = () => {
     .map((course) => course.name?.trim())
     .filter((name): name is string => Boolean(name))
     .map((name) => ({ label: name, href: "/admissions/courses" }));
+
+  useEffect(() => {
+    fetch("http://localhost:8080/api/v1/content/site-settings")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch");
+        return res.json();
+      })
+      .then((data: Record<string, string>) => {
+        if (data.portal_name) setPortalName(data.portal_name);
+        if (data.footer_mission) setOrganizationMission(data.footer_mission);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const ctx = gsap.context(() => {

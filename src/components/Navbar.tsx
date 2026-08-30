@@ -8,7 +8,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const navItems = [
+const defaultNavItems = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
   { label: "News", href: "/news" },
@@ -20,13 +20,22 @@ const navItems = [
   { label: "Contact", href: "/contact" },
 ];
 
+const defaultCtaButtons = [
+  { label: "Apply Now", href: "/admissions/how-to-apply", style: "accent", visible: true },
+  { label: "Donate", href: "/donate", style: "outline", visible: true },
+];
+
 const Navbar = () => {
   const navRef = useRef<HTMLElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [portalName] = useState("University Application Portal");
+
+  const [portalName, setPortalName] = useState("University Application Portal");
+  const [navItems, setNavItems] = useState(defaultNavItems);
+  const [ctaButtons, setCtaButtons] = useState(defaultCtaButtons);
+
   const forceSolidNavbar = location.pathname.startsWith(
     "/admissions/application/start",
   );
@@ -46,6 +55,35 @@ const Navbar = () => {
         { y: 0, opacity: 1, duration: 1, ease: "power3.out", delay: 0.2 },
       );
     }
+  }, []);
+
+  useEffect(() => {
+    const API_BASE = "http://localhost:8080";
+    fetch(`${API_BASE}/api/v1/content/site-settings`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch");
+        return res.json();
+      })
+      .then((data: Record<string, string>) => {
+        if (data.portal_name) setPortalName(data.portal_name);
+        if (data.nav_links) {
+          try {
+            const parsed = JSON.parse(data.nav_links);
+            const visible = parsed.filter((l: { visible?: boolean }) => l.visible !== false);
+            if (visible.length > 0) setNavItems(visible);
+          } catch {}
+        }
+        if (data.cta_buttons) {
+          try {
+            const parsed = JSON.parse(data.cta_buttons);
+            const visible = parsed.filter((b: { visible?: boolean }) => b.visible !== false);
+            if (visible.length > 0) setCtaButtons(visible);
+          } catch {}
+        }
+      })
+      .catch(() => {
+        // Use defaults if API is down
+      });
   }, []);
 
   const handleNavClick = (href: string) => {
@@ -103,23 +141,20 @@ const Navbar = () => {
           {/* CTA Buttons */}
           <div className="flex items-center gap-3 pl-4 border-l border-accent/20">
             <NotificationBell />
-            <button
-              onClick={() => navigate("/admissions/how-to-apply")}
-              className="px-5 py-2.5 bg-accent text-accent-foreground font-body text-xs tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 hover:scale-105"
-            >
-              Apply Now
-            </button>
-            <button
-              onClick={() => navigate("/donate")}
-              className={`flex items-center gap-2 px-5 py-2.5 font-body text-xs tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:scale-105 ${
-                solidNavbar
-                  ? "bg-foreground/10 text-foreground hover:bg-foreground/20"
-                  : "bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/30"
-              }`}
-            >
-              <Heart size={12} className="fill-current" />
-              Donate
-            </button>
+            {ctaButtons.map((btn) => (
+              <button
+                key={btn.label}
+                onClick={() => navigate(btn.href)}
+                className={`px-5 py-2.5 font-body text-xs tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:scale-105 ${
+                  btn.style === "accent"
+                    ? "bg-accent text-accent-foreground hover:bg-accent/90"
+                    : `bg-foreground/10 text-foreground hover:bg-foreground/20`
+                }`}
+              >
+                {btn.label === "Donate" && <Heart size={12} className="fill-current mr-1 inline" />}
+                {btn.label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -162,19 +197,20 @@ const Navbar = () => {
                 {item.label}
               </button>
             ))}
-            <button
-              onClick={() => handleNavClick("/admissions/how-to-apply")}
-              className="px-8 py-4 bg-accent text-accent-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 mt-6"
-            >
-              Apply Now
-            </button>
-            <button
-              onClick={() => handleNavClick("/donate")}
-              className="flex items-center gap-2 px-8 py-4 bg-accent/20 text-accent font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/30 mt-4"
-            >
-              <Heart size={16} className="fill-current" />
-              Donate Now
-            </button>
+            {ctaButtons.map((btn) => (
+              <button
+                key={btn.label}
+                onClick={() => handleNavClick(btn.href)}
+                className={`px-8 py-4 font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 mt-4 ${
+                  btn.style === "accent"
+                    ? "bg-accent text-accent-foreground hover:bg-accent/90"
+                    : "bg-accent/20 text-accent hover:bg-accent/30"
+                }`}
+              >
+                {btn.label === "Donate" && <Heart size={16} className="fill-current mr-2 inline" />}
+                {btn.label}
+              </button>
+            ))}
           </div>
         </div>,
         document.body,

@@ -7,6 +7,8 @@ public record QualificationResult(
         String programmeName,
         boolean qualified,
         double totalScore,
+        double adjustedScore,
+        boolean genderBonus,
         double cutoffScore,
         double oLevelScore,
         double aLevelScore,
