@@ -67,6 +67,7 @@ const Index = () => {
   const [whatWeTeachTagline, setWhatWeTeachTagline] = useState("What We Teach");
   const [whatWeTeachHeading1, setWhatWeTeachHeading1] = useState("Practical Skills That");
   const [whatWeTeachHeading2, setWhatWeTeachHeading2] = useState("Create Real Livelihoods");
+  const [whatWeTeachSubtitle, setWhatWeTeachSubtitle] = useState("Our vocational programs are designed for immediate employment and entrepreneurship. Each graduate leaves with the skills to earn income from day one.");
 
   const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
   const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
@@ -112,6 +113,7 @@ const Index = () => {
         if (data.what_we_teach_tagline) setWhatWeTeachTagline(data.what_we_teach_tagline);
         if (data.what_we_teach_heading_1) setWhatWeTeachHeading1(data.what_we_teach_heading_1);
         if (data.what_we_teach_heading_2) setWhatWeTeachHeading2(data.what_we_teach_heading_2);
+        if (data.what_we_teach_subtitle) setWhatWeTeachSubtitle(data.what_we_teach_subtitle);
       })
       .catch(() => {});
   }, []);
@@ -210,7 +212,7 @@ const Index = () => {
                 {whatWeTeachHeading1}<br />{whatWeTeachHeading2}
               </h2>
               <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6 max-w-lg">
-                Our vocational programs are designed for immediate employment and entrepreneurship. Each graduate leaves with the skills to earn income from day one.
+                {whatWeTeachSubtitle}
               </p>
             </div>
             <div ref={programsRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
