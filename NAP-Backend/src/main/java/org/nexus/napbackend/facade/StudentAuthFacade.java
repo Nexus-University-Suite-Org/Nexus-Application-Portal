@@ -5,20 +5,25 @@ import java.util.List;
 import org.nexus.napbackend.configuration.JwtUtil;
 import org.nexus.napbackend.dto.StudentLoginResponse;
 import org.nexus.napbackend.model.Application;
+import org.nexus.napbackend.model.Programme;
 import org.nexus.napbackend.repository.ApplicationRepository;
+import org.nexus.napbackend.repository.ProgrammeRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Facade
 public class StudentAuthFacade {
 
     private final ApplicationRepository applicationRepository;
+    private final ProgrammeRepository programmeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     public StudentAuthFacade(ApplicationRepository applicationRepository,
+                             ProgrammeRepository programmeRepository,
                              PasswordEncoder passwordEncoder,
                              JwtUtil jwtUtil) {
         this.applicationRepository = applicationRepository;
+        this.programmeRepository = programmeRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
@@ -66,6 +71,13 @@ public class StudentAuthFacade {
     }
 
     private StudentLoginResponse.StudentProfile toProfile(Application a) {
+        String faculty = null;
+        String programmeName = a.getAssignedProgramme() != null ? a.getAssignedProgramme() : a.getProgramChoice1();
+        if (programmeName != null && !programmeName.isBlank()) {
+            faculty = programmeRepository.findByNameIgnoreCase(programmeName)
+                    .map(Programme::getFaculty)
+                    .orElse(null);
+        }
         return new StudentLoginResponse.StudentProfile(
                 a.getId(),
                 a.getPrn(),
@@ -80,7 +92,8 @@ public class StudentAuthFacade {
                 a.getStatus(),
                 a.getStudyMode(),
                 a.getAcademicYear(),
-                a.getStartDate()
+                a.getStartDate(),
+                faculty
         );
     }
 

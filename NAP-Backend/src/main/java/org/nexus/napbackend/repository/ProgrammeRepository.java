@@ -14,4 +14,6 @@ public interface ProgrammeRepository extends JpaRepository<Programme, Long> {
     List<Programme> findAllByIsActiveTrueOrderByCode();
 
     boolean existsByCode(String code);
+
+    Optional<Programme> findByNameIgnoreCase(String name);
 }

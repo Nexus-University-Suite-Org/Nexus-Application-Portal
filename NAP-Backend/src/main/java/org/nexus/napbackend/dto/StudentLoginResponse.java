@@ -28,7 +28,8 @@ public record StudentLoginResponse(
             String status,
             String studyMode,
             String academicYear,
-            String startDate
+            String startDate,
+            String faculty
     ) {
     }
 }
