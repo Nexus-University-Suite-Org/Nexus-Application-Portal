@@ -78,6 +78,7 @@ const Index = () => {
   ]);
   const [whatWeTeachBtnText, setWhatWeTeachBtnText] = useState("View All Programs");
   const [whatWeTeachBtnVisible, setWhatWeTeachBtnVisible] = useState(true);
+  const [successStoryTagline, setSuccessStoryTagline] = useState("Student Success Story");
 
   const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
   const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
@@ -122,6 +123,7 @@ const Index = () => {
         }
         if (data.what_we_teach_btn_text) setWhatWeTeachBtnText(data.what_we_teach_btn_text);
         if (data.what_we_teach_btn_visible !== undefined) setWhatWeTeachBtnVisible(data.what_we_teach_btn_visible !== 'false');
+        if (data.success_story_tagline) setSuccessStoryTagline(data.success_story_tagline);
       })
       .catch(() => {});
   }, []);
@@ -261,7 +263,7 @@ const Index = () => {
             <div className="parallax-el pointer-events-none absolute -left-24 top-8 h-64 w-64 rounded-full bg-accent/15 blur-3xl" data-speed="0.4" />
             <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div>
-                <p className="story-anim opacity-0 font-body text-xs tracking-[0.3em] uppercase text-accent mb-6">Student Success Story</p>
+                <p className="story-anim opacity-0 font-body text-xs tracking-[0.3em] uppercase text-accent mb-6">{successStoryTagline}</p>
                 <blockquote className="story-anim opacity-0 font-heading text-3xl md:text-5xl font-light text-primary-foreground leading-tight mb-8">
                   "{storyFeature.quote}"
                 </blockquote>
