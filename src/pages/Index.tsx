@@ -65,6 +65,8 @@ const Index = () => {
   const donateRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const [whatWeTeachTagline, setWhatWeTeachTagline] = useState("What We Teach");
+  const [whatWeTeachHeading1, setWhatWeTeachHeading1] = useState("Practical Skills That");
+  const [whatWeTeachHeading2, setWhatWeTeachHeading2] = useState("Create Real Livelihoods");
 
   const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
   const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
@@ -108,6 +110,8 @@ const Index = () => {
       .then((res) => { if (!res.ok) throw new Error(""); return res.json(); })
       .then((data: Record<string, string>) => {
         if (data.what_we_teach_tagline) setWhatWeTeachTagline(data.what_we_teach_tagline);
+        if (data.what_we_teach_heading_1) setWhatWeTeachHeading1(data.what_we_teach_heading_1);
+        if (data.what_we_teach_heading_2) setWhatWeTeachHeading2(data.what_we_teach_heading_2);
       })
       .catch(() => {});
   }, []);
@@ -203,7 +207,7 @@ const Index = () => {
             <div className="max-w-2xl mb-16">
               <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">{whatWeTeachTagline}</p>
               <h2 className="section-heading font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">
-                Practical Skills That<br />Create Real Livelihoods
+                {whatWeTeachHeading1}<br />{whatWeTeachHeading2}
               </h2>
               <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6 max-w-lg">
                 Our vocational programs are designed for immediate employment and entrepreneurship. Each graduate leaves with the skills to earn income from day one.

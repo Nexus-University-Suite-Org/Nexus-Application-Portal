@@ -43,6 +43,8 @@ public class SiteSettingDataSeeder implements CommandLineRunner {
             seedIfEmpty("hero_cta_learn_more_visible", "true");
             seedIfEmpty("hero_stats", "[{\"value\":\"1,200+\",\"label\":\"Students Trained\"},{\"value\":\"70%\",\"label\":\"Women & Single Mothers\"},{\"value\":\"300+\",\"label\":\"Graduates Running Businesses\"},{\"value\":\"8\",\"label\":\"Vocational Programs\"}]");
             seedIfEmpty("what_we_teach_tagline", "What We Teach");
+            seedIfEmpty("what_we_teach_heading_1", "Practical Skills That");
+            seedIfEmpty("what_we_teach_heading_2", "Create Real Livelihoods");
             seedIfEmpty("footer_mission", "Empowering single mothers and vulnerable youth through practical vocational skills — building dignified livelihoods one graduate at a time.");
         } catch (Exception e) {
             log.warn("SiteSetting seeder skipped — table may not exist yet: {}", e.getMessage());
