@@ -124,7 +124,9 @@ const Index = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, []);
 
+  useEffect(() => {
     const ctx = gsap.context(() => {
       // Programs section — staggered cards with scale
       if (programsRef.current) {
@@ -194,7 +196,7 @@ const Index = () => {
     });
 
     return () => ctx.revert();
-  }, []);
+  }, [whatWeTeachPrograms]);
 
   return (
     <LoadingWrapper>
