@@ -74,6 +74,10 @@ SELECT 1, 'hero_cta_learn_more_visible', 'true', NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'hero_cta_learn_more_visible');
 
 INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'hero_stats', '[{"value":"1,200+","label":"Students Trained"},{"value":"70%","label":"Women & Single Mothers"},{"value":"300+","label":"Graduates Running Businesses"},{"value":"8","label":"Vocational Programs"}]', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'hero_stats');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
 SELECT 1, 'footer_mission', 'Empowering single mothers and vulnerable youth through practical vocational skills — building dignified livelihoods one graduate at a time.', NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'footer_mission');
 

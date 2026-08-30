@@ -45,6 +45,7 @@ const HeroSection = () => {
   const [heroCtaSponsorVisible, setHeroCtaSponsorVisible] = useState(true);
   const [heroCtaLearnMore, setHeroCtaLearnMore] = useState("Learn More");
   const [heroCtaLearnMoreVisible, setHeroCtaLearnMoreVisible] = useState(true);
+  const [heroStats, setHeroStats] = useState(fallbackStats);
   const { data: sections } = useContentCollection<PageSection>("page_sections", []);
   const homeSections = sections.filter((s) => s.page_key === "home");
   const statsSection = homeSections.find((s) => s.section_key === "impact-stats");
@@ -70,6 +71,12 @@ const HeroSection = () => {
         if (data.hero_cta_sponsor_visible !== undefined) setHeroCtaSponsorVisible(data.hero_cta_sponsor_visible !== 'false');
         if (data.hero_cta_learn_more) setHeroCtaLearnMore(data.hero_cta_learn_more);
         if (data.hero_cta_learn_more_visible !== undefined) setHeroCtaLearnMoreVisible(data.hero_cta_learn_more_visible !== 'false');
+        if (data.hero_stats) {
+          try {
+            const parsed = JSON.parse(data.hero_stats);
+            if (Array.isArray(parsed) && parsed.length > 0) setHeroStats(parsed);
+          } catch {}
+        }
       })
       .catch(() => {});
   }, []);
@@ -271,7 +278,7 @@ const HeroSection = () => {
           ref={statsRef}
           className="mt-16 pt-8 border-t border-primary-foreground/20 grid grid-cols-2 md:grid-cols-4 gap-8 opacity-0"
         >
-          {impactStats.map((stat) => (
+          {heroStats.map((stat) => (
             <div key={stat.label} className="text-center md:text-left">
               <p className="font-heading text-3xl md:text-4xl font-light text-accent">
                 {stat.value}
