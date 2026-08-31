@@ -49,13 +49,13 @@ const Footer = () => {
   const bottomRef = useRef<HTMLDivElement>(null);
   const [email, setEmail] = useState("");
   const [portalName, setPortalName] = useState("University Application Portal");
-  const [organizationEmail] = useState("");
+  const [organizationEmail, setOrganizationEmail] = useState("");
   const [organizationMission, setOrganizationMission] = useState(
     "Empowering single mothers and vulnerable youth through practical vocational skills — building dignified livelihoods one graduate at a time.",
   );
-  const [organizationWhatsappCta] = useState("WhatsApp Us");
-  const [organizationPhone] = useState("+256 700 000 000");
-  const [organizationAddress] = useState(
+  const [organizationWhatsappCta, setOrganizationWhatsappCta] = useState("WhatsApp Us");
+  const [organizationPhone, setOrganizationPhone] = useState("+256 700 000 000");
+  const [organizationAddress, setOrganizationAddress] = useState(
     "Plot 7, Nakawa Road, Kampala, Uganda",
   );
   const { data: courseDocs } = useContentCollection<CourseDoc>(
@@ -81,6 +81,10 @@ const Footer = () => {
       .then((data: Record<string, string>) => {
         if (data.portal_name) setPortalName(data.portal_name);
         if (data.footer_mission) setOrganizationMission(data.footer_mission);
+        if (data.footer_email) setOrganizationEmail(data.footer_email);
+        if (data.footer_phone) setOrganizationPhone(data.footer_phone);
+        if (data.footer_whatsapp_cta) setOrganizationWhatsappCta(data.footer_whatsapp_cta);
+        if (data.footer_address) setOrganizationAddress(data.footer_address);
       })
       .catch(() => {});
   }, []);
