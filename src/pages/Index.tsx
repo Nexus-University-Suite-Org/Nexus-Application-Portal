@@ -80,6 +80,9 @@ const Index = () => {
   const [whatWeTeachBtnVisible, setWhatWeTeachBtnVisible] = useState(true);
   const [successStoryTagline, setSuccessStoryTagline] = useState("Student Success Story");
   const [successStoryQuote, setSuccessStoryQuote] = useState("I went from nothing to owning my own business.");
+  const [successStoryAuthor, setSuccessStoryAuthor] = useState("Mary Nakato");
+  const [successStoryProgram, setSuccessStoryProgram] = useState("Tailoring & Design");
+  const [successStoryOutcome, setSuccessStoryOutcome] = useState("Now runs a successful tailoring shop");
 
   const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
   const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
@@ -126,6 +129,9 @@ const Index = () => {
         if (data.what_we_teach_btn_visible !== undefined) setWhatWeTeachBtnVisible(data.what_we_teach_btn_visible !== 'false');
         if (data.success_story_tagline) setSuccessStoryTagline(data.success_story_tagline);
         if (data.success_story_quote) setSuccessStoryQuote(data.success_story_quote);
+        if (data.success_story_author) setSuccessStoryAuthor(data.success_story_author);
+        if (data.success_story_program) setSuccessStoryProgram(data.success_story_program);
+        if (data.success_story_outcome) setSuccessStoryOutcome(data.success_story_outcome);
       })
       .catch(() => {});
   }, []);
@@ -269,8 +275,8 @@ const Index = () => {
                 <blockquote className="story-anim opacity-0 font-heading text-3xl md:text-5xl font-light text-primary-foreground leading-tight mb-8">
                   "{successStoryQuote}"
                 </blockquote>
-                <p className="story-anim opacity-0 font-body text-sm text-primary-foreground/60 mb-2">— {storyFeature.name}, {storyFeature.program}</p>
-                <p className="story-anim opacity-0 font-body text-sm text-accent mb-10">{storyFeature.outcome}</p>
+                <p className="story-anim opacity-0 font-body text-sm text-primary-foreground/60 mb-2">— {successStoryAuthor}, {successStoryProgram}</p>
+                <p className="story-anim opacity-0 font-body text-sm text-accent mb-10">{successStoryOutcome}</p>
                 <button
                   onClick={() => navigate("/impact")}
                   className="story-anim opacity-0 group flex items-center gap-2 px-8 py-4 border border-primary-foreground/40 text-primary-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent btn-lift"
