@@ -126,6 +126,18 @@ SELECT 1, 'success_story_outcome', 'Now runs a successful tailoring shop', NOW()
 WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'success_story_outcome');
 
 INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'success_story_btn_text', 'Read More Stories', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'success_story_btn_text');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'success_story_btn_visible', 'true', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'success_story_btn_visible');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'success_story_stats', '[{"val":"1,200+","label":"Lives Changed"},{"val":"300+","label":"Businesses Started"},{"val":"12+","label":"Communities Reached"}]', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'success_story_stats');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
 SELECT 1, 'footer_mission', 'Empowering single mothers and vulnerable youth through practical vocational skills — building dignified livelihoods one graduate at a time.', NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'footer_mission');
 

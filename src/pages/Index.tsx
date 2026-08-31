@@ -83,6 +83,13 @@ const Index = () => {
   const [successStoryAuthor, setSuccessStoryAuthor] = useState("Mary Nakato");
   const [successStoryProgram, setSuccessStoryProgram] = useState("Tailoring & Design");
   const [successStoryOutcome, setSuccessStoryOutcome] = useState("Now runs a successful tailoring shop");
+  const [successStoryBtnText, setSuccessStoryBtnText] = useState("Read More Stories");
+  const [successStoryBtnVisible, setSuccessStoryBtnVisible] = useState(true);
+  const [successStoryStats, setSuccessStoryStats] = useState([
+    { val: "1,200+", label: "Lives Changed" },
+    { val: "300+", label: "Businesses Started" },
+    { val: "12+", label: "Communities Reached" },
+  ]);
 
   const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
   const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
@@ -132,6 +139,14 @@ const Index = () => {
         if (data.success_story_author) setSuccessStoryAuthor(data.success_story_author);
         if (data.success_story_program) setSuccessStoryProgram(data.success_story_program);
         if (data.success_story_outcome) setSuccessStoryOutcome(data.success_story_outcome);
+        if (data.success_story_btn_text) setSuccessStoryBtnText(data.success_story_btn_text);
+        if (data.success_story_btn_visible !== undefined) setSuccessStoryBtnVisible(data.success_story_btn_visible !== 'false');
+        if (data.success_story_stats) {
+          try {
+            const parsed = JSON.parse(data.success_story_stats);
+            if (Array.isArray(parsed) && parsed.length > 0) setSuccessStoryStats(parsed);
+          } catch {}
+        }
       })
       .catch(() => {});
   }, []);
@@ -277,20 +292,18 @@ const Index = () => {
                 </blockquote>
                 <p className="story-anim opacity-0 font-body text-sm text-primary-foreground/60 mb-2">— {successStoryAuthor}, {successStoryProgram}</p>
                 <p className="story-anim opacity-0 font-body text-sm text-accent mb-10">{successStoryOutcome}</p>
-                <button
-                  onClick={() => navigate("/impact")}
-                  className="story-anim opacity-0 group flex items-center gap-2 px-8 py-4 border border-primary-foreground/40 text-primary-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent btn-lift"
-                >
-                  Read More Stories
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
-                </button>
+                {successStoryBtnVisible && (
+                  <button
+                    onClick={() => navigate("/impact")}
+                    className="story-anim opacity-0 group flex items-center gap-2 px-8 py-4 border border-primary-foreground/40 text-primary-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent btn-lift"
+                  >
+                    {successStoryBtnText}
+                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
+                  </button>
+                )}
               </div>
               <div className="hidden lg:flex flex-col gap-6">
-                {[
-                  { val: "1,200+", label: "Lives Changed" },
-                  { val: "300+", label: "Businesses Started" },
-                  { val: "12+", label: "Communities Reached" },
-                ].map(({ val, label }) => (
+                {successStoryStats.map(({ val, label }) => (
                   <div key={label} className="stat-block opacity-0 p-8 bg-primary-foreground/5 border border-primary-foreground/15 rounded-[20px] stat-glow">
                     <p className="stat-value font-heading text-5xl font-light text-accent mb-2">{val}</p>
                     <p className="font-body text-sm text-primary-foreground/60 uppercase tracking-[0.2em]">{label}</p>
