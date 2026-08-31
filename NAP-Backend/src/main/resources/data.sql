@@ -138,6 +138,22 @@ SELECT 1, 'success_story_stats', '[{"val":"1,200+","label":"Lives Changed"},{"va
 WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'success_story_stats');
 
 INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'donate_tagline', 'Make A Difference', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'donate_tagline');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'donate_heading_1', 'Your Support Changes', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'donate_heading_1');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'donate_heading_2', 'A Life', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'donate_heading_2');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'donate_subtitle', 'Every contribution — large or small — directly funds training, materials, and opportunity for those who need it most.', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'donate_subtitle');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
 SELECT 1, 'footer_mission', 'Empowering single mothers and vulnerable youth through practical vocational skills — building dignified livelihoods one graduate at a time.', NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'footer_mission');
 

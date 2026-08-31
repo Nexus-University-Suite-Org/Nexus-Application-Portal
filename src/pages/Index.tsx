@@ -90,6 +90,10 @@ const Index = () => {
     { val: "300+", label: "Businesses Started" },
     { val: "12+", label: "Communities Reached" },
   ]);
+  const [donateTagline, setDonateTagline] = useState("Make A Difference");
+  const [donateHeading1, setDonateHeading1] = useState("Your Support Changes");
+  const [donateHeading2, setDonateHeading2] = useState("A Life");
+  const [donateSubtitle, setDonateSubtitle] = useState("Every contribution — large or small — directly funds training, materials, and opportunity for those who need it most.");
 
   const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
   const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
@@ -147,6 +151,10 @@ const Index = () => {
             if (Array.isArray(parsed) && parsed.length > 0) setSuccessStoryStats(parsed);
           } catch {}
         }
+        if (data.donate_tagline) setDonateTagline(data.donate_tagline);
+        if (data.donate_heading_1) setDonateHeading1(data.donate_heading_1);
+        if (data.donate_heading_2) setDonateHeading2(data.donate_heading_2);
+        if (data.donate_subtitle) setDonateSubtitle(data.donate_subtitle);
       })
       .catch(() => {});
   }, []);
@@ -317,12 +325,12 @@ const Index = () => {
           <section className="relative py-24 md:py-32 px-8 md:px-16 bg-background overflow-hidden">
             <div className="parallax-el pointer-events-none absolute top-10 right-[-6rem] h-80 w-80 rounded-full bg-accent/12 blur-3xl" data-speed="0.35" />
             <div className="max-w-2xl mx-auto text-center mb-16">
-              <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">Make A Difference</p>
+              <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">{donateTagline}</p>
               <h2 className="section-heading font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">
-                Your Support Changes<br />A Life
+                {donateHeading1}<br />{donateHeading2}
               </h2>
               <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6">
-                Every contribution — large or small — directly funds training, materials, and opportunity for those who need it most.
+                {donateSubtitle}
               </p>
             </div>
             <div ref={donateRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-12">
