@@ -154,6 +154,10 @@ SELECT 1, 'donate_subtitle', 'Every contribution — large or small — directly
 WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'donate_subtitle');
 
 INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
+SELECT 1, 'donate_tiers', '[{"amount":"$10","impact":"Provides learning materials for one student"},{"amount":"$25","impact":"Covers essential training tools"},{"amount":"$50","impact":"Sponsors a student for one month"},{"amount":"$200","impact":"Covers full training support"}]', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'donate_tiers');
+
+INSERT INTO site_settings (tenant_id, setting_key, setting_value, created_at, updated_at)
 SELECT 1, 'footer_mission', 'Empowering single mothers and vulnerable youth through practical vocational skills — building dignified livelihoods one graduate at a time.', NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM site_settings WHERE tenant_id = 1 AND setting_key = 'footer_mission');
 

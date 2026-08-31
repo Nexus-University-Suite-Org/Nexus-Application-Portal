@@ -94,6 +94,12 @@ const Index = () => {
   const [donateHeading1, setDonateHeading1] = useState("Your Support Changes");
   const [donateHeading2, setDonateHeading2] = useState("A Life");
   const [donateSubtitle, setDonateSubtitle] = useState("Every contribution — large or small — directly funds training, materials, and opportunity for those who need it most.");
+  const [donateTiers, setDonateTiers] = useState([
+    { amount: "$10", impact: "Provides learning materials for one student" },
+    { amount: "$25", impact: "Covers essential training tools" },
+    { amount: "$50", impact: "Sponsors a student for one month" },
+    { amount: "$200", impact: "Covers full training support" },
+  ]);
 
   const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
   const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
@@ -155,6 +161,12 @@ const Index = () => {
         if (data.donate_heading_1) setDonateHeading1(data.donate_heading_1);
         if (data.donate_heading_2) setDonateHeading2(data.donate_heading_2);
         if (data.donate_subtitle) setDonateSubtitle(data.donate_subtitle);
+        if (data.donate_tiers) {
+          try {
+            const parsed = JSON.parse(data.donate_tiers);
+            if (Array.isArray(parsed) && parsed.length > 0) setDonateTiers(parsed);
+          } catch {}
+        }
       })
       .catch(() => {});
   }, []);
@@ -334,7 +346,7 @@ const Index = () => {
               </p>
             </div>
             <div ref={donateRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-12">
-              {donationTiers.map(({ amount, impact }) => (
+              {donateTiers.map(({ amount, impact }) => (
                 <div
                   key={amount}
                   className="donate-card spotlight-card opacity-0 group p-8 border border-border rounded-[20px] text-center cursor-pointer"

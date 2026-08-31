@@ -61,6 +61,7 @@ public class SiteSettingDataSeeder implements CommandLineRunner {
             seedIfEmpty("donate_heading_1", "Your Support Changes");
             seedIfEmpty("donate_heading_2", "A Life");
             seedIfEmpty("donate_subtitle", "Every contribution — large or small — directly funds training, materials, and opportunity for those who need it most.");
+            seedIfEmpty("donate_tiers", "[{\"amount\":\"$10\",\"impact\":\"Provides learning materials for one student\"},{\"amount\":\"$25\",\"impact\":\"Covers essential training tools\"},{\"amount\":\"$50\",\"impact\":\"Sponsors a student for one month\"},{\"amount\":\"$200\",\"impact\":\"Covers full training support\"}]");
             seedIfEmpty("footer_mission", "Empowering single mothers and vulnerable youth through practical vocational skills — building dignified livelihoods one graduate at a time.");
         } catch (Exception e) {
             log.warn("SiteSetting seeder skipped — table may not exist yet: {}", e.getMessage());
