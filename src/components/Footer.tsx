@@ -91,7 +91,7 @@ const Footer = () => {
         const cols = contentRef.current.querySelectorAll(".footer-col");
         gsap.fromTo(
           cols,
-          { y: 50, opacity: 0 },
+          { y: 30, opacity: 0 },
           {
             y: 0,
             opacity: 1,
@@ -100,8 +100,8 @@ const Footer = () => {
             ease: "power2.out",
             scrollTrigger: {
               trigger: footerRef.current,
-              start: "top 90%",
-              toggleActions: "play none none reverse",
+              start: "top 95%",
+              toggleActions: "play none none none",
             },
           },
         );
@@ -116,8 +116,8 @@ const Footer = () => {
           ease: "power2.out",
           scrollTrigger: {
             trigger: footerRef.current,
-            start: "top 85%",
-            toggleActions: "play none none reverse",
+            start: "top 90%",
+            toggleActions: "play none none none",
           },
         },
       );
@@ -143,7 +143,7 @@ const Footer = () => {
       <div ref={contentRef} className="px-8 md:px-16 pt-24 pb-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 lg:gap-8">
           {/* Brand & Contact */}
-          <div className="footer-col lg:col-span-1 opacity-0">
+          <div className="footer-col lg:col-span-1">
             <h3 className="font-heading text-2xl font-light tracking-[0.2em] uppercase mb-4">
               {portalName}
             </h3>
@@ -209,7 +209,7 @@ const Footer = () => {
           </div>
 
           {/* Quick Links */}
-          <div className="footer-col opacity-0">
+          <div className="footer-col">
             <p className="font-body text-xs tracking-[0.3em] uppercase text-primary-foreground/40 mb-8">
               Quick Links
             </p>
@@ -229,7 +229,7 @@ const Footer = () => {
           </div>
 
           {/* Programs */}
-          <div className="footer-col opacity-0">
+          <div className="footer-col">
             <p className="font-body text-xs tracking-[0.3em] uppercase text-primary-foreground/40 mb-8">
               Our Programs
             </p>
@@ -253,7 +253,7 @@ const Footer = () => {
           </div>
 
           {/* Donate & Newsletter */}
-          <div className="footer-col opacity-0">
+          <div className="footer-col">
             <p className="font-body text-xs tracking-[0.3em] uppercase text-primary-foreground/40 mb-8">
               Support Our Mission
             </p>
@@ -297,7 +297,7 @@ const Footer = () => {
       {/* Bottom bar */}
       <div
         ref={bottomRef}
-        className="border-t border-primary-foreground/10 px-8 md:px-16 py-6 flex flex-col md:flex-row items-center justify-between gap-4 opacity-0"
+        className="border-t border-primary-foreground/10 px-8 md:px-16 py-6 flex flex-col md:flex-row items-center justify-between gap-4"
       >
         <p className="font-body text-xs text-primary-foreground/30 tracking-wider">
           © {new Date().getFullYear()} {portalName}. All rights reserved.
