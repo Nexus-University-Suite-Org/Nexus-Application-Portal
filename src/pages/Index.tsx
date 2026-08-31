@@ -100,6 +100,10 @@ const Index = () => {
     { amount: "$50", impact: "Sponsors a student for one month" },
     { amount: "$200", impact: "Covers full training support" },
   ]);
+  const [donateCtaDonate, setDonateCtaDonate] = useState("Donate Now");
+  const [donateCtaDonateVisible, setDonateCtaDonateVisible] = useState(true);
+  const [donateCtaSponsor, setDonateCtaSponsor] = useState("Sponsor a Student");
+  const [donateCtaSponsorVisible, setDonateCtaSponsorVisible] = useState(true);
 
   const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
   const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
@@ -167,6 +171,10 @@ const Index = () => {
             if (Array.isArray(parsed) && parsed.length > 0) setDonateTiers(parsed);
           } catch {}
         }
+        if (data.donate_cta_donate) setDonateCtaDonate(data.donate_cta_donate);
+        if (data.donate_cta_donate_visible !== undefined) setDonateCtaDonateVisible(data.donate_cta_donate_visible !== 'false');
+        if (data.donate_cta_sponsor) setDonateCtaSponsor(data.donate_cta_sponsor);
+        if (data.donate_cta_sponsor_visible !== undefined) setDonateCtaSponsorVisible(data.donate_cta_sponsor_visible !== 'false');
       })
       .catch(() => {});
   }, []);
@@ -360,20 +368,24 @@ const Index = () => {
               ))}
             </div>
             <div className="flex flex-wrap justify-center gap-4">
-              <button
-                onClick={() => navigate("/donate")}
-                className="group flex items-center gap-2 px-10 py-4 bg-accent text-accent-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 btn-lift"
-              >
-                <Heart size={16} className="fill-current" />
-                Donate Now
-              </button>
-              <button
-                onClick={() => navigate("/donate#sponsor")}
-                className="group flex items-center gap-2 px-10 py-4 border border-foreground/30 text-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent btn-lift"
-              >
-                <Users size={16} />
-                Sponsor a Student
-              </button>
+              {donateCtaDonateVisible && (
+                <button
+                  onClick={() => navigate("/donate")}
+                  className="group flex items-center gap-2 px-10 py-4 bg-accent text-accent-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 btn-lift"
+                >
+                  <Heart size={16} className="fill-current" />
+                  {donateCtaDonate}
+                </button>
+              )}
+              {donateCtaSponsorVisible && (
+                <button
+                  onClick={() => navigate("/donate#sponsor")}
+                  className="group flex items-center gap-2 px-10 py-4 border border-foreground/30 text-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent btn-lift"
+                >
+                  <Users size={16} />
+                  {donateCtaSponsor}
+                </button>
+              )}
             </div>
           </section>
 
