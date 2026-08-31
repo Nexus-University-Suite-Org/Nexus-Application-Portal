@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -34,12 +34,52 @@ const HeroSection = () => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const heroGlowRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const [heroTagline, setHeroTagline] = useState("Empowering Communities Since 2010");
+  const [heroHeading1, setHeroHeading1] = useState("Empowering Single Mothers");
+  const [heroHeading2, setHeroHeading2] = useState("& Vulnerable Youth");
+  const [heroHeading3, setHeroHeading3] = useState("Through Practical Skills");
+  const [heroSubtitle, setHeroSubtitle] = useState("We equip vulnerable youth and single mothers with vocational skills that enable them to earn sustainable livelihoods and build better futures.");
+  const [heroCtaDonate, setHeroCtaDonate] = useState("Donate Now");
+  const [heroCtaSponsor, setHeroCtaSponsor] = useState("Sponsor a Student");
+  const [heroCtaDonateVisible, setHeroCtaDonateVisible] = useState(true);
+  const [heroCtaSponsorVisible, setHeroCtaSponsorVisible] = useState(true);
+  const [heroCtaLearnMore, setHeroCtaLearnMore] = useState("Learn More");
+  const [heroCtaLearnMoreVisible, setHeroCtaLearnMoreVisible] = useState(true);
+  const [heroStats, setHeroStats] = useState(fallbackStats);
   const { data: sections } = useContentCollection<PageSection>("page_sections", []);
   const homeSections = sections.filter((s) => s.page_key === "home");
   const statsSection = homeSections.find((s) => s.section_key === "impact-stats");
   const impactStats = statsSection?.body
     ? (() => { try { return JSON.parse(statsSection.body); } catch { return fallbackStats; } })()
     : fallbackStats;
+
+  useEffect(() => {
+    fetch("http://localhost:8080/api/v1/content/site-settings")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch");
+        return res.json();
+      })
+      .then((data: Record<string, string>) => {
+        if (data.hero_tagline) setHeroTagline(data.hero_tagline);
+        if (data.hero_heading_1) setHeroHeading1(data.hero_heading_1);
+        if (data.hero_heading_2) setHeroHeading2(data.hero_heading_2);
+        if (data.hero_heading_3) setHeroHeading3(data.hero_heading_3);
+        if (data.hero_subtitle) setHeroSubtitle(data.hero_subtitle);
+        if (data.hero_cta_donate) setHeroCtaDonate(data.hero_cta_donate);
+        if (data.hero_cta_sponsor) setHeroCtaSponsor(data.hero_cta_sponsor);
+        if (data.hero_cta_donate_visible !== undefined) setHeroCtaDonateVisible(data.hero_cta_donate_visible !== 'false');
+        if (data.hero_cta_sponsor_visible !== undefined) setHeroCtaSponsorVisible(data.hero_cta_sponsor_visible !== 'false');
+        if (data.hero_cta_learn_more) setHeroCtaLearnMore(data.hero_cta_learn_more);
+        if (data.hero_cta_learn_more_visible !== undefined) setHeroCtaLearnMoreVisible(data.hero_cta_learn_more_visible !== 'false');
+        if (data.hero_stats) {
+          try {
+            const parsed = JSON.parse(data.hero_stats);
+            if (Array.isArray(parsed) && parsed.length > 0) setHeroStats(parsed);
+          } catch {}
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     let handleMouseMove: ((event: MouseEvent) => void) | null = null;
@@ -179,53 +219,57 @@ const HeroSection = () => {
         <div className="max-w-5xl">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6 flex items-center gap-2">
             <Heart size={12} className="fill-accent" />
-            Empowering Communities Since 2010
+            {heroTagline}
           </p>
           <h1
             ref={titleRef}
             className="font-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-primary-foreground leading-[0.92] max-w-4xl opacity-0"
           >
-            Empowering Single Mothers
+            {heroHeading1}
             <br />
-            <em className="text-accent">& Vulnerable Youth</em>
+            <em className="text-accent">{heroHeading2}</em>
             <br />
-            Through Practical Skills
+            {heroHeading3}
           </h1>
           <p
             ref={subtitleRef}
             className="font-body mt-8 text-primary-foreground/75 max-w-xl text-lg leading-relaxed opacity-0"
           >
-            We equip vulnerable youth and single mothers with vocational skills
-            that enable them to earn sustainable livelihoods and build better
-            futures.
+            {heroSubtitle}
           </p>
 
           {/* CTA Buttons */}
           <div ref={ctaRef} className="flex flex-wrap gap-4 mt-10 opacity-0">
-            <button
-              onClick={() => navigate("/donate")}
-              className="group flex items-center gap-2 px-8 py-4 bg-accent text-accent-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 hover:scale-105"
-            >
-              <Heart size={16} className="fill-current" />
-              Donate Now
-            </button>
-            <button
-              onClick={() => navigate("/donate#sponsor")}
-              className="group flex items-center gap-2 px-8 py-4 border border-primary-foreground/50 text-primary-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent"
-            >
-              <Users size={16} />
-              Sponsor a Student
-            </button>
-            <button
-              onClick={() => navigate("/about")}
-              className="group flex items-center gap-2 px-8 py-4 text-primary-foreground/70 font-body text-sm tracking-[0.2em] uppercase transition-all duration-500 hover:text-primary-foreground"
-            >
-              Learn More
-              <ArrowRight
-                size={16}
-                className="group-hover:translate-x-1 transition-transform duration-300"
-              />
-            </button>
+            {heroCtaDonateVisible && (
+              <button
+                onClick={() => navigate("/donate")}
+                className="group flex items-center gap-2 px-8 py-4 bg-accent text-accent-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 hover:scale-105"
+              >
+                <Heart size={16} className="fill-current" />
+                {heroCtaDonate}
+              </button>
+            )}
+            {heroCtaSponsorVisible && (
+              <button
+                onClick={() => navigate("/donate#sponsor")}
+                className="group flex items-center gap-2 px-8 py-4 border border-primary-foreground/50 text-primary-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent"
+              >
+                <Users size={16} />
+                {heroCtaSponsor}
+              </button>
+            )}
+            {heroCtaLearnMoreVisible && (
+              <button
+                onClick={() => navigate("/about")}
+                className="group flex items-center gap-2 px-8 py-4 text-primary-foreground/70 font-body text-sm tracking-[0.2em] uppercase transition-all duration-500 hover:text-primary-foreground"
+              >
+                {heroCtaLearnMore}
+                <ArrowRight
+                  size={16}
+                  className="group-hover:translate-x-1 transition-transform duration-300"
+                />
+              </button>
+            )}
           </div>
         </div>
 
@@ -234,7 +278,7 @@ const HeroSection = () => {
           ref={statsRef}
           className="mt-16 pt-8 border-t border-primary-foreground/20 grid grid-cols-2 md:grid-cols-4 gap-8 opacity-0"
         >
-          {impactStats.map((stat) => (
+          {heroStats.map((stat) => (
             <div key={stat.label} className="text-center md:text-left">
               <p className="font-heading text-3xl md:text-4xl font-light text-accent">
                 {stat.value}

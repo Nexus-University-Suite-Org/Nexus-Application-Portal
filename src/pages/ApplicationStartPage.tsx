@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { ArrowLeft, ArrowRight, Check, Lock, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { uploadFile } from "@/lib/storage";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import {
   submitApplicationSubmission,
   type ApplicationSubmissionInput,
@@ -25,8 +26,8 @@ const applicationSteps = [
   },
   {
     number: "03",
-    title: "Academic Background",
-    desc: "Submit your academic history, selected programmes, and personal statement.",
+    title: "A Level Qualifications",
+    desc: "Submit your O-Level and A-Level results.",
   },
   {
     number: "04",
@@ -665,7 +666,7 @@ const initialFormData: ApplicationStartData = {
   startDate: "",
   previousInstitution: "",
   highestQualification: "",
-  academicCredentialLevel: "",
+  academicCredentialLevel: "Uganda Advanced Level Certificate of Education (UACE)",
   academicCredentialsDetails: "",
   birthCertificateUrl: "",
   uceIndexNumber: "",
@@ -769,12 +770,14 @@ const ApplicationStartPage = () => {
     : fallbackProgramOptions;
 
   const isUaceSelected = formData.academicCredentialLevel.includes("UACE");
+  const isUceSelected = formData.academicCredentialLevel.includes("UCE") && !formData.academicCredentialLevel.includes("UACE");
   const isDirectEntry = formData.applicationType === "Direct Entry (A-Level)";
-  const shouldCaptureUceAndUace = isDirectEntry || isUaceSelected;
+  const shouldCaptureUceAndUace = isDirectEntry || isUceSelected || isUaceSelected;
   const academicStepLabels = [
     "Application Setup",
+    "UCE / O-Level Details",
+    "UACE / A-Level Details",
     "Qualification Record",
-    "Subjects & Motivation",
   ];
   const documentStepLabels = [
     "Photo & Results",
@@ -1329,9 +1332,6 @@ const ApplicationStartPage = () => {
       if (!formData.previousInstitution.trim()) {
         nextErrors.previousInstitution = "Previous institution is required.";
       }
-      if (!formData.highestQualification.trim()) {
-        nextErrors.highestQualification = "Highest qualification is required.";
-      }
       if (!formData.academicCredentialLevel.trim()) {
         nextErrors.academicCredentialLevel =
           "Please select your academic credential level.";
@@ -1341,7 +1341,7 @@ const ApplicationStartPage = () => {
           "Please enter your academic results or transcript details.";
       }
 
-      if (isUaceSelected) {
+      if (isUceSelected || isUaceSelected) {
         if (!formData.uceIndexNumber.trim()) {
           nextErrors.uceIndexNumber = "UCE index number is required.";
         }
@@ -1359,6 +1359,52 @@ const ApplicationStartPage = () => {
           }
         }
 
+        if (!formData.uceTotalAggregates.trim()) {
+          nextErrors.uceTotalAggregates =
+            "Enter O-Level grades to auto-calculate total aggregates.";
+        } else if (!/^\d+$/.test(formData.uceTotalAggregates.trim())) {
+          nextErrors.uceTotalAggregates =
+            "UCE total aggregates must be a numeric value.";
+        }
+
+        if (!formData.uceDivision) {
+          nextErrors.uceDivision =
+            "Please select UCE division (1, 2, 3, 4, or U).";
+        }
+
+        if (!formData.oLevelSchoolName.trim()) {
+          nextErrors.oLevelSchoolName =
+            "Please provide your O-Level school name.";
+        }
+
+        const completedOLevelRows = formData.oLevelSubjects.filter(
+          (entry) => entry.subject.trim() && entry.grade.trim(),
+        );
+        if (completedOLevelRows.length < 5) {
+          nextErrors.oLevelSubjects =
+            "Provide at least five O-Level subjects with grades.";
+        }
+
+        const hasInvalidOLevelRows = formData.oLevelSubjects.some(
+          (entry) =>
+            Boolean(entry.subject.trim()) !== Boolean(entry.grade.trim()),
+        );
+
+        if (hasInvalidOLevelRows) {
+          nextErrors.oLevelSubjects =
+            "Each O-Level subject row must have both subject and grade.";
+        }
+
+        const hasInvalidOLevelGrades = completedOLevelRows.some(
+          (entry) => !oLevelGradeOptions.includes(entry.grade.trim()),
+        );
+
+        if (hasInvalidOLevelGrades) {
+          nextErrors.oLevelSubjects = "O-Level grades must be between 1 and 9.";
+        }
+      }
+
+      if (isUaceSelected) {
         if (!formData.uaceIndexNumber.trim()) {
           nextErrors.uaceIndexNumber = "UACE index number is required.";
         }
@@ -1382,26 +1428,6 @@ const ApplicationStartPage = () => {
         } else if (!/^\d+$/.test(formData.uaceTotalPoints.trim())) {
           nextErrors.uaceTotalPoints =
             "UACE total points must be a numeric value.";
-        }
-
-        if (!formData.uceTotalAggregates.trim()) {
-          nextErrors.uceTotalAggregates =
-            "Enter O-Level grades to auto-calculate total aggregates.";
-        } else if (!/^\d+$/.test(formData.uceTotalAggregates.trim())) {
-          nextErrors.uceTotalAggregates =
-            "UCE total aggregates must be a numeric value.";
-        }
-
-        if (!formData.uceDivision) {
-          nextErrors.uceDivision =
-            "Please select UCE division (1, 2, 3, 4, or U).";
-        }
-      }
-
-      if (isUaceSelected) {
-        if (!formData.oLevelSchoolName.trim()) {
-          nextErrors.oLevelSchoolName =
-            "Please provide your O-Level school name for UACE applicants.";
         }
 
         const completedPrincipalCount = formData.uacePrincipalSubjects.filter(
@@ -1451,32 +1477,6 @@ const ApplicationStartPage = () => {
           nextErrors.uaceIctOrSubMathGrade =
             "ICT/Subsidiary Mathematics grade must be between A and E.";
         }
-
-        const completedOLevelRows = formData.oLevelSubjects.filter(
-          (entry) => entry.subject.trim() && entry.grade.trim(),
-        );
-        if (completedOLevelRows.length < 5) {
-          nextErrors.oLevelSubjects =
-            "Provide at least five O-Level subjects with grades.";
-        }
-
-        const hasInvalidOLevelRows = formData.oLevelSubjects.some(
-          (entry) =>
-            Boolean(entry.subject.trim()) !== Boolean(entry.grade.trim()),
-        );
-
-        if (hasInvalidOLevelRows) {
-          nextErrors.oLevelSubjects =
-            "Each O-Level subject row must have both subject and grade.";
-        }
-
-        const hasInvalidOLevelGrades = completedOLevelRows.some(
-          (entry) => !oLevelGradeOptions.includes(entry.grade.trim()),
-        );
-
-        if (hasInvalidOLevelGrades) {
-          nextErrors.oLevelSubjects = "O-Level grades must be between 1 and 9.";
-        }
       }
 
       const hasCertificateRows = formData.certificateSubjects.some(
@@ -1493,19 +1493,6 @@ const ApplicationStartPage = () => {
         }
       }
 
-      if (!isDirectEntry && !formData.gpa.trim()) {
-        nextErrors.gpa = "GPA/score is required for this entry type.";
-      }
-      if (
-        formData.applicationType === "Mature Age" &&
-        formData.personalStatement.trim().length < 50
-      ) {
-        nextErrors.personalStatement =
-          "Personal statement must be at least 50 characters for Mature Age entry.";
-      }
-      if (!formData.howDidYouHear.trim()) {
-        nextErrors.howDidYouHear = "Please tell us how you heard about us.";
-      }
     }
 
     if (step === 3) {
@@ -1582,14 +1569,16 @@ const ApplicationStartPage = () => {
       "academicCredentialLevel", "academicCredentialsDetails",
       "uceIndexNumber", "uceYearOfSitting", "uceSecondIndexNumber", "uceSecondYearOfSitting",
       "uaceIndexNumber", "uaceYearOfSitting", "uaceSecondIndexNumber", "uaceSecondYearOfSitting",
-      "uaceTotalPoints", "uceTotalAggregates", "uceDivision",
-      "oLevelSchoolName", "uacePrincipalSubjects",
+      "oLevelSchoolName", "oLevelSubjects", "uceTotalAggregates", "uceDivision",
+    ],
+    2: [
+      "uacePrincipalSubjects",
       "uacePrincipalSubject0", "uacePrincipalSubject1", "uacePrincipalSubject2",
       "uacePrincipalGrade0", "uacePrincipalGrade1", "uacePrincipalGrade2",
       "uaceGeneralPaperGrade", "uaceIctOrSubMathSubject", "uaceIctOrSubMathGrade",
-      "oLevelSubjects", "certificateSubjects",
+      "uaceTotalPoints",
     ],
-    2: ["highestQualification", "gpa", "personalStatement", "howDidYouHear"],
+    3: ["certificateSubjects"],
   };
 
   const documentSubStepErrorKeys: Record<number, string[]> = {
@@ -1599,7 +1588,7 @@ const ApplicationStartPage = () => {
   };
 
   const findFirstFailingSubStep = (errors: Record<string, string>): number => {
-    for (let sub = 0; sub < 3; sub++) {
+    for (let sub = 0; sub < academicStepLabels.length; sub++) {
       if (academicSubStepErrorKeys[sub].some((key) => errors[key])) return sub;
     }
     return 0;
@@ -1625,12 +1614,12 @@ const ApplicationStartPage = () => {
         setErrors((prev) => ({ ...prev, ...allErrors }));
         return;
       }
-      console.log("[NEXT] advancing sub-step", academicSubStep, "->", academicSubStep + 1);
       setErrors((prev) => {
         const next = { ...prev };
         currentSubKeys.forEach((key) => delete next[key]);
         return next;
       });
+      console.log("[NEXT] advancing sub-step", academicSubStep, "->", academicSubStep + 1);
       setAcademicSubStep((prev) => prev + 1);
       return;
     }
@@ -2794,7 +2783,7 @@ const ApplicationStartPage = () => {
                           <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
                               <p className="font-body text-[11px] tracking-[0.24em] uppercase text-accent">
-                                Part {academicSubStep + 1}/3
+                                Part {academicSubStep + 1}/{academicStepLabels.length}
                               </p>
                               <p className="font-body text-sm text-foreground mt-1">
                                 {academicStepLabels[academicSubStep]}
@@ -2810,7 +2799,7 @@ const ApplicationStartPage = () => {
                                       : "border-border text-muted-foreground"
                                   }`}
                                 >
-                                  {index + 1}/3 {label}
+                                  {index + 1}/{academicStepLabels.length} {label}
                                 </span>
                               ))}
                             </div>
@@ -3150,20 +3139,13 @@ const ApplicationStartPage = () => {
                                 <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                                   {label}
                                 </label>
-                                <select
+                                <SearchableSelect
                                   value={formData[field]}
-                                  onChange={(e) =>
-                                    updateField(field, e.target.value)
-                                  }
-                                  className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                                >
-                                  <option value="">Select a programme</option>
-                                  {programmeNames.map((name) => (
-                                    <option key={name} value={name}>
-                                      {name}
-                                    </option>
-                                  ))}
-                                </select>
+                                  onValueChange={(val) => updateField(field, val)}
+                                  options={programmeNames}
+                                  placeholder="Type to search programmes..."
+                                  className="mt-2"
+                                />
                                 {errors[field] && (
                                   <p className="text-xs text-destructive mt-2">
                                     {errors[field]}
@@ -3293,10 +3275,10 @@ const ApplicationStartPage = () => {
                             </div>
                           </div>
 
-                          {isUaceSelected ? (
+                          {(isUceSelected || isUaceSelected) ? (
                             <div className="space-y-6 border border-border rounded-[14px] p-4 bg-secondary/10">
                               <p className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                UACE Details
+                                {isUceSelected ? "UCE" : "O-Level"} Details
                               </p>
 
                               <div>
@@ -3321,6 +3303,146 @@ const ApplicationStartPage = () => {
                                   </p>
                                 )}
                               </div>
+
+                              <div className="space-y-3">
+                                <p className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                  O-Level Subjects And Grades
+                                </p>
+                                {formData.oLevelSubjects.map((entry, index) => (
+                                  <div
+                                    key={`olevel-${index}`}
+                                    className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_180px_auto] gap-3"
+                                  >
+                                    <input
+                                      value={entry.subject}
+                                      onChange={(e) =>
+                                        updateSubjectGradeList(
+                                          "oLevelSubjects",
+                                          index,
+                                          "subject",
+                                          e.target.value,
+                                        )
+                                      }
+                                      list="olevel-subject-options"
+                                      className="w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                                      type="text"
+                                      placeholder="Search/select O-Level subject"
+                                    />
+                                    <select
+                                      value={entry.grade}
+                                      onChange={(e) =>
+                                        updateSubjectGradeList(
+                                          "oLevelSubjects",
+                                          index,
+                                          "grade",
+                                          e.target.value,
+                                        )
+                                      }
+                                      className="w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                                    >
+                                      <option value="">Grade</option>
+                                      {oLevelGradeOptions.map((grade) => (
+                                        <option
+                                          key={`olevel-${index}-${grade}`}
+                                          value={grade}
+                                        >
+                                          {grade}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        removeSubjectGradeRow(
+                                          "oLevelSubjects",
+                                          index,
+                                        )
+                                      }
+                                      className="px-3 py-2 border border-border rounded-[10px] font-body text-xs uppercase tracking-[0.16em]"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                ))}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    addSubjectGradeRow("oLevelSubjects")
+                                  }
+                                  className="px-4 py-2 rounded-[10px] border border-accent/40 text-accent font-body text-xs tracking-[0.16em] uppercase"
+                                >
+                                  Add O-Level Subject
+                                </button>
+                                {errors.oLevelSubjects && (
+                                  <p className="text-xs text-destructive mt-2">
+                                    {errors.oLevelSubjects}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                    UCE Total Aggregates *
+                                  </label>
+                                  <input
+                                    value={formData.uceTotalAggregates}
+                                    className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-secondary/10 font-body text-sm"
+                                    type="text"
+                                    inputMode="numeric"
+                                    placeholder="Auto-calculated from O-Level grades"
+                                    readOnly
+                                  />
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    Derived from best O-Level grades using the
+                                    UCE aggregate system.
+                                  </p>
+                                  {errors.uceTotalAggregates && (
+                                    <p className="text-xs text-destructive mt-2">
+                                      {errors.uceTotalAggregates}
+                                    </p>
+                                  )}
+                                </div>
+                                <div>
+                                  <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                    UCE Division *
+                                  </label>
+                                  <input
+                                    value={formData.uceDivision}
+                                    className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-secondary/10 font-body text-sm"
+                                    type="text"
+                                    placeholder="Auto-calculated"
+                                    readOnly
+                                  />
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    Automatically assigned as 1, 2, 3, 4, or U.
+                                  </p>
+                                  {errors.uceDivision && (
+                                    <p className="text-xs text-destructive mt-2">
+                                      {errors.uceDivision}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ) : null}
+
+                          <datalist id="olevel-subject-options">
+                            {oLevelSubjectOptions.map((subject) => (
+                              <option key={subject} value={subject} />
+                            ))}
+                          </datalist>
+                        </div>
+
+                        <div
+                          className={
+                            academicSubStep === 2 ? "space-y-4" : "hidden"
+                          }
+                        >
+                          <div className="space-y-6 border border-border rounded-[14px] p-4 bg-secondary/10">
+                              <p className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                UACE / A-Level Details
+                              </p>
 
                               <div className="space-y-4">
                                 <p className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -3512,130 +3634,20 @@ const ApplicationStartPage = () => {
                                   </p>
                                 )}
                               </div>
-
-                              <div className="space-y-3">
-                                <p className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                  O-Level Subjects And Grades
-                                </p>
-                                {formData.oLevelSubjects.map((entry, index) => (
-                                  <div
-                                    key={`olevel-${index}`}
-                                    className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_180px_auto] gap-3"
-                                  >
-                                    <input
-                                      value={entry.subject}
-                                      onChange={(e) =>
-                                        updateSubjectGradeList(
-                                          "oLevelSubjects",
-                                          index,
-                                          "subject",
-                                          e.target.value,
-                                        )
-                                      }
-                                      list="olevel-subject-options"
-                                      className="w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                                      type="text"
-                                      placeholder="Search/select O-Level subject"
-                                    />
-                                    <select
-                                      value={entry.grade}
-                                      onChange={(e) =>
-                                        updateSubjectGradeList(
-                                          "oLevelSubjects",
-                                          index,
-                                          "grade",
-                                          e.target.value,
-                                        )
-                                      }
-                                      className="w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                                    >
-                                      <option value="">Grade</option>
-                                      {oLevelGradeOptions.map((grade) => (
-                                        <option
-                                          key={`olevel-${index}-${grade}`}
-                                          value={grade}
-                                        >
-                                          {grade}
-                                        </option>
-                                      ))}
-                                    </select>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        removeSubjectGradeRow(
-                                          "oLevelSubjects",
-                                          index,
-                                        )
-                                      }
-                                      className="px-3 py-2 border border-border rounded-[10px] font-body text-xs uppercase tracking-[0.16em]"
-                                    >
-                                      Remove
-                                    </button>
-                                  </div>
-                                ))}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    addSubjectGradeRow("oLevelSubjects")
-                                  }
-                                  className="px-4 py-2 rounded-[10px] border border-accent/40 text-accent font-body text-xs tracking-[0.16em] uppercase"
-                                >
-                                  Add O-Level Subject
-                                </button>
-                                {errors.oLevelSubjects && (
-                                  <p className="text-xs text-destructive mt-2">
-                                    {errors.oLevelSubjects}
-                                  </p>
-                                )}
-                              </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                    UCE Total Aggregates *
-                                  </label>
-                                  <input
-                                    value={formData.uceTotalAggregates}
-                                    className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-secondary/10 font-body text-sm"
-                                    type="text"
-                                    inputMode="numeric"
-                                    placeholder="Auto-calculated from O-Level grades"
-                                    readOnly
-                                  />
-                                  <p className="text-xs text-muted-foreground mt-2">
-                                    Derived from best O-Level grades using the
-                                    UCE aggregate system.
-                                  </p>
-                                  {errors.uceTotalAggregates && (
-                                    <p className="text-xs text-destructive mt-2">
-                                      {errors.uceTotalAggregates}
-                                    </p>
-                                  )}
-                                </div>
-                                <div>
-                                  <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                    UCE Division *
-                                  </label>
-                                  <input
-                                    value={formData.uceDivision}
-                                    className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-secondary/10 font-body text-sm"
-                                    type="text"
-                                    placeholder="Auto-calculated"
-                                    readOnly
-                                  />
-                                  <p className="text-xs text-muted-foreground mt-2">
-                                    Automatically assigned as 1, 2, 3, 4, or U.
-                                  </p>
-                                  {errors.uceDivision && (
-                                    <p className="text-xs text-destructive mt-2">
-                                      {errors.uceDivision}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
                             </div>
-                          ) : null}
 
+                          <datalist id="uace-subject-options">
+                            {uaceSubjectOptions.map((subject) => (
+                              <option key={subject} value={subject} />
+                            ))}
+                          </datalist>
+                        </div>
+
+                        <div
+                          className={
+                            academicSubStep === 3 ? "space-y-4" : "hidden"
+                          }
+                        >
                           <div className="space-y-3 border border-border rounded-[14px] p-4 bg-secondary/10">
                             <p className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                               Certificate Subjects And Grades (If Applicable)
@@ -3714,16 +3726,6 @@ const ApplicationStartPage = () => {
                             )}
                           </div>
 
-                          <datalist id="uace-subject-options">
-                            {uaceSubjectOptions.map((subject) => (
-                              <option key={subject} value={subject} />
-                            ))}
-                          </datalist>
-                          <datalist id="olevel-subject-options">
-                            {oLevelSubjectOptions.map((subject) => (
-                              <option key={subject} value={subject} />
-                            ))}
-                          </datalist>
                           <datalist id="certificate-subject-options">
                             {[
                               ...new Set([
@@ -3734,112 +3736,6 @@ const ApplicationStartPage = () => {
                               <option key={subject} value={subject} />
                             ))}
                           </datalist>
-                        </div>
-
-                        <div
-                          className={
-                            academicSubStep === 2 ? "space-y-4" : "hidden"
-                          }
-                        >
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                Highest Qualification
-                              </label>
-                              <select
-                                value={formData.highestQualification}
-                                onChange={(e) =>
-                                  updateField(
-                                    "highestQualification",
-                                    e.target.value,
-                                  )
-                                }
-                                className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                              >
-                                <option value="">Select qualification</option>
-                                {qualifications.map((q) => (
-                                  <option key={q} value={q}>
-                                    {q}
-                                  </option>
-                                ))}
-                              </select>
-                              {errors.highestQualification && (
-                                <p className="text-xs text-destructive mt-2">
-                                  {errors.highestQualification}
-                                </p>
-                              )}
-                            </div>
-                            {!isDirectEntry ? (
-                              <div>
-                                <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                  GPA / Score
-                                </label>
-                                <input
-                                  value={formData.gpa}
-                                  onChange={(e) =>
-                                    updateField("gpa", e.target.value)
-                                  }
-                                  className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                                  type="text"
-                                />
-                                {errors.gpa && (
-                                  <p className="text-xs text-destructive mt-2">
-                                    {errors.gpa}
-                                  </p>
-                                )}
-                              </div>
-                            ) : null}
-                          </div>
-
-                          <div>
-                            <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                              Personal Statement
-                            </label>
-                            <textarea
-                              value={formData.personalStatement}
-                              onChange={(e) =>
-                                updateField("personalStatement", e.target.value)
-                              }
-                              className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm min-h-[160px]"
-                              placeholder="Tell us why you want to join University Application Portal (minimum 50 characters)."
-                            />
-                            <p className="text-xs text-muted-foreground mt-2">
-                              {formData.personalStatement.length} characters
-                              {formData.applicationType === "Mature Age"
-                                ? " (required for Mature Age applications)"
-                                : " (optional)"}
-                            </p>
-                            {errors.personalStatement && (
-                              <p className="text-xs text-destructive mt-2">
-                                {errors.personalStatement}
-                              </p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                              How did you hear about us?
-                            </label>
-                            <select
-                              value={formData.howDidYouHear}
-                              onChange={(e) =>
-                                updateField("howDidYouHear", e.target.value)
-                              }
-                              className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                            >
-                              <option value="">Select one option</option>
-                              {hearAboutOptions.map((option) => (
-                                <option key={option} value={option}>
-                                  {option}
-                                </option>
-                              ))}
-                            </select>
-                            {errors.howDidYouHear && (
-                              <p className="text-xs text-destructive mt-2">
-                                {errors.howDidYouHear}
-                              </p>
-                            )}
-                          </div>
                         </div>
                       </>
                     )}
@@ -3866,7 +3762,7 @@ const ApplicationStartPage = () => {
                                       : "border-border text-muted-foreground"
                                   }`}
                                 >
-                                  {index + 1}/3 {label}
+                                  {index + 1}/{documentStepLabels.length} {label}
                                 </span>
                               ))}
                             </div>

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -64,6 +64,46 @@ const Index = () => {
   const storyRef = useRef<HTMLDivElement>(null);
   const donateRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
+  const [whatWeTeachTagline, setWhatWeTeachTagline] = useState("What We Teach");
+  const [whatWeTeachHeading1, setWhatWeTeachHeading1] = useState("Practical Skills That");
+  const [whatWeTeachHeading2, setWhatWeTeachHeading2] = useState("Create Real Livelihoods");
+  const [whatWeTeachSubtitle, setWhatWeTeachSubtitle] = useState("Our vocational programs are designed for immediate employment and entrepreneurship. Each graduate leaves with the skills to earn income from day one.");
+  const [whatWeTeachPrograms, setWhatWeTeachPrograms] = useState([
+    { title: "Tailoring & Design", duration: "6 months", outcome: "Run your own shop" },
+    { title: "Electrical Installation", duration: "8 months", outcome: "Certified electrician" },
+    { title: "Plumbing", duration: "8 months", outcome: "Start a plumbing business" },
+    { title: "Welding & Fabrication", duration: "6 months", outcome: "Fabrication workshop owner" },
+    { title: "Hairdressing", duration: "4 months", outcome: "Open your own salon" },
+    { title: "Beauty Therapy", duration: "4 months", outcome: "Freelance beauty therapist" },
+  ]);
+  const [whatWeTeachBtnText, setWhatWeTeachBtnText] = useState("View All Programs");
+  const [whatWeTeachBtnVisible, setWhatWeTeachBtnVisible] = useState(true);
+  const [successStoryTagline, setSuccessStoryTagline] = useState("Student Success Story");
+  const [successStoryQuote, setSuccessStoryQuote] = useState("I went from nothing to owning my own business.");
+  const [successStoryAuthor, setSuccessStoryAuthor] = useState("Mary Nakato");
+  const [successStoryProgram, setSuccessStoryProgram] = useState("Tailoring & Design");
+  const [successStoryOutcome, setSuccessStoryOutcome] = useState("Now runs a successful tailoring shop");
+  const [successStoryBtnText, setSuccessStoryBtnText] = useState("Read More Stories");
+  const [successStoryBtnVisible, setSuccessStoryBtnVisible] = useState(true);
+  const [successStoryStats, setSuccessStoryStats] = useState([
+    { val: "1,200+", label: "Lives Changed" },
+    { val: "300+", label: "Businesses Started" },
+    { val: "12+", label: "Communities Reached" },
+  ]);
+  const [donateTagline, setDonateTagline] = useState("Make A Difference");
+  const [donateHeading1, setDonateHeading1] = useState("Your Support Changes");
+  const [donateHeading2, setDonateHeading2] = useState("A Life");
+  const [donateSubtitle, setDonateSubtitle] = useState("Every contribution — large or small — directly funds training, materials, and opportunity for those who need it most.");
+  const [donateTiers, setDonateTiers] = useState([
+    { amount: "$10", impact: "Provides learning materials for one student" },
+    { amount: "$25", impact: "Covers essential training tools" },
+    { amount: "$50", impact: "Sponsors a student for one month" },
+    { amount: "$200", impact: "Covers full training support" },
+  ]);
+  const [donateCtaDonate, setDonateCtaDonate] = useState("Donate Now");
+  const [donateCtaDonateVisible, setDonateCtaDonateVisible] = useState(true);
+  const [donateCtaSponsor, setDonateCtaSponsor] = useState("Sponsor a Student");
+  const [donateCtaSponsorVisible, setDonateCtaSponsorVisible] = useState(true);
 
   const { data: remotePrograms } = useContentCollection<RemoteProgram>("courses", []);
   const { data: remoteStories } = useContentCollection<RemoteStory>("student_stories", []);
@@ -78,21 +118,11 @@ const Index = () => {
     tailor: Scissors, plumb: Wrench, electric: Zap, weld: Flame, hair: Users, beauty: Sparkles, auto: Car, soap: BookOpen,
   };
 
-  const programPreviews = remotePrograms.length > 0
-    ? remotePrograms.slice(0, 6).map((p) => {
-        const name = (typeof p.programName === "string" && p.programName.trim()) || "Program";
-        const lower = name.toLowerCase();
-        const icon = Object.entries(iconMap).find(([k]) => lower.includes(k))?.[1] || BookOpen;
-        return { icon, title: name, duration: "", outcome: (typeof p.description === "string" && p.description.slice(0, 100)) || "Practical skills for real careers" };
-      })
-    : [
-        { icon: Scissors, title: "Tailoring & Design", duration: "6 months", outcome: "Run your own shop" },
-        { icon: Zap, title: "Electrical Installation", duration: "8 months", outcome: "Certified electrician" },
-        { icon: Wrench, title: "Plumbing", duration: "8 months", outcome: "Start a plumbing business" },
-        { icon: Flame, title: "Welding & Fabrication", duration: "6 months", outcome: "Fabrication workshop owner" },
-        { icon: Users, title: "Hairdressing", duration: "4 months", outcome: "Open your own salon" },
-        { icon: Sparkles, title: "Beauty Therapy", duration: "4 months", outcome: "Freelance beauty therapist" },
-      ];
+  const programPreviews = whatWeTeachPrograms.map((p) => {
+    const lower = p.title.toLowerCase();
+    const icon = Object.entries(iconMap).find(([k]) => lower.includes(k))?.[1] || BookOpen;
+    return { icon, title: p.title, duration: p.duration, outcome: p.outcome };
+  });
 
   const storyFeature = remoteStories.length > 0
     ? { name: remoteStories[0].student_name || "Graduate", program: remoteStories[0].program || "Vocational Training", quote: remoteStories[0].title || "This program changed my life.", outcome: "Now earning a stable income" }
@@ -103,8 +133,57 @@ const Index = () => {
   useParallax(pageRef);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    fetch("http://localhost:8080/api/v1/content/site-settings")
+      .then((res) => { if (!res.ok) throw new Error(""); return res.json(); })
+      .then((data: Record<string, string>) => {
+        if (data.what_we_teach_tagline) setWhatWeTeachTagline(data.what_we_teach_tagline);
+        if (data.what_we_teach_heading_1) setWhatWeTeachHeading1(data.what_we_teach_heading_1);
+        if (data.what_we_teach_heading_2) setWhatWeTeachHeading2(data.what_we_teach_heading_2);
+        if (data.what_we_teach_subtitle) setWhatWeTeachSubtitle(data.what_we_teach_subtitle);
+        if (data.what_we_teach_programs) {
+          try {
+            const parsed = JSON.parse(data.what_we_teach_programs);
+            if (Array.isArray(parsed) && parsed.length > 0) setWhatWeTeachPrograms(parsed);
+          } catch {}
+        }
+        if (data.what_we_teach_btn_text) setWhatWeTeachBtnText(data.what_we_teach_btn_text);
+        if (data.what_we_teach_btn_visible !== undefined) setWhatWeTeachBtnVisible(data.what_we_teach_btn_visible !== 'false');
+        if (data.success_story_tagline) setSuccessStoryTagline(data.success_story_tagline);
+        if (data.success_story_quote) setSuccessStoryQuote(data.success_story_quote);
+        if (data.success_story_author) setSuccessStoryAuthor(data.success_story_author);
+        if (data.success_story_program) setSuccessStoryProgram(data.success_story_program);
+        if (data.success_story_outcome) setSuccessStoryOutcome(data.success_story_outcome);
+        if (data.success_story_btn_text) setSuccessStoryBtnText(data.success_story_btn_text);
+        if (data.success_story_btn_visible !== undefined) setSuccessStoryBtnVisible(data.success_story_btn_visible !== 'false');
+        if (data.success_story_stats) {
+          try {
+            const parsed = JSON.parse(data.success_story_stats);
+            if (Array.isArray(parsed) && parsed.length > 0) setSuccessStoryStats(parsed);
+          } catch {}
+        }
+        if (data.donate_tagline) setDonateTagline(data.donate_tagline);
+        if (data.donate_heading_1) setDonateHeading1(data.donate_heading_1);
+        if (data.donate_heading_2) setDonateHeading2(data.donate_heading_2);
+        if (data.donate_subtitle) setDonateSubtitle(data.donate_subtitle);
+        if (data.donate_tiers) {
+          try {
+            const parsed = JSON.parse(data.donate_tiers);
+            if (Array.isArray(parsed) && parsed.length > 0) setDonateTiers(parsed);
+          } catch {}
+        }
+        if (data.donate_cta_donate) setDonateCtaDonate(data.donate_cta_donate);
+        if (data.donate_cta_donate_visible !== undefined) setDonateCtaDonateVisible(data.donate_cta_donate_visible !== 'false');
+        if (data.donate_cta_sponsor) setDonateCtaSponsor(data.donate_cta_sponsor);
+        if (data.donate_cta_sponsor_visible !== undefined) setDonateCtaSponsorVisible(data.donate_cta_sponsor_visible !== 'false');
+      })
+      .catch(() => {});
+  }, []);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     const ctx = gsap.context(() => {
       // Programs section — staggered cards with scale
       if (programsRef.current) {
@@ -174,7 +253,7 @@ const Index = () => {
     });
 
     return () => ctx.revert();
-  }, []);
+  }, [whatWeTeachPrograms]);
 
   return (
     <LoadingWrapper>
@@ -191,12 +270,12 @@ const Index = () => {
             <div className="parallax-el pointer-events-none absolute -top-24 -left-28 h-72 w-72 rounded-full bg-accent/10 blur-3xl" data-speed="0.3" />
             <div className="parallax-el pointer-events-none absolute -bottom-32 right-0 h-80 w-80 rounded-full bg-primary/10 blur-3xl" data-speed="0.5" />
             <div className="max-w-2xl mb-16">
-              <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">What We Teach</p>
+              <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">{whatWeTeachTagline}</p>
               <h2 className="section-heading font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">
-                Practical Skills That<br />Create Real Livelihoods
+                {whatWeTeachHeading1}<br />{whatWeTeachHeading2}
               </h2>
               <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6 max-w-lg">
-                Our vocational programs are designed for immediate employment and entrepreneurship. Each graduate leaves with the skills to earn income from day one.
+                {whatWeTeachSubtitle}
               </p>
             </div>
             <div ref={programsRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
@@ -219,13 +298,15 @@ const Index = () => {
                 </div>
               ))}
             </div>
-            <button
-              onClick={() => navigate("/programs")}
-              className="group flex items-center gap-2 font-body text-sm tracking-[0.2em] uppercase text-accent transition-all duration-300 hover:gap-4 btn-lift"
-            >
-              View All Programs
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
-            </button>
+            {whatWeTeachBtnVisible && (
+              <button
+                onClick={() => navigate("/programs")}
+                className="group flex items-center gap-2 font-body text-sm tracking-[0.2em] uppercase text-accent transition-all duration-300 hover:gap-4 btn-lift"
+              >
+                {whatWeTeachBtnText}
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
+              </button>
+            )}
           </section>
 
           {/* Featured Success Story */}
@@ -233,26 +314,24 @@ const Index = () => {
             <div className="parallax-el pointer-events-none absolute -left-24 top-8 h-64 w-64 rounded-full bg-accent/15 blur-3xl" data-speed="0.4" />
             <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div>
-                <p className="story-anim opacity-0 font-body text-xs tracking-[0.3em] uppercase text-accent mb-6">Student Success Story</p>
+                <p className="story-anim opacity-0 font-body text-xs tracking-[0.3em] uppercase text-accent mb-6">{successStoryTagline}</p>
                 <blockquote className="story-anim opacity-0 font-heading text-3xl md:text-5xl font-light text-primary-foreground leading-tight mb-8">
-                  "{storyFeature.quote}"
+                  "{successStoryQuote}"
                 </blockquote>
-                <p className="story-anim opacity-0 font-body text-sm text-primary-foreground/60 mb-2">— {storyFeature.name}, {storyFeature.program}</p>
-                <p className="story-anim opacity-0 font-body text-sm text-accent mb-10">{storyFeature.outcome}</p>
-                <button
-                  onClick={() => navigate("/impact")}
-                  className="story-anim opacity-0 group flex items-center gap-2 px-8 py-4 border border-primary-foreground/40 text-primary-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent btn-lift"
-                >
-                  Read More Stories
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
-                </button>
+                <p className="story-anim opacity-0 font-body text-sm text-primary-foreground/60 mb-2">— {successStoryAuthor}, {successStoryProgram}</p>
+                <p className="story-anim opacity-0 font-body text-sm text-accent mb-10">{successStoryOutcome}</p>
+                {successStoryBtnVisible && (
+                  <button
+                    onClick={() => navigate("/impact")}
+                    className="story-anim opacity-0 group flex items-center gap-2 px-8 py-4 border border-primary-foreground/40 text-primary-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent btn-lift"
+                  >
+                    {successStoryBtnText}
+                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
+                  </button>
+                )}
               </div>
               <div className="hidden lg:flex flex-col gap-6">
-                {[
-                  { val: "1,200+", label: "Lives Changed" },
-                  { val: "300+", label: "Businesses Started" },
-                  { val: "12+", label: "Communities Reached" },
-                ].map(({ val, label }) => (
+                {successStoryStats.map(({ val, label }) => (
                   <div key={label} className="stat-block opacity-0 p-8 bg-primary-foreground/5 border border-primary-foreground/15 rounded-[20px] stat-glow">
                     <p className="stat-value font-heading text-5xl font-light text-accent mb-2">{val}</p>
                     <p className="font-body text-sm text-primary-foreground/60 uppercase tracking-[0.2em]">{label}</p>
@@ -266,16 +345,16 @@ const Index = () => {
           <section className="relative py-24 md:py-32 px-8 md:px-16 bg-background overflow-hidden">
             <div className="parallax-el pointer-events-none absolute top-10 right-[-6rem] h-80 w-80 rounded-full bg-accent/12 blur-3xl" data-speed="0.35" />
             <div className="max-w-2xl mx-auto text-center mb-16">
-              <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">Make A Difference</p>
+              <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">{donateTagline}</p>
               <h2 className="section-heading font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">
-                Your Support Changes<br />A Life
+                {donateHeading1}<br />{donateHeading2}
               </h2>
               <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6">
-                Every contribution — large or small — directly funds training, materials, and opportunity for those who need it most.
+                {donateSubtitle}
               </p>
             </div>
             <div ref={donateRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-12">
-              {donationTiers.map(({ amount, impact }) => (
+              {donateTiers.map(({ amount, impact }) => (
                 <div
                   key={amount}
                   className="donate-card spotlight-card opacity-0 group p-8 border border-border rounded-[20px] text-center cursor-pointer"
@@ -289,20 +368,24 @@ const Index = () => {
               ))}
             </div>
             <div className="flex flex-wrap justify-center gap-4">
-              <button
-                onClick={() => navigate("/donate")}
-                className="group flex items-center gap-2 px-10 py-4 bg-accent text-accent-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 btn-lift"
-              >
-                <Heart size={16} className="fill-current" />
-                Donate Now
-              </button>
-              <button
-                onClick={() => navigate("/donate#sponsor")}
-                className="group flex items-center gap-2 px-10 py-4 border border-foreground/30 text-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent btn-lift"
-              >
-                <Users size={16} />
-                Sponsor a Student
-              </button>
+              {donateCtaDonateVisible && (
+                <button
+                  onClick={() => navigate("/donate")}
+                  className="group flex items-center gap-2 px-10 py-4 bg-accent text-accent-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 btn-lift"
+                >
+                  <Heart size={16} className="fill-current" />
+                  {donateCtaDonate}
+                </button>
+              )}
+              {donateCtaSponsorVisible && (
+                <button
+                  onClick={() => navigate("/donate#sponsor")}
+                  className="group flex items-center gap-2 px-10 py-4 border border-foreground/30 text-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent btn-lift"
+                >
+                  <Users size={16} />
+                  {donateCtaSponsor}
+                </button>
+              )}
             </div>
           </section>
 

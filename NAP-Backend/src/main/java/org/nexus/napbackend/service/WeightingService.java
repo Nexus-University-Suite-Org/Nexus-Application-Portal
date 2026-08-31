@@ -61,11 +61,16 @@ public class WeightingService {
         }
     }
 
+    private static final double GENDER_BONUS = 1.5;
+
     public QualificationResult evaluateQualification(Application app, Programme programme) {
         double oLevelScore = calculateOLevelWeight(app.getOLevelSubjects());
         double aLevelScore = calculateALevelWeight(app.getUacePrincipalSubjects(), programme);
         double totalScore = oLevelScore + aLevelScore;
-        boolean qualified = totalScore >= programme.getCutoffScore();
+
+        boolean isFemale = "Female".equalsIgnoreCase(app.getGender());
+        double adjustedScore = isFemale ? totalScore + GENDER_BONUS : totalScore;
+        boolean qualified = adjustedScore >= programme.getCutoffScore();
 
         List<SubjectScore> breakdown = new ArrayList<>();
         try {
@@ -91,13 +96,21 @@ public class WeightingService {
             }
         } catch (Exception ignored) {}
 
-        String reason = qualified
-                ? "Score " + String.format("%.1f", totalScore) + " meets cutoff of " + String.format("%.1f", programme.getCutoffScore())
-                : "Score " + String.format("%.1f", totalScore) + " is below cutoff of " + String.format("%.1f", programme.getCutoffScore());
+        String reason;
+        if (qualified) {
+            reason = "Score " + String.format("%.1f", totalScore)
+                    + (isFemale ? " + " + String.format("%.1f", GENDER_BONUS) + " female applicant bonus = " + String.format("%.1f", adjustedScore) : "")
+                    + " meets cutoff of " + String.format("%.1f", programme.getCutoffScore());
+        } else {
+            reason = "Score " + String.format("%.1f", totalScore)
+                    + (isFemale ? " + " + String.format("%.1f", GENDER_BONUS) + " female applicant bonus = " + String.format("%.1f", adjustedScore) : "")
+                    + " is below cutoff of " + String.format("%.1f", programme.getCutoffScore());
+        }
 
         return new QualificationResult(
                 programme.getCode(), programme.getName(), qualified,
-                totalScore, programme.getCutoffScore(),
+                totalScore, adjustedScore, isFemale,
+                programme.getCutoffScore(),
                 oLevelScore, aLevelScore, breakdown, reason
         );
     }

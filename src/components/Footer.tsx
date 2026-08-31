@@ -48,14 +48,14 @@ const Footer = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [email, setEmail] = useState("");
-  const [portalName] = useState("University Application Portal");
-  const [organizationEmail] = useState("");
-  const [organizationMission] = useState(
+  const [portalName, setPortalName] = useState("University Application Portal");
+  const [organizationEmail, setOrganizationEmail] = useState("");
+  const [organizationMission, setOrganizationMission] = useState(
     "Empowering single mothers and vulnerable youth through practical vocational skills — building dignified livelihoods one graduate at a time.",
   );
-  const [organizationWhatsappCta] = useState("WhatsApp Us");
-  const [organizationPhone] = useState("+256 700 000 000");
-  const [organizationAddress] = useState(
+  const [organizationWhatsappCta, setOrganizationWhatsappCta] = useState("WhatsApp Us");
+  const [organizationPhone, setOrganizationPhone] = useState("+256 700 000 000");
+  const [organizationAddress, setOrganizationAddress] = useState(
     "Plot 7, Nakawa Road, Kampala, Uganda",
   );
   const { data: courseDocs } = useContentCollection<CourseDoc>(
@@ -73,12 +73,29 @@ const Footer = () => {
     .map((name) => ({ label: name, href: "/admissions/courses" }));
 
   useEffect(() => {
+    fetch("http://localhost:8080/api/v1/content/site-settings")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch");
+        return res.json();
+      })
+      .then((data: Record<string, string>) => {
+        if (data.portal_name) setPortalName(data.portal_name);
+        if (data.footer_mission) setOrganizationMission(data.footer_mission);
+        if (data.footer_email) setOrganizationEmail(data.footer_email);
+        if (data.footer_phone) setOrganizationPhone(data.footer_phone);
+        if (data.footer_whatsapp_cta) setOrganizationWhatsappCta(data.footer_whatsapp_cta);
+        if (data.footer_address) setOrganizationAddress(data.footer_address);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     const ctx = gsap.context(() => {
       if (contentRef.current) {
         const cols = contentRef.current.querySelectorAll(".footer-col");
         gsap.fromTo(
           cols,
-          { y: 50, opacity: 0 },
+          { y: 30, opacity: 0 },
           {
             y: 0,
             opacity: 1,
@@ -87,8 +104,8 @@ const Footer = () => {
             ease: "power2.out",
             scrollTrigger: {
               trigger: footerRef.current,
-              start: "top 90%",
-              toggleActions: "play none none reverse",
+              start: "top 95%",
+              toggleActions: "play none none none",
             },
           },
         );
@@ -103,8 +120,8 @@ const Footer = () => {
           ease: "power2.out",
           scrollTrigger: {
             trigger: footerRef.current,
-            start: "top 85%",
-            toggleActions: "play none none reverse",
+            start: "top 90%",
+            toggleActions: "play none none none",
           },
         },
       );
@@ -130,7 +147,7 @@ const Footer = () => {
       <div ref={contentRef} className="px-8 md:px-16 pt-24 pb-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 lg:gap-8">
           {/* Brand & Contact */}
-          <div className="footer-col lg:col-span-1 opacity-0">
+          <div className="footer-col lg:col-span-1">
             <h3 className="font-heading text-2xl font-light tracking-[0.2em] uppercase mb-4">
               {portalName}
             </h3>
@@ -196,7 +213,7 @@ const Footer = () => {
           </div>
 
           {/* Quick Links */}
-          <div className="footer-col opacity-0">
+          <div className="footer-col">
             <p className="font-body text-xs tracking-[0.3em] uppercase text-primary-foreground/40 mb-8">
               Quick Links
             </p>
@@ -216,7 +233,7 @@ const Footer = () => {
           </div>
 
           {/* Programs */}
-          <div className="footer-col opacity-0">
+          <div className="footer-col">
             <p className="font-body text-xs tracking-[0.3em] uppercase text-primary-foreground/40 mb-8">
               Our Programs
             </p>
@@ -240,7 +257,7 @@ const Footer = () => {
           </div>
 
           {/* Donate & Newsletter */}
-          <div className="footer-col opacity-0">
+          <div className="footer-col">
             <p className="font-body text-xs tracking-[0.3em] uppercase text-primary-foreground/40 mb-8">
               Support Our Mission
             </p>
@@ -284,7 +301,7 @@ const Footer = () => {
       {/* Bottom bar */}
       <div
         ref={bottomRef}
-        className="border-t border-primary-foreground/10 px-8 md:px-16 py-6 flex flex-col md:flex-row items-center justify-between gap-4 opacity-0"
+        className="border-t border-primary-foreground/10 px-8 md:px-16 py-6 flex flex-col md:flex-row items-center justify-between gap-4"
       >
         <p className="font-body text-xs text-primary-foreground/30 tracking-wider">
           © {new Date().getFullYear()} {portalName}. All rights reserved.

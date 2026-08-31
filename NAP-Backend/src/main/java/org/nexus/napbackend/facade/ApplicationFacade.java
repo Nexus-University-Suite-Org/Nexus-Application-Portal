@@ -70,7 +70,7 @@ public class ApplicationFacade {
             try {
                 var results = new com.fasterxml.jackson.databind.ObjectMapper()
                         .readValue(qualificationResultsJson, new com.fasterxml.jackson.core.type.TypeReference<List<org.nexus.napbackend.dto.QualificationResult>>() {});
-                double maxScore = results.stream().mapToDouble(org.nexus.napbackend.dto.QualificationResult::totalScore).max().orElse(0);
+                double maxScore = results.stream().mapToDouble(org.nexus.napbackend.dto.QualificationResult::adjustedScore).max().orElse(0);
                 entity.setTotalWeightScore(maxScore);
             } catch (Exception ignored) {}
         } else if ("rejected".equals(reviewStatus.toLowerCase())) {

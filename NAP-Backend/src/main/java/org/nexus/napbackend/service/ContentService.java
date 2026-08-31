@@ -25,6 +25,7 @@ import org.nexus.napbackend.repository.GalleryItemRepository;
 import org.nexus.napbackend.repository.LegalPageRepository;
 import org.nexus.napbackend.repository.NewsArticleRepository;
 import org.nexus.napbackend.repository.PageSectionRepository;
+import org.nexus.napbackend.repository.SiteSettingRepository;
 import org.nexus.napbackend.repository.PartnerRepository;
 import org.nexus.napbackend.repository.QuickLinkRepository;
 import org.nexus.napbackend.repository.ScholarshipRepository;
@@ -47,6 +48,7 @@ public class ContentService {
     private final FacultyMemberRepository facultyMemberRepo;
     private final PageSectionRepository pageSectionRepo;
     private final CmsEventRepository cmsEventRepo;
+    private final SiteSettingRepository siteSettingRepo;
 
     public ContentService(
             NewsArticleRepository newsRepo,
@@ -61,7 +63,8 @@ public class ContentService {
             CourseCatalogRepository courseCatalogRepo,
             FacultyMemberRepository facultyMemberRepo,
             PageSectionRepository pageSectionRepo,
-            CmsEventRepository cmsEventRepo) {
+            CmsEventRepository cmsEventRepo,
+            SiteSettingRepository siteSettingRepo) {
         this.newsRepo = newsRepo;
         this.galleryRepo = galleryRepo;
         this.faqRepo = faqRepo;
@@ -75,6 +78,7 @@ public class ContentService {
         this.facultyMemberRepo = facultyMemberRepo;
         this.pageSectionRepo = pageSectionRepo;
         this.cmsEventRepo = cmsEventRepo;
+        this.siteSettingRepo = siteSettingRepo;
     }
 
     public List<Map<String, Object>> findByCollection(String collection) {
@@ -105,10 +109,17 @@ public class ContentService {
                     .stream().map(ContentMapper::toMap).toList();
             case "page_sections" -> pageSectionRepo.findAllByOrderByCreatedAtDesc()
                     .stream().map(ContentMapper::toMap).toList();
+            case "site_settings" -> siteSettingRepo.findAll().stream()
+                    .map(s -> {
+                        java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+                        m.put("settingKey", s.getSettingKey());
+                        m.put("settingValue", s.getSettingValue());
+                        return m;
+                    }).toList();
             default -> throw new IllegalArgumentException(
                     "Unknown collection: " + collection + ". Valid collections: "
                             + "news, events, gallery, faqs, alumni, partners, scholarships, "
-                            + "student_stories, legal_pages, quick_links, courses, faculty, page_sections");
+                            + "student_stories, legal_pages, quick_links, courses, faculty, page_sections, site_settings");
         };
     }
 }
