@@ -65,6 +65,11 @@ const NewsPage = () => {
   const newsRef = useRef<HTMLDivElement>(null);
   const eventsRef = useRef<HTMLDivElement>(null);
   const [portalName] = useState("University Application Portal");
+  const [heroTagline, setHeroTagline] = useState("News & Events");
+  const [heroHeading1, setHeroHeading1] = useState("Stories That");
+  const [heroHeading2, setHeroHeading2] = useState("Inspire");
+  const [eventsTagline, setEventsTagline] = useState("Upcoming Events");
+  const [eventsHeading, setEventsHeading] = useState("Mark Your Calendar");
 
   const { data: rawNewsData, isLoading: newsLoading } = useContentCollection<RemoteNewsArticle>(
     "NewsArticles",
@@ -78,6 +83,19 @@ const NewsPage = () => {
     [],
     { orderBy: { field: "date", direction: "asc" } },
   );
+
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8080"}/api/v1/site-settings`)
+      .then((r) => r.json())
+      .then((data: Record<string, string>) => {
+        if (data.news_hero_tagline) setHeroTagline(data.news_hero_tagline);
+        if (data.news_hero_heading_1) setHeroHeading1(data.news_hero_heading_1);
+        if (data.news_hero_heading_2) setHeroHeading2(data.news_hero_heading_2);
+        if (data.news_events_tagline) setEventsTagline(data.news_events_tagline);
+        if (data.news_events_heading) setEventsHeading(data.news_events_heading);
+      })
+      .catch(() => {});
+  }, []);
 
   const newsData: NewsItem[] =
     rawNewsData.length > 0
@@ -202,12 +220,12 @@ const NewsPage = () => {
         </div>
         <div className="relative z-10 px-8 md:px-16 pb-24 pt-40 news-hero-text max-w-4xl">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6 opacity-0">
-            News & Events
+            {heroTagline}
           </p>
           <h1 className="font-heading text-5xl md:text-8xl font-light text-primary-foreground leading-[0.9] mb-8 opacity-0">
-            Stories That
+            {heroHeading1}
             <br />
-            Inspire
+            {heroHeading2}
           </h1>
         </div>
       </div>
@@ -286,10 +304,10 @@ const NewsPage = () => {
       <div ref={eventsRef} className="px-8 md:px-16 py-32 bg-primary">
         <div className="max-w-2xl mb-20">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">
-            Upcoming Events
+            {eventsTagline}
           </p>
           <h2 className="font-heading text-4xl md:text-6xl font-light text-primary-foreground leading-tight">
-            Mark Your Calendar
+            {eventsHeading}
           </h2>
         </div>
         <div className="space-y-0">
