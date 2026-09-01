@@ -13,6 +13,7 @@ import org.nexus.napbackend.model.LegalPage;
 import org.nexus.napbackend.model.NewsArticle;
 import org.nexus.napbackend.model.PageSection;
 import org.nexus.napbackend.model.Partner;
+import org.nexus.napbackend.model.Program;
 import org.nexus.napbackend.model.QuickLink;
 import org.nexus.napbackend.model.Scholarship;
 import org.nexus.napbackend.model.StudentStory;
@@ -25,6 +26,7 @@ import org.nexus.napbackend.repository.GalleryItemRepository;
 import org.nexus.napbackend.repository.LegalPageRepository;
 import org.nexus.napbackend.repository.NewsArticleRepository;
 import org.nexus.napbackend.repository.PageSectionRepository;
+import org.nexus.napbackend.repository.ProgramRepository;
 import org.nexus.napbackend.repository.SiteSettingRepository;
 import org.nexus.napbackend.repository.PartnerRepository;
 import org.nexus.napbackend.repository.QuickLinkRepository;
@@ -49,6 +51,7 @@ public class ContentService {
     private final PageSectionRepository pageSectionRepo;
     private final CmsEventRepository cmsEventRepo;
     private final SiteSettingRepository siteSettingRepo;
+    private final ProgramRepository programRepo;
 
     public ContentService(
             NewsArticleRepository newsRepo,
@@ -64,7 +67,8 @@ public class ContentService {
             FacultyMemberRepository facultyMemberRepo,
             PageSectionRepository pageSectionRepo,
             CmsEventRepository cmsEventRepo,
-            SiteSettingRepository siteSettingRepo) {
+            SiteSettingRepository siteSettingRepo,
+            ProgramRepository programRepo) {
         this.newsRepo = newsRepo;
         this.galleryRepo = galleryRepo;
         this.faqRepo = faqRepo;
@@ -79,6 +83,7 @@ public class ContentService {
         this.pageSectionRepo = pageSectionRepo;
         this.cmsEventRepo = cmsEventRepo;
         this.siteSettingRepo = siteSettingRepo;
+        this.programRepo = programRepo;
     }
 
     public List<Map<String, Object>> findByCollection(String collection) {
@@ -109,6 +114,8 @@ public class ContentService {
                     .stream().map(ContentMapper::toMap).toList();
             case "page_sections" -> pageSectionRepo.findAllByOrderByCreatedAtDesc()
                     .stream().map(ContentMapper::toMap).toList();
+            case "programs" -> programRepo.findByDeletedAtIsNullOrderByDisplayOrderAscProgramNameAsc()
+                    .stream().map(ContentMapper::toMap).toList();
             case "site_settings" -> siteSettingRepo.findAll().stream()
                     .map(s -> {
                         java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
@@ -119,7 +126,7 @@ public class ContentService {
             default -> throw new IllegalArgumentException(
                     "Unknown collection: " + collection + ". Valid collections: "
                             + "news, events, gallery, faqs, alumni, partners, scholarships, "
-                            + "student_stories, legal_pages, quick_links, courses, faculty, page_sections, site_settings");
+                            + "student_stories, legal_pages, quick_links, courses, faculty, page_sections, programs, site_settings");
         };
     }
 }

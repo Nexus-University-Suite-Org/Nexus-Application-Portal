@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Compass,
   GraduationCap,
+  X,
   HandHeart,
   Newspaper,
   Sparkles,
@@ -88,6 +89,7 @@ const UniversityPortalSection = () => {
   const navigate = useNavigate();
   const { data: newsDocs } = useContentCollection<NewsDoc>("news", []);
   const { data: eventDocs } = useContentCollection<EventDoc>("events", []);
+  const [modalEvent, setModalEvent] = useState<EventDoc | null>(null);
   const stories = newsDocs.slice(0, 3);
   const innovationArticles = newsDocs.slice(0, 6);
 
@@ -570,16 +572,16 @@ const UniversityPortalSection = () => {
                     </p>
                   </div>
                   <div className="md:col-span-3 md:text-right">
-                    <Link
-                      to="/quick-links/upcoming-events"
-                      className="w-full md:w-auto inline-flex items-center justify-center md:justify-end gap-2 font-body text-xs tracking-[0.15em] uppercase text-accent border border-accent/30 px-4 py-2.5 rounded-[12px] group-hover:bg-accent/10 transition-all duration-300"
+                    <button
+                      onClick={() => setModalEvent(event)}
+                      className="w-full md:w-auto inline-flex items-center justify-center md:justify-end gap-2 font-body text-xs tracking-[0.15em] uppercase text-accent border border-accent/30 px-4 py-2.5 rounded-[12px] group-hover:bg-accent/10 transition-all duration-300 cursor-pointer"
                     >
                       View Details
                       <ArrowRight
                         size={13}
                         className="group-hover:translate-x-1 transition-transform duration-300"
                       />
-                    </Link>
+                    </button>
                   </div>
                 </div>
               </article>
@@ -681,6 +683,57 @@ const UniversityPortalSection = () => {
           </form>
         </div>
       </div>
+
+      {/* Event Detail Modal */}
+      {modalEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setModalEvent(null)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div
+            className="relative bg-card border border-border rounded-3xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-10">
+              <div className="flex items-center justify-between mb-6">
+                {modalEvent.eventDate && (
+                  <div className="w-16 h-16 rounded-[14px] border border-accent/30 flex flex-col items-center justify-center bg-accent/8 shrink-0">
+                    <span className="font-heading text-2xl leading-none text-foreground font-light">
+                      {new Date(modalEvent.eventDate).getDate()}
+                    </span>
+                    <span className="font-body text-[9px] uppercase tracking-wider text-muted-foreground mt-1">
+                      {new Date(modalEvent.eventDate).toLocaleDateString("en-US", { month: "short" })}
+                    </span>
+                  </div>
+                )}
+                <button
+                  onClick={() => setModalEvent(null)}
+                  className="p-2 rounded-full border border-border hover:bg-muted transition-colors cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <h2 className="font-heading text-3xl md:text-4xl font-light text-foreground leading-tight mb-3">
+                {modalEvent.title}
+              </h2>
+              {modalEvent.eventDate && (
+                <p className="font-body text-sm text-accent mb-6">
+                  {new Date(modalEvent.eventDate).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                </p>
+              )}
+              <p className="font-body text-base text-muted-foreground leading-relaxed">
+                {modalEvent.description || "Details coming soon."}
+              </p>
+              <div className="mt-8 pt-6 border-t border-border">
+                <button
+                  onClick={() => setModalEvent(null)}
+                  className="font-body text-xs tracking-[0.15em] uppercase text-accent hover:text-foreground transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

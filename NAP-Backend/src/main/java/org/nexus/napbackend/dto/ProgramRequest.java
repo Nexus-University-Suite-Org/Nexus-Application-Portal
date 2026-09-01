@@ -1,0 +1,39 @@
+package org.nexus.napbackend.dto;
+
+import jakarta.validation.constraints.NotBlank;
+
+public record ProgramRequest(
+        @NotBlank String programName,
+        String programCode,
+        String programType,
+        String awardQualification,
+        String programDescription,
+        String programObjectives,
+        String learningOutcomes,
+        String careerOpportunities,
+        String status,
+        String facultySchool,
+        String department,
+        String programCoordinator,
+        String campus,
+        Integer duration,
+        String durationUnit,
+        Integer numberOfYears,
+        Integer numberOfSemesters,
+        Integer semestersPerYear,
+        Integer totalCreditUnits,
+        String studyMode,
+        String academicCalendar,
+        String fees,
+        String admissionRequirements,
+        String curriculum,
+        String intakes,
+        String studyOptions,
+        String accreditation,
+        String documents,
+        String imageUrl,
+        String shortDescription,
+        String fullDescription,
+        Boolean featured,
+        Integer displayOrder
+) {}

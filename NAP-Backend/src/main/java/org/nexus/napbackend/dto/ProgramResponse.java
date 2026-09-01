@@ -1,0 +1,46 @@
+package org.nexus.napbackend.dto;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+public record ProgramResponse(
+        Long id,
+        String programName,
+        String programCode,
+        String programType,
+        String awardQualification,
+        String programDescription,
+        String programObjectives,
+        String learningOutcomes,
+        String careerOpportunities,
+        String status,
+        String facultySchool,
+        String department,
+        String programCoordinator,
+        String campus,
+        Integer duration,
+        String durationUnit,
+        Integer numberOfYears,
+        Integer numberOfSemesters,
+        Integer semestersPerYear,
+        Integer totalCreditUnits,
+        String studyMode,
+        String academicCalendar,
+        String fees,
+        String admissionRequirements,
+        String curriculum,
+        String intakes,
+        String studyOptions,
+        String accreditation,
+        String documents,
+        String imageUrl,
+        String shortDescription,
+        String fullDescription,
+        Boolean featured,
+        Integer displayOrder,
+        String createdBy,
+        LocalDateTime createdAt,
+        String updatedBy,
+        LocalDateTime updatedAt,
+        List<String> categoryNames
+) {}
