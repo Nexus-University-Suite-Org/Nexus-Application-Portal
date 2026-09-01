@@ -106,7 +106,7 @@ const NewsPage = () => {
               typeof item.title === "string" && item.title.trim().length > 0
                 ? item.title.replace(/University Application Portal/g, portalName)
                 : "Untitled News";
-            const generatedSlug = `${toSlug(title)}-${item.id.slice(0, 6)}`;
+            const generatedSlug = `${toSlug(title)}-${String(item.id).slice(0, 6)}`;
             return {
               id: item.id,
               title,
@@ -137,7 +137,7 @@ const NewsPage = () => {
   const featuredNews =
     newsData.find((article) => article.featured) ?? newsData[0] ?? null;
   const newsItems = newsData.filter(
-    (article) => article.slug !== featuredNews?.slug,
+    (article) => article.id !== featuredNews?.id,
   );
   const events = eventsData.map((item) => ({
     ...item,
