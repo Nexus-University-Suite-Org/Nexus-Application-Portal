@@ -77,6 +77,9 @@ const ProgramsPage = () => {
   const [heroHeading1, setHeroHeading1] = useState("Vocational Programs");
   const [heroHeading2, setHeroHeading2] = useState("That Build Real Futures");
   const [heroDescription, setHeroDescription] = useState("8 practical programs. Market-driven curricula. Every graduate leaves with skills to earn a living from day one.");
+  const [sectionTagline, setSectionTagline] = useState("Our Programs");
+  const [sectionHeading, setSectionHeading] = useState("Choose Your Path");
+  const [sectionDescription, setSectionDescription] = useState("Click on any program to see skills, career outcomes, and how long it takes to complete.");
   const {
     data: remotePrograms,
     isLoading,
@@ -153,6 +156,9 @@ const ProgramsPage = () => {
         if (data.programs_hero_heading_1) setHeroHeading1(data.programs_hero_heading_1);
         if (data.programs_hero_heading_2) setHeroHeading2(data.programs_hero_heading_2);
         if (data.programs_hero_description) setHeroDescription(data.programs_hero_description);
+        if (data.programs_section_tagline) setSectionTagline(data.programs_section_tagline);
+        if (data.programs_section_heading) setSectionHeading(data.programs_section_heading);
+        if (data.programs_section_description) setSectionDescription(data.programs_section_description);
       })
       .catch(() => {});
     const ctx = gsap.context(() => {
@@ -240,14 +246,13 @@ const ProgramsPage = () => {
       <div ref={cardsRef} className="px-8 md:px-16 py-24 md:py-32">
         <div className="max-w-2xl mb-16">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">
-            Our Programs
+            {sectionTagline}
           </p>
           <h2 className="font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">
-            Choose Your Path
+            {sectionHeading}
           </h2>
           <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6 max-w-lg">
-            Click on any program to see skills, career outcomes, and how long it
-            takes to complete.
+            {sectionDescription}
           </p>
         </div>
 
