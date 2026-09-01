@@ -70,6 +70,7 @@ const NewsPage = () => {
   const [heroHeading2, setHeroHeading2] = useState("Inspire");
   const [eventsTagline, setEventsTagline] = useState("Upcoming Events");
   const [eventsHeading, setEventsHeading] = useState("Mark Your Calendar");
+  const [readMoreText, setReadMoreText] = useState("Read Full Story");
 
   const { data: rawNewsData, isLoading: newsLoading } = useContentCollection<RemoteNewsArticle>(
     "NewsArticles",
@@ -93,6 +94,7 @@ const NewsPage = () => {
         if (data.news_hero_heading_2) setHeroHeading2(data.news_hero_heading_2);
         if (data.news_events_tagline) setEventsTagline(data.news_events_tagline);
         if (data.news_events_heading) setEventsHeading(data.news_events_heading);
+        if (data.news_read_more) setReadMoreText(data.news_read_more);
       })
       .catch(() => {});
   }, []);
@@ -251,7 +253,7 @@ const NewsPage = () => {
               to={`/news/${featuredNews.slug}`}
               className="group inline-flex items-center gap-2 font-body text-xs tracking-[0.15em] uppercase text-accent"
             >
-              Read Full Story{" "}
+              {readMoreText}{" "}
               <ArrowRight
                 size={14}
                 className="group-hover:translate-x-1 transition-transform duration-300"
