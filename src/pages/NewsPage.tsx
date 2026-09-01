@@ -75,6 +75,7 @@ const NewsPage = () => {
   const [featuredCategoryOverride, setFeaturedCategoryOverride] = useState("");
   const [featuredTitleOverride, setFeaturedTitleOverride] = useState("");
   const [featuredExcerptOverride, setFeaturedExcerptOverride] = useState("");
+  const [settingNewsArticles, setSettingNewsArticles] = useState<Array<{ category: string; title: string; excerpt: string }>>([]);
 
   const { data: rawNewsData, isLoading: newsLoading } = useContentCollection<RemoteNewsArticle>(
     "NewsArticles",
@@ -103,6 +104,7 @@ const NewsPage = () => {
         if (data.news_featured_category) setFeaturedCategoryOverride(data.news_featured_category);
         if (data.news_featured_title) setFeaturedTitleOverride(data.news_featured_title);
         if (data.news_featured_excerpt) setFeaturedExcerptOverride(data.news_featured_excerpt);
+        try { if (data.news_articles) setSettingNewsArticles(JSON.parse(data.news_articles)); } catch {}
       })
       .catch(() => {});
   }, []);
@@ -146,9 +148,20 @@ const NewsPage = () => {
 
   const featuredNews =
     newsData.find((article) => article.featured) ?? newsData[0] ?? null;
-  const newsItems = newsData.filter(
+  const dbNewsItems = newsData.filter(
     (article) => article.id !== featuredNews?.id,
   );
+  const newsItems = settingNewsArticles.length > 0
+    ? settingNewsArticles.map((a, i) => ({
+        id: `setting-${i}`,
+        title: a.title || 'Untitled',
+        slug: toSlug(a.title || `article-${i}`),
+        excerpt: a.excerpt || '',
+        category: a.category || 'News',
+        date: '',
+        featured: false,
+      }))
+    : dbNewsItems;
   const events = eventsData.map((item) => ({
     ...item,
     date: formatDate(item.date, item.date),
