@@ -84,25 +84,25 @@ public class Program {
     @Column(name = "academic_calendar", length = 50)
     private String academicCalendar;
 
-    @Column(columnDefinition = "jsonb")
+    @Column(columnDefinition = "text")
     private String fees;
 
-    @Column(name = "admission_requirements", columnDefinition = "jsonb")
+    @Column(name = "admission_requirements", columnDefinition = "text")
     private String admissionRequirements;
 
-    @Column(columnDefinition = "jsonb")
+    @Column(columnDefinition = "text")
     private String curriculum;
 
-    @Column(columnDefinition = "jsonb")
+    @Column(columnDefinition = "text")
     private String intakes;
 
-    @Column(name = "study_options", columnDefinition = "jsonb")
+    @Column(name = "study_options", columnDefinition = "text")
     private String studyOptions;
 
-    @Column(columnDefinition = "jsonb")
+    @Column(columnDefinition = "text")
     private String accreditation;
 
-    @Column(columnDefinition = "jsonb")
+    @Column(columnDefinition = "text")
     private String documents;
 
     @Column(name = "image_url", length = 500)
