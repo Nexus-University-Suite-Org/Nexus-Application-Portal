@@ -73,6 +73,10 @@ const ProgramsPage = () => {
   const navigate = useNavigate();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
+  const [heroTagline, setHeroTagline] = useState("What We Teach");
+  const [heroHeading1, setHeroHeading1] = useState("Vocational Programs");
+  const [heroHeading2, setHeroHeading2] = useState("That Build Real Futures");
+  const [heroDescription, setHeroDescription] = useState("8 practical programs. Market-driven curricula. Every graduate leaves with skills to earn a living from day one.");
   const {
     data: remotePrograms,
     isLoading,
@@ -142,6 +146,15 @@ const ProgramsPage = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    fetch("http://localhost:8080/api/v1/content/site-settings")
+      .then((r) => r.json())
+      .then((data: Record<string, string>) => {
+        if (data.programs_hero_tagline) setHeroTagline(data.programs_hero_tagline);
+        if (data.programs_hero_heading_1) setHeroHeading1(data.programs_hero_heading_1);
+        if (data.programs_hero_heading_2) setHeroHeading2(data.programs_hero_heading_2);
+        if (data.programs_hero_description) setHeroDescription(data.programs_hero_description);
+      })
+      .catch(() => {});
     const ctx = gsap.context(() => {
       gsap.fromTo(
         ".programs-hero-text > *",
@@ -210,16 +223,15 @@ const ProgramsPage = () => {
         </div>
         <div className="relative z-10 px-8 md:px-16 pb-24 pt-40 programs-hero-text max-w-4xl">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6 opacity-0">
-            What We Teach
+            {heroTagline}
           </p>
           <h1 className="font-heading text-5xl md:text-7xl font-light text-primary-foreground leading-[0.92] mb-8 opacity-0">
-            Vocational Programs
+            {heroHeading1}
             <br />
-            That Build Real Futures
+            {heroHeading2}
           </h1>
           <p className="font-body text-lg text-primary-foreground/70 max-w-xl leading-relaxed opacity-0">
-            8 practical programs. Market-driven curricula. Every graduate leaves
-            with skills to earn a living from day one.
+            {heroDescription}
           </p>
         </div>
       </div>
