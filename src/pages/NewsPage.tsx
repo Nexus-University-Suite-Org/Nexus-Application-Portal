@@ -85,7 +85,7 @@ const NewsPage = () => {
   );
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8080"}/api/v1/site-settings`)
+    fetch("http://localhost:8080/api/v1/content/site-settings")
       .then((r) => r.json())
       .then((data: Record<string, string>) => {
         if (data.news_hero_tagline) setHeroTagline(data.news_hero_tagline);
