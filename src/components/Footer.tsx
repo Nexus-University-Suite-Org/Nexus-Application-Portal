@@ -67,10 +67,11 @@ const Footer = () => {
     { orderBy: { field: "name", direction: "asc" } },
   );
 
-  const programLinks = courseDocs
-    .map((course) => course.name?.trim())
-    .filter((name): name is string => Boolean(name))
-    .map((name) => ({ label: name, href: "/admissions/courses" }));
+  const programLinks = [...new Set(
+    courseDocs
+      .map((course) => course.name?.trim())
+      .filter((name): name is string => Boolean(name))
+  )].map((name) => ({ label: name, href: "/admissions/courses" }));
 
   useEffect(() => {
     fetch("http://localhost:8080/api/v1/content/site-settings")
