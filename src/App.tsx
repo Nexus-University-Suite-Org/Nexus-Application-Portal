@@ -50,6 +50,7 @@ const ScholarshipsPage = lazy(() => import("./pages/ScholarshipsPage.tsx"));
 const LearningOnlinePage = lazy(() => import("./pages/LearningOnlinePage.tsx"));
 const FAQPage = lazy(() => import("./pages/FAQPage.tsx"));
 const ProgramsPage = lazy(() => import("./pages/ProgramsPage.tsx"));
+const ProgramDetailPage = lazy(() => import("./pages/ProgramDetailPage.tsx"));
 const ImpactPage = lazy(() => import("./pages/ImpactPage.tsx"));
 const DonatePage = lazy(() => import("./pages/DonatePage.tsx"));
 const GalleryPage = lazy(() => import("./pages/GalleryPage.tsx"));
@@ -159,6 +160,7 @@ const AnimatedRoutes = () => {
             <Route path="/admissions/online" element={<LearningOnlinePage />} />
             <Route path="/admissions/faq" element={<FAQPage />} />
             <Route path="/programs" element={<ProgramsPage />} />
+            <Route path="/programs/:id" element={<ProgramDetailPage />} />
             <Route path="/impact" element={<ImpactPage />} />
             <Route path="/donate" element={<DonatePage />} />
             <Route path="/gallery" element={<GalleryPage />} />
