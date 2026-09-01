@@ -272,7 +272,7 @@ const NewsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {newsItems.map((n) => (
             <Link
-              key={n.slug}
+              key={n.id}
               to={`/news/${n.slug}`}
               className="news-card opacity-0 group p-8 border border-border rounded-[20px] transition-all duration-500 hover:border-accent/40 hover:shadow-[0_20px_60px_-20px_hsl(var(--accent)/0.12)]"
             >
@@ -313,7 +313,7 @@ const NewsPage = () => {
         <div className="space-y-0">
           {events.map((e) => (
             <Link
-              key={e.title}
+              key={e.id}
               to="/quick-links/upcoming-events"
               className="event-item opacity-0 group flex items-center justify-between py-8 border-t border-primary-foreground/10 last:border-b"
             >
