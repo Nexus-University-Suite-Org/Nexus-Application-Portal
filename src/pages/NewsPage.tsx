@@ -71,6 +71,7 @@ const NewsPage = () => {
   const [eventsTagline, setEventsTagline] = useState("Upcoming Events");
   const [eventsHeading, setEventsHeading] = useState("Mark Your Calendar");
   const [readMoreText, setReadMoreText] = useState("Read Full Story");
+  const [readMoreVisible, setReadMoreVisible] = useState(true);
   const [featuredCategoryOverride, setFeaturedCategoryOverride] = useState("");
   const [featuredTitleOverride, setFeaturedTitleOverride] = useState("");
   const [featuredExcerptOverride, setFeaturedExcerptOverride] = useState("");
@@ -98,6 +99,7 @@ const NewsPage = () => {
         if (data.news_events_tagline) setEventsTagline(data.news_events_tagline);
         if (data.news_events_heading) setEventsHeading(data.news_events_heading);
         if (data.news_read_more) setReadMoreText(data.news_read_more);
+        if (data.news_read_more_visible !== undefined) setReadMoreVisible(data.news_read_more_visible !== 'false');
         if (data.news_featured_category) setFeaturedCategoryOverride(data.news_featured_category);
         if (data.news_featured_title) setFeaturedTitleOverride(data.news_featured_title);
         if (data.news_featured_excerpt) setFeaturedExcerptOverride(data.news_featured_excerpt);
@@ -255,6 +257,7 @@ const NewsPage = () => {
             <span className="font-body text-xs text-muted-foreground">
               {formatDate(featuredNews.date, featuredNews.date)}
             </span>
+            {readMoreVisible && (
             <Link
               to={`/news/${featuredNews.slug}`}
               className="group inline-flex items-center gap-2 font-body text-xs tracking-[0.15em] uppercase text-accent"
@@ -265,6 +268,7 @@ const NewsPage = () => {
                 className="group-hover:translate-x-1 transition-transform duration-300"
               />
             </Link>
+            )}
           </div>
         </div>
       </div>
