@@ -1,6 +1,8 @@
 package org.nexus.napbackend.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.nexus.napbackend.model.Alumni;
@@ -20,7 +22,13 @@ import org.nexus.napbackend.model.StudentStory;
 
 public final class ContentMapper {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER;
+
+    static {
+        MAPPER = new ObjectMapper();
+        MAPPER.registerModule(new JavaTimeModule());
+        MAPPER.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    }
 
     private ContentMapper() {
     }
