@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -28,8 +28,34 @@ const AboutPage = () => {
   const pageRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
 
+  const [storyLabel, setStoryLabel] = useState("Our Story");
+  const [headingLine1, setHeadingLine1] = useState("Built on Hope,");
+  const [headingLine2, setHeadingLine2] = useState("Powered by Purpose");
+  const [storyParagraph, setStoryParagraph] = useState(
+    "We started with one belief: that every person — regardless of circumstance — deserves the chance to build a dignified life through skills and hard work."
+  );
+  const [foundingLabel, setFoundingLabel] = useState("Our Founding Story");
+  const [foundingHeading, setFoundingHeading] = useState("Why We Started");
+
   useSpotlightCards(valuesRef);
   useParallax(pageRef);
+
+  useEffect(() => {
+    fetch("http://localhost:8080/api/v1/content/site-settings")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch");
+        return res.json();
+      })
+      .then((data: Record<string, string>) => {
+        if (data.about_story_label) setStoryLabel(data.about_story_label);
+        if (data.about_story_heading_1) setHeadingLine1(data.about_story_heading_1);
+        if (data.about_story_heading_2) setHeadingLine2(data.about_story_heading_2);
+        if (data.about_story_paragraph) setStoryParagraph(data.about_story_paragraph);
+        if (data.about_founding_label) setFoundingLabel(data.about_founding_label);
+        if (data.about_founding_heading) setFoundingHeading(data.about_founding_heading);
+      })
+      .catch(() => {});
+  }, []);
 
   const { data: sections, isLoading } = useContentCollection<PageSection>("page_sections", []);
 
@@ -124,12 +150,12 @@ const AboutPage = () => {
           <div className="absolute inset-0 bg-primary/70 rounded-none" />
         </div>
         <div className="relative z-10 px-8 md:px-16 pb-24 pt-40 about-hero-text max-w-4xl">
-          <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6 opacity-0">Our Story</p>
+          <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6 opacity-0">{storyLabel}</p>
           <h1 className="font-heading text-5xl md:text-8xl font-light text-primary-foreground leading-[0.9] mb-8 opacity-0">
-            Built on Hope,<br />Powered by Purpose
+            {headingLine1}<br />{headingLine2}
           </h1>
           <p className="font-body text-lg text-primary-foreground/70 max-w-xl leading-relaxed opacity-0">
-            We started with one belief: that every person — regardless of circumstance — deserves the chance to build a dignified life through skills and hard work.
+            {storyParagraph}
           </p>
         </div>
       </div>
@@ -138,8 +164,8 @@ const AboutPage = () => {
       <div ref={founderRef} className="px-8 md:px-16 py-32 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           <div>
-            <p className="founder-anim opacity-0 font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">Our Founding Story</p>
-            <h2 className="founder-anim opacity-0 font-heading text-4xl md:text-6xl font-light text-foreground leading-tight mb-8">Why We Started</h2>
+            <p className="founder-anim opacity-0 font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">{foundingLabel}</p>
+            <h2 className="founder-anim opacity-0 font-heading text-4xl md:text-6xl font-light text-foreground leading-tight mb-8">{foundingHeading}</h2>
             <p className="founder-anim opacity-0 font-body text-base text-muted-foreground leading-relaxed mb-6">
               Our institute was founded after witnessing firsthand the cycle of poverty trapping single mothers and vulnerable youth in our community — not because of lack of ability, but lack of opportunity and skills.
             </p>
