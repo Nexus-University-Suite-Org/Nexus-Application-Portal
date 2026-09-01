@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
   BookOpen, ChevronDown, ChevronUp, ArrowLeft, ArrowRight,
-  Clock, DollarSign, Award, Calendar, Globe, Users, Building,
+  Clock, Banknote, Award, Calendar, Globe, Users, Building,
   CheckCircle2, AlertCircle, FileText,
 } from "lucide-react";
 import aboutHero from "@/assets/about-hero.jpg";
@@ -121,7 +121,7 @@ const ProgramDetailPage = () => {
   if (program.duration > 0) quickFacts.push({ icon: <Clock size={14} />, label: `${program.duration} ${program.durationUnit || "years"}` });
   if (program.numberOfYears > 0) quickFacts.push({ icon: <Calendar size={14} />, label: `${program.numberOfYears} years, ${program.numberOfSemesters} semesters` });
   if (program.studyMode) quickFacts.push({ icon: <Building size={14} />, label: program.studyMode });
-  if (feeInfo.total > 0) quickFacts.push({ icon: <DollarSign size={14} />, label: `${feeInfo.currency} ${feeInfo.total.toLocaleString()}` });
+  if (feeInfo.total > 0) quickFacts.push({ icon: <Banknote size={14} />, label: `${feeInfo.currency} ${feeInfo.total.toLocaleString()}` });
   if (program.campus) quickFacts.push({ icon: <Globe size={14} />, label: program.campus });
   if (program.academicCalendar) quickFacts.push({ icon: <Calendar size={14} />, label: program.academicCalendar });
 

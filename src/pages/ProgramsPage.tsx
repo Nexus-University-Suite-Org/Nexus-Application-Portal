@@ -4,7 +4,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { BookOpen, ChevronDown, Heart, ArrowRight, Clock, DollarSign } from "lucide-react";
+import { BookOpen, ChevronDown, Heart, ArrowRight, Clock, Banknote } from "lucide-react";
 import aboutHero from "@/assets/about-hero.jpg";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -210,7 +210,7 @@ function ProgramCard({ program, onClick, feeInfo, stats }: { program: Program; o
             {program.duration > 0 && <span className="flex items-center gap-1"><Clock size={12} /> {program.duration} {program.durationUnit || "years"}</span>}
             {stats.totalCredits > 0 && <span>{stats.totalCredits} credits</span>}
             {program.studyMode && <span>{program.studyMode}</span>}
-            {feeInfo.total > 0 && <span className="flex items-center gap-1"><DollarSign size={12} /> {feeInfo.currency} {feeInfo.total.toLocaleString()}</span>}
+            {feeInfo.total > 0 && <span className="flex items-center gap-1"><Banknote size={12} /> {feeInfo.currency} {feeInfo.total.toLocaleString()}</span>}
           </div>
           {program.shortDescription && <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{program.shortDescription}</p>}
         </div>
