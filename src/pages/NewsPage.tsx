@@ -286,7 +286,7 @@ const NewsPage = () => {
             <Link
               key={n.id}
               to={`/news/${n.slug}`}
-              className="news-card opacity-0 group p-8 border border-border rounded-[20px] transition-all duration-500 hover:border-accent/40 hover:shadow-[0_20px_60px_-20px_hsl(var(--accent)/0.12)]"
+              className="news-card group p-8 border border-border rounded-[20px] transition-all duration-500 hover:border-accent/40 hover:shadow-[0_20px_60px_-20px_hsl(var(--accent)/0.12)]"
             >
               <span className="inline-block font-body text-[10px] tracking-[0.3em] uppercase text-accent mb-4">
                 {n.category}
@@ -327,7 +327,7 @@ const NewsPage = () => {
             <Link
               key={e.id}
               to="/quick-links/upcoming-events"
-              className="event-item opacity-0 group flex items-center justify-between py-8 border-t border-primary-foreground/10 last:border-b"
+              className="event-item group flex items-center justify-between py-8 border-t border-primary-foreground/10 last:border-b"
             >
               <div className="flex items-center gap-6">
                 <Calendar size={18} className="text-accent shrink-0" />
