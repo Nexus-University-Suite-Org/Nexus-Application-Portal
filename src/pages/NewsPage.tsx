@@ -71,6 +71,9 @@ const NewsPage = () => {
   const [eventsTagline, setEventsTagline] = useState("Upcoming Events");
   const [eventsHeading, setEventsHeading] = useState("Mark Your Calendar");
   const [readMoreText, setReadMoreText] = useState("Read Full Story");
+  const [featuredCategoryOverride, setFeaturedCategoryOverride] = useState("");
+  const [featuredTitleOverride, setFeaturedTitleOverride] = useState("");
+  const [featuredExcerptOverride, setFeaturedExcerptOverride] = useState("");
 
   const { data: rawNewsData, isLoading: newsLoading } = useContentCollection<RemoteNewsArticle>(
     "NewsArticles",
@@ -95,6 +98,9 @@ const NewsPage = () => {
         if (data.news_events_tagline) setEventsTagline(data.news_events_tagline);
         if (data.news_events_heading) setEventsHeading(data.news_events_heading);
         if (data.news_read_more) setReadMoreText(data.news_read_more);
+        if (data.news_featured_category) setFeaturedCategoryOverride(data.news_featured_category);
+        if (data.news_featured_title) setFeaturedTitleOverride(data.news_featured_title);
+        if (data.news_featured_excerpt) setFeaturedExcerptOverride(data.news_featured_excerpt);
       })
       .catch(() => {});
   }, []);
@@ -237,13 +243,13 @@ const NewsPage = () => {
       <div className="px-8 md:px-16 py-24 border-b border-border">
         <div className="max-w-4xl">
           <span className="inline-block font-body text-[10px] tracking-[0.3em] uppercase text-accent border border-accent/30 px-3 py-1 rounded-full mb-6">
-            {featuredNews.category}
+            {featuredCategoryOverride || featuredNews.category}
           </span>
           <h2 className="font-heading text-3xl md:text-5xl font-light text-foreground leading-tight mb-6">
-            {featuredNews.title}
+            {featuredTitleOverride || featuredNews.title}
           </h2>
           <p className="font-body text-base text-muted-foreground leading-relaxed mb-6 max-w-2xl">
-            {featuredNews.excerpt}
+            {featuredExcerptOverride || featuredNews.excerpt}
           </p>
           <div className="flex items-center gap-6">
             <span className="font-body text-xs text-muted-foreground">
