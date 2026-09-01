@@ -76,6 +76,7 @@ const NewsPage = () => {
   const [featuredTitleOverride, setFeaturedTitleOverride] = useState("");
   const [featuredExcerptOverride, setFeaturedExcerptOverride] = useState("");
   const [settingNewsArticles, setSettingNewsArticles] = useState<Array<{ category: string; title: string; excerpt: string }>>([]);
+  const [settingEvents, setSettingEvents] = useState<Array<{ title: string; date: string; type: string }>>([]);
 
   const { data: rawNewsData, isLoading: newsLoading } = useContentCollection<RemoteNewsArticle>(
     "NewsArticles",
@@ -105,6 +106,7 @@ const NewsPage = () => {
         if (data.news_featured_title) setFeaturedTitleOverride(data.news_featured_title);
         if (data.news_featured_excerpt) setFeaturedExcerptOverride(data.news_featured_excerpt);
         try { if (data.news_articles) setSettingNewsArticles(JSON.parse(data.news_articles)); } catch {}
+        try { if (data.news_events) setSettingEvents(JSON.parse(data.news_events)); } catch {}
       })
       .catch(() => {});
   }, []);
@@ -162,10 +164,18 @@ const NewsPage = () => {
         featured: false,
       }))
     : dbNewsItems;
-  const events = eventsData.map((item) => ({
+  const dbEvents = eventsData.map((item) => ({
     ...item,
     date: formatDate(item.date, item.date),
   }));
+  const events = settingEvents.length > 0
+    ? settingEvents.map((e, i) => ({
+        id: `setting-event-${i}`,
+        title: e.title || 'Untitled Event',
+        date: e.date || 'TBA',
+        type: e.type || 'Event',
+      }))
+    : dbEvents;
 
   useEffect(() => {
     window.scrollTo(0, 0);
