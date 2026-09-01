@@ -180,7 +180,7 @@ const ProgramsPage = () => {
       <div className="px-8 md:px-16 py-24 bg-primary text-primary-foreground text-center">
         <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6">Ready to Help?</p>
         <h2 className="font-heading text-4xl md:text-6xl font-light text-primary-foreground leading-tight mb-10 max-w-2xl mx-auto">Sponsor a Student's Journey</h2>
-        <p className="font-body text-sm text-primary-foreground/60 max-w-lg mx-auto mb-10 leading-relaxed">For as little as $50 a month, you can sponsor a student through one of these life-changing programs.</p>
+        <p className="font-body text-sm text-primary-foreground/60 max-w-lg mx-auto mb-10 leading-relaxed">For as little as 50 a month, you can sponsor a student through one of these life-changing programs.</p>
         <div className="flex flex-wrap justify-center gap-4">
           <button onClick={() => navigate("/donate")} className="group flex items-center gap-2 px-10 py-4 bg-accent text-accent-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 btn-lift">
             <Heart size={16} className="fill-current" /> Sponsor a Student
