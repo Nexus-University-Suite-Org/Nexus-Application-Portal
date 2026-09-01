@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { ArrowRight, Calendar } from "lucide-react";
+import { ArrowRight, Calendar, X } from "lucide-react";
 import newsHero from "@/assets/news-hero.jpg";
 import { useContentCollection } from "@/hooks/useContentCollection";
 
@@ -77,6 +76,7 @@ const NewsPage = () => {
   const [featuredExcerptOverride, setFeaturedExcerptOverride] = useState("");
   const [settingNewsArticles, setSettingNewsArticles] = useState<Array<{ category: string; title: string; excerpt: string }>>([]);
   const [settingEvents, setSettingEvents] = useState<Array<{ title: string; date: string; type: string }>>([]);
+  const [modalItem, setModalItem] = useState<{ kind: "news" | "event"; title: string; subtitle?: string; body?: string; category?: string; date?: string } | null>(null);
 
   const { data: rawNewsData, isLoading: newsLoading } = useContentCollection<RemoteNewsArticle>(
     "NewsArticles",
@@ -281,16 +281,16 @@ const NewsPage = () => {
               {formatDate(featuredNews.date, featuredNews.date)}
             </span>
             {readMoreVisible && (
-            <Link
-              to={`/news/${featuredNews.slug}`}
-              className="group inline-flex items-center gap-2 font-body text-xs tracking-[0.15em] uppercase text-accent"
+            <button
+              onClick={() => setModalItem({ kind: "news", title: featuredTitleOverride || featuredNews.title, subtitle: featuredCategoryOverride || featuredNews.category, body: featuredExcerptOverride || featuredNews.excerpt, category: featuredCategoryOverride || featuredNews.category, date: featuredNews.date })}
+              className="group inline-flex items-center gap-2 font-body text-xs tracking-[0.15em] uppercase text-accent cursor-pointer"
             >
               {readMoreText}{" "}
               <ArrowRight
                 size={14}
                 className="group-hover:translate-x-1 transition-transform duration-300"
               />
-            </Link>
+            </button>
             )}
           </div>
         </div>
@@ -306,10 +306,10 @@ const NewsPage = () => {
         ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {newsItems.map((n) => (
-            <Link
+            <button
               key={n.id}
-              to={`/news/${n.slug}`}
-              className="news-card group p-8 border border-border rounded-[20px] transition-all duration-500 hover:border-accent/40 hover:shadow-[0_20px_60px_-20px_hsl(var(--accent)/0.12)]"
+              onClick={() => setModalItem({ kind: "news", title: n.title, subtitle: n.category, body: n.excerpt, category: n.category, date: n.date })}
+              className="news-card group p-8 border border-border rounded-[20px] transition-all duration-500 hover:border-accent/40 hover:shadow-[0_20px_60px_-20px_hsl(var(--accent)/0.12)] text-left cursor-pointer"
             >
               <span className="inline-block font-body text-[10px] tracking-[0.3em] uppercase text-accent mb-4">
                 {n.category}
@@ -329,7 +329,7 @@ const NewsPage = () => {
                   className="text-muted-foreground/30 group-hover:text-accent group-hover:translate-x-1 transition-all duration-500"
                 />
               </div>
-            </Link>
+            </button>
           ))}
         </div>
         )}
@@ -347,10 +347,10 @@ const NewsPage = () => {
         </div>
         <div className="space-y-0">
           {events.map((e) => (
-            <Link
+            <button
               key={e.id}
-              to="/quick-links/upcoming-events"
-              className="event-item group flex items-center justify-between py-8 border-t border-primary-foreground/10 last:border-b"
+              onClick={() => setModalItem({ kind: "event", title: e.title, subtitle: e.type, body: `Date: ${e.date}`, category: e.type, date: e.date })}
+              className="event-item group flex items-center justify-between py-8 border-t border-primary-foreground/10 last:border-b w-full text-left cursor-pointer"
             >
               <div className="flex items-center gap-6">
                 <Calendar size={18} className="text-accent shrink-0" />
@@ -372,10 +372,58 @@ const NewsPage = () => {
                   className="text-primary-foreground/30 group-hover:text-accent group-hover:translate-x-1 transition-all duration-500"
                 />
               </div>
-            </Link>
+            </button>
           ))}
         </div>
       </div>
+
+      {/* Detail Modal */}
+      {modalItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setModalItem(null)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div
+            className="relative bg-card border border-border rounded-3xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-10">
+              <div className="flex items-center justify-between mb-6">
+                <span className="inline-block font-body text-[10px] tracking-[0.3em] uppercase text-accent border border-accent/30 px-3 py-1 rounded-full">
+                  {modalItem.kind === "news" ? modalItem.category : modalItem.category}
+                </span>
+                <button
+                  onClick={() => setModalItem(null)}
+                  className="p-2 rounded-full border border-border hover:bg-muted transition-colors cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <h2 className="font-heading text-3xl md:text-4xl font-light text-foreground leading-tight mb-4">
+                {modalItem.title}
+              </h2>
+              {modalItem.subtitle && modalItem.kind === "event" && (
+                <div className="flex items-center gap-3 mb-6">
+                  <Calendar size={16} className="text-accent" />
+                  <span className="font-body text-sm text-muted-foreground">{modalItem.date}</span>
+                  <span className="font-body text-[10px] tracking-[0.2em] uppercase text-accent border border-accent/30 px-3 py-1 rounded-full">
+                    {modalItem.subtitle}
+                  </span>
+                </div>
+              )}
+              <p className="font-body text-base text-muted-foreground leading-relaxed">
+                {modalItem.body || "Details coming soon."}
+              </p>
+              <div className="mt-8 pt-6 border-t border-border">
+                <button
+                  onClick={() => setModalItem(null)}
+                  className="font-body text-xs tracking-[0.15em] uppercase text-accent hover:text-foreground transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
