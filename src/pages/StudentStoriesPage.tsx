@@ -38,6 +38,22 @@ const StudentStoriesPage = () => {
   const [expandedStory, setExpandedStory] = useState<number | null>(null);
   const [portalName] = useState("University Application Portal");
   const storiesRef = useRef<HTMLDivElement>(null);
+
+  const [heroTagline, setHeroTagline] = useState("Student Stories");
+  const [heroHeading1, setHeroHeading1] = useState("Real People.");
+  const [heroHeading2, setHeroHeading2] = useState("Real Transformation.");
+  const [heroDescription, setHeroDescription] = useState("Behind every statistic is a person whose life was changed by practical skills and the belief that a better future is possible.");
+  const [sectionTagline, setSectionTagline] = useState("Their Journeys");
+  const [sectionHeading1, setSectionHeading1] = useState("From Hardship");
+  const [sectionHeading2, setSectionHeading2] = useState("To Hope");
+  const [ctaTagline, setCtaTagline] = useState("Be Part of the Story");
+  const [ctaHeading1, setCtaHeading1] = useState("Help Write the Next");
+  const [ctaHeading2, setCtaHeading2] = useState("Success Story");
+  const [ctaDescription, setCtaDescription] = useState("Every student who walks through our doors has the potential to transform their life and their community. Your support makes it possible.");
+  const [ctaBtn1Text, setCtaBtn1Text] = useState("Sponsor a Student");
+  const [ctaBtn1Visible, setCtaBtn1Visible] = useState(true);
+  const [ctaBtn2Text, setCtaBtn2Text] = useState("View Programs");
+  const [ctaBtn2Visible, setCtaBtn2Visible] = useState(true);
   const { data: storyDocs, isLoading } = useContentCollection<StudentStoryDoc>(
     "student_stories",
     [],
@@ -69,6 +85,27 @@ const StudentStoriesPage = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+
+    fetch("http://localhost:8080/api/v1/content/site-settings")
+      .then(r => r.json())
+      .then((data: Record<string, string>) => {
+        if (data.stories_hero_tagline) setHeroTagline(data.stories_hero_tagline);
+        if (data.stories_hero_heading_1) setHeroHeading1(data.stories_hero_heading_1);
+        if (data.stories_hero_heading_2) setHeroHeading2(data.stories_hero_heading_2);
+        if (data.stories_hero_description) setHeroDescription(data.stories_hero_description);
+        if (data.stories_section_tagline) setSectionTagline(data.stories_section_tagline);
+        if (data.stories_section_heading_1) setSectionHeading1(data.stories_section_heading_1);
+        if (data.stories_section_heading_2) setSectionHeading2(data.stories_section_heading_2);
+        if (data.stories_cta_tagline) setCtaTagline(data.stories_cta_tagline);
+        if (data.stories_cta_heading_1) setCtaHeading1(data.stories_cta_heading_1);
+        if (data.stories_cta_heading_2) setCtaHeading2(data.stories_cta_heading_2);
+        if (data.stories_cta_description) setCtaDescription(data.stories_cta_description);
+        if (data.stories_cta_btn1_text) setCtaBtn1Text(data.stories_cta_btn1_text);
+        if (data.stories_cta_btn1_visible) setCtaBtn1Visible(data.stories_cta_btn1_visible !== "false");
+        if (data.stories_cta_btn2_text) setCtaBtn2Text(data.stories_cta_btn2_text);
+        if (data.stories_cta_btn2_visible) setCtaBtn2Visible(data.stories_cta_btn2_visible !== "false");
+      })
+      .catch(() => {});
     const ctx = gsap.context(() => {
       gsap.fromTo(
         ".stories-hero-text > *",
@@ -143,16 +180,15 @@ const StudentStoriesPage = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/60 to-primary/20 rounded-none" />
         <div className="relative z-10 px-8 md:px-16 pb-20 pt-40 stories-hero-text max-w-4xl">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-5 opacity-0">
-            Student Stories
+            {heroTagline}
           </p>
           <h1 className="font-heading text-5xl md:text-7xl font-light text-primary-foreground leading-[0.92] mb-6 opacity-0">
-            Real People.
+            {heroHeading1}
             <br />
-            <em className="text-accent">Real Transformation.</em>
+            <em className="text-accent">{heroHeading2}</em>
           </h1>
           <p className="font-body text-base text-primary-foreground/70 max-w-xl leading-relaxed opacity-0">
-            Behind every statistic is a person whose life was changed by
-            practical skills and the belief that a better future is possible.
+            {heroDescription}
           </p>
         </div>
       </div>
@@ -161,12 +197,12 @@ const StudentStoriesPage = () => {
       <section className="py-24 md:py-32 px-8 md:px-16">
         <div className="max-w-2xl mb-16">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">
-            Their Journeys
+            {sectionTagline}
           </p>
           <h2 className="section-heading font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">
-            From Hardship
+            {sectionHeading1}
             <br />
-            To Hope
+            {sectionHeading2}
           </h2>
         </div>
 
@@ -269,36 +305,38 @@ const StudentStoriesPage = () => {
       <section className="py-24 md:py-32 px-8 md:px-16 bg-primary text-primary-foreground">
         <div className="max-w-3xl mx-auto text-center">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6">
-            Be Part of the Story
+            {ctaTagline}
           </p>
           <h2 className="font-heading text-4xl md:text-6xl font-light text-primary-foreground leading-tight mb-8">
-            Help Write the Next
+            {ctaHeading1}
             <br />
-            Success Story
+            {ctaHeading2}
           </h2>
           <p className="font-body text-sm text-primary-foreground/60 leading-relaxed mb-10 max-w-lg mx-auto">
-            Every student who walks through our doors has the potential to
-            transform their life and their community. Your support makes it
-            possible.
+            {ctaDescription}
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <button
-              onClick={() => navigate("/donate")}
-              className="group flex items-center gap-2 px-10 py-4 bg-accent text-accent-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 btn-lift"
-            >
-              <Heart size={16} className="fill-current" />
-              Sponsor a Student
-            </button>
-            <button
-              onClick={() => navigate("/programs")}
-              className="group flex items-center gap-2 px-10 py-4 border border-primary-foreground/40 text-primary-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent btn-lift"
-            >
-              View Programs
-              <ArrowRight
-                size={16}
-                className="group-hover:translate-x-1 transition-transform duration-300"
-              />
-            </button>
+            {ctaBtn1Visible && (
+              <button
+                onClick={() => navigate("/donate")}
+                className="group flex items-center gap-2 px-10 py-4 bg-accent text-accent-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 btn-lift"
+              >
+                <Heart size={16} className="fill-current" />
+                {ctaBtn1Text}
+              </button>
+            )}
+            {ctaBtn2Visible && (
+              <button
+                onClick={() => navigate("/programs")}
+                className="group flex items-center gap-2 px-10 py-4 border border-primary-foreground/40 text-primary-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent btn-lift"
+              >
+                {ctaBtn2Text}
+                <ArrowRight
+                  size={16}
+                  className="group-hover:translate-x-1 transition-transform duration-300"
+                />
+              </button>
+            )}
           </div>
         </div>
       </section>
