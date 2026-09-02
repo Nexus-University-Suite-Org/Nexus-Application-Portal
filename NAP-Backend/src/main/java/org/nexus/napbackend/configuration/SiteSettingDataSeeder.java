@@ -69,6 +69,19 @@ public class SiteSettingDataSeeder implements CommandLineRunner {
             seedIfEmpty("about_story_paragraph", "We started with one belief: that every person — regardless of circumstance — deserves the chance to build a dignified life through skills and hard work.");
             seedIfEmpty("about_founding_label", "Our Founding Story");
             seedIfEmpty("about_founding_heading", "Why We Started");
+            seedIfEmpty("about_founding_story", "Our institute was founded after witnessing firsthand the cycle of poverty trapping single mothers and vulnerable youth in our community \u2014 not because of lack of ability, but lack of opportunity and skills.\n\nThe founder, a community leader and educator, believed that practical vocational training \u2014 not charity \u2014 was the most dignified path to self-sufficiency. A small rented space, three sewing machines, and twelve students became the beginning of something far greater.\n\nToday, hundreds of graduates are running their own businesses, supporting their families, and transforming their communities \u2014 one skill at a time.");
+            seedIfEmpty("about_mission_label", "Our Mission");
+            seedIfEmpty("about_mission_text", "\u201cTo equip vulnerable youth and single mothers with practical vocational skills that enable them to earn sustainable livelihoods.\u201d");
+            seedIfEmpty("about_vision_label", "Our Vision");
+            seedIfEmpty("about_vision_text", "\u201cA society where every young person has the skills to build a better future.\u201d");
+            seedIfEmpty("about_values_label", "What We Stand For");
+            seedIfEmpty("about_values_heading", "Our Core Values");
+            seedIfEmpty("about_values", "[{\"title\":\"Empowerment\",\"desc\":\"We believe every person has the potential to transform their life through education and practical skills.\"},{\"title\":\"Dignity\",\"desc\":\"We treat every student with respect and create an environment where they feel valued and supported.\"},{\"title\":\"Practical Education\",\"desc\":\"Our programs are designed to give students immediately applicable skills for the real world.\"},{\"title\":\"Community Impact\",\"desc\":\"When we invest in one person, we invest in their entire community. Our graduates create ripple effects of change.\"}]");
+            seedIfEmpty("about_programs_btn", "See Our Programs");
+            seedIfEmpty("about_cta_label", "Join Our Mission");
+            seedIfEmpty("about_cta_heading", "Be Part of the Change");
+            seedIfEmpty("about_cta_donate_btn", "Donate Now");
+            seedIfEmpty("about_cta_partner_btn", "Partner With Us");
         } catch (Exception e) {
             log.warn("SiteSetting seeder skipped — table may not exist yet: {}", e.getMessage());
         }
