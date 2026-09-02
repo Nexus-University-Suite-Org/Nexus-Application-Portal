@@ -12,7 +12,11 @@ public final class StudentStoryMapper {
         StudentStory entity = new StudentStory();
         entity.setTitle(request.title());
         entity.setContent(request.content());
+        entity.setStudentName(request.studentName());
         entity.setAuthor(request.author());
+        entity.setProgram(request.program());
+        entity.setGraduationYear(request.graduationYear());
+        entity.setImageUrl(request.imageUrl());
         entity.setFeatured(request.featured() != null ? request.featured() : false);
         return entity;
     }
@@ -23,7 +27,11 @@ public final class StudentStoryMapper {
                 entity.getTitle(),
                 entity.getSlug(),
                 entity.getContent(),
+                entity.getStudentName(),
                 entity.getAuthor(),
+                entity.getProgram(),
+                entity.getGraduationYear(),
+                entity.getImageUrl(),
                 entity.getFeatured(),
                 entity.getCreatedAt()
         );
@@ -32,7 +40,11 @@ public final class StudentStoryMapper {
     public static void updateEntity(StudentStory entity, StudentStoryRequest request) {
         entity.setTitle(request.title());
         entity.setContent(request.content());
+        entity.setStudentName(request.studentName());
         entity.setAuthor(request.author());
+        entity.setProgram(request.program());
+        entity.setGraduationYear(request.graduationYear());
+        entity.setImageUrl(request.imageUrl());
         entity.setFeatured(request.featured() != null ? request.featured() : entity.getFeatured());
     }
 }

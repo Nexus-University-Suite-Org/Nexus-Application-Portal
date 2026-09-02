@@ -46,7 +46,9 @@ public class StudentStoryService {
         return repository.findAll().stream()
                 .filter(s -> (s.getTitle() != null && s.getTitle().toLowerCase().contains(lower))
                         || (s.getContent() != null && s.getContent().toLowerCase().contains(lower))
-                        || (s.getAuthor() != null && s.getAuthor().toLowerCase().contains(lower)))
+                        || (s.getAuthor() != null && s.getAuthor().toLowerCase().contains(lower))
+                        || (s.getStudentName() != null && s.getStudentName().toLowerCase().contains(lower))
+                        || (s.getProgram() != null && s.getProgram().toLowerCase().contains(lower)))
                 .toList();
     }
 

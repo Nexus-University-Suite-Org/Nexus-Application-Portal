@@ -67,7 +67,8 @@ export const useContentCollection = <T extends Record<string, unknown>>(
 
     const fetchData = async () => {
       try {
-        const response = await fetch(buildUrl(`v1/content/${apiCollection}`));
+        const url = buildUrl(`v1/content/${apiCollection}`);
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Content API returned ${response.status}`);
         }

@@ -26,11 +26,11 @@ interface Story {
 type StudentStoryDoc = {
   id: string;
   title: string;
-  student_name: string;
+  studentName: string;
   program?: string;
-  graduation_year?: number;
+  graduationYear?: number;
   content?: string;
-  image_url?: string;
+  imageUrl?: string;
 };
 
 const StudentStoriesPage = () => {
@@ -67,13 +67,13 @@ const StudentStoriesPage = () => {
             doc.content || "Story details will be published soon."
           ).replace(/University Application Portal/g, portalName);
           return {
-            name: doc.student_name,
+            name: doc.studentName || doc.title,
             age: 0,
             program: doc.program || "Vocational Training",
-            graduated: doc.graduation_year
-              ? String(doc.graduation_year)
+            graduated: doc.graduationYear
+              ? String(doc.graduationYear)
               : "Recent",
-            image: doc.image_url || "",
+            image: doc.imageUrl || "",
             tag: "Featured Story",
             quote: doc.title,
             before: "Learner preparing for better livelihood opportunities.",
@@ -160,7 +160,7 @@ const StudentStoriesPage = () => {
       });
     });
     return () => ctx.revert();
-  }, []);
+  }, [dynamicStories]);
 
   const toggleStory = (index: number) => {
     setExpandedStory(expandedStory === index ? null : index);
