@@ -135,14 +135,34 @@ const Footer = () => {
     return () => ctx.revert();
   }, []);
 
+  const [subscribing, setSubscribing] = useState(false);
+
   const handleNewsletterSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!email.trim()) return;
-    toast({
-      title: "Subscribed",
-      description: `Updates will be sent to ${email.trim()}.`,
-    });
-    setEmail("");
+    const value = email.trim();
+    if (!value || subscribing) return;
+    setSubscribing(true);
+    fetch("/api/v1/newsletter/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: value }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("subscribe failed");
+        setEmail("");
+        toast({
+          title: "Subscribed",
+          description: `Updates will be sent to ${value}.`,
+        });
+      })
+      .catch(() => {
+        toast({
+          title: "Subscription Failed",
+          description: "Please enter a valid email address and try again.",
+          variant: "destructive",
+        });
+      })
+      .finally(() => setSubscribing(false));
   };
 
   const whatsappDigits = organizationPhone.replace(/\D/g, "");
