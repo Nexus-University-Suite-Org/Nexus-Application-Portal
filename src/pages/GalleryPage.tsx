@@ -104,10 +104,11 @@ const GalleryPage = () => {
     return () => ctx.revert();
   }, []);
 
-  // Animate grid items on filter change
+  // Animate grid items on filter change / when items first render
   useEffect(() => {
-    if (!gridRef.current) return;
+    if (!gridRef.current || filtered.length === 0) return;
     const items = gridRef.current.querySelectorAll(".gallery-item");
+    if (items.length === 0) return;
     const ctx = gsap.context(() => {
       gsap.fromTo(
         items,
@@ -124,7 +125,7 @@ const GalleryPage = () => {
       );
     });
     return () => ctx.revert();
-  }, [activeCategory]);
+  }, [activeCategory, filtered.length]);
 
   // Lightbox animation
   useEffect(() => {
@@ -258,7 +259,6 @@ const GalleryPage = () => {
               <img
                 src={src}
                 alt={alt}
-                loading="lazy"
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
               />
               {/* Hover overlay */}
