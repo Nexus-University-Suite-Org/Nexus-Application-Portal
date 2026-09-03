@@ -65,6 +65,7 @@ const ContactPage = () => {
   const [organizationAddress] = useState(
     "Plot 7, Nakawa Road, Kampala, Uganda",
   );
+  const [heroImage, setHeroImage] = useState<string>(heroCampus);
   const partnersRef = useRef<HTMLDivElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
 
@@ -77,6 +78,17 @@ const ContactPage = () => {
     : fallbackPartnerTypes;
 
   const phoneDigits = organizationPhone.replace(/\D/g, "");
+
+  useEffect(() => {
+    fetch("/api/v1/content/site-settings")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: Record<string, string> | null) => {
+        if (!data?.contact_hero_image) return;
+        setHeroImage(data.contact_hero_image);
+        new Image().src = data.contact_hero_image;
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -221,7 +233,7 @@ const ContactPage = () => {
       <div className="relative min-h-[50vh] flex items-end">
         <div className="absolute inset-0 overflow-hidden rounded-none">
           <img
-            src={heroCampus}
+            src={heroImage}
             alt="Contact us"
             className="w-full h-full object-cover rounded-none"
           />

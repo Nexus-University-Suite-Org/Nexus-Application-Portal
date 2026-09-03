@@ -41,6 +41,7 @@ const DonatePage = () => {
     needText: "These students are enrolled and ready to start but need a sponsor to begin their program.",
     needVisible: true,
   });
+  const [heroImage, setHeroImage] = useState<string>(heroCampus);
   const tiersRef = useRef<HTMLDivElement>(null);
   const faqRef = useRef<HTMLDivElement>(null);
   const faqAnswerRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -98,6 +99,10 @@ const DonatePage = () => {
           }
           return next;
         });
+        if (data.donate_hero_image) {
+          setHeroImage(data.donate_hero_image);
+          new Image().src = data.donate_hero_image;
+        }
       })
       .catch((err) => console.error("[DonatePage] site-settings fetch failed:", err));
   }, []);
@@ -177,7 +182,7 @@ const DonatePage = () => {
       {/* Hero */}
       <div className="relative min-h-[60vh] flex items-end">
         <div className="absolute inset-0 overflow-hidden rounded-none">
-          <img src={heroCampus} alt="Students learning skills" className="w-full h-full object-cover rounded-none" />
+          <img src={heroImage} alt="Students learning skills" className="w-full h-full object-cover rounded-none" />
           <div className="absolute inset-0 bg-primary/75 rounded-none" />
         </div>
         <div className="relative z-10 px-8 md:px-16 pb-24 pt-40 donate-hero-text max-w-4xl">

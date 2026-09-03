@@ -105,6 +105,7 @@ const PartnersPage = () => {
     ctaHeading2: "Together?",
     ctaDescription: "Whether you represent a corporation, an NGO, or you're an individual with skills to share — we'd love to explore how we can work together.",
   });
+  const [heroImage, setHeroImage] = useState<string>(partnersHero);
   const { data: partnerDocs, isLoading } =
     useContentCollection<PartnerDoc>("partners", [], {
       orderBy: { field: "name", direction: "asc" },
@@ -182,6 +183,10 @@ const PartnersPage = () => {
           } catch (e) {
             console.error("[PartnersPage] Failed to parse partners_stats:", e);
           }
+        }
+        if (data.partners_hero_image) {
+          setHeroImage(data.partners_hero_image);
+          new Image().src = data.partners_hero_image;
         }
       })
       .catch((err) => console.error("[PartnersPage] site-settings fetch failed:", err));
@@ -317,7 +322,7 @@ const PartnersPage = () => {
       {/* Hero */}
       <div className="relative min-h-[55vh] flex items-end overflow-hidden">
         <img
-          src={partnersHero}
+          src={heroImage}
           alt="Partnership meeting"
           className="absolute inset-0 w-full h-full object-cover rounded-none"
         />

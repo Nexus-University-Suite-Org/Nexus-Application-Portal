@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -31,7 +31,19 @@ type PageSection = Record<string, unknown> & {
 const ResearchPage = () => {
   const imageRef = useRef<HTMLImageElement>(null);
   const areasRef = useRef<HTMLDivElement>(null);
+  const [heroImage, setHeroImage] = useState<string>(researchHero);
   const { data: sections, isLoading } = useContentCollection<PageSection>("page_sections", []);
+
+  useEffect(() => {
+    fetch("/api/v1/content/site-settings")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: Record<string, string> | null) => {
+        if (!data?.research_hero_image) return;
+        setHeroImage(data.research_hero_image);
+        new Image().src = data.research_hero_image;
+      })
+      .catch(() => {});
+  }, []);
 
   const researchSections = sections.filter((s) => s.page_key === "research");
   const areas = researchSections.length > 0
@@ -118,7 +130,7 @@ const ResearchPage = () => {
         <div className="absolute inset-0 overflow-hidden rounded-none">
           <img
             ref={imageRef}
-            src={researchHero}
+            src={heroImage}
             alt="Research laboratory"
             className="w-full h-full object-cover rounded-none"
           />

@@ -54,6 +54,7 @@ const StudentStoriesPage = () => {
   const [ctaBtn1Visible, setCtaBtn1Visible] = useState(true);
   const [ctaBtn2Text, setCtaBtn2Text] = useState("View Programs");
   const [ctaBtn2Visible, setCtaBtn2Visible] = useState(true);
+  const [heroImage, setHeroImage] = useState<string>(storiesHero);
   const { data: storyDocs, isLoading } = useContentCollection<StudentStoryDoc>(
     "student_stories",
     [],
@@ -104,6 +105,10 @@ const StudentStoriesPage = () => {
         if (data.stories_cta_btn1_visible) setCtaBtn1Visible(data.stories_cta_btn1_visible !== "false");
         if (data.stories_cta_btn2_text) setCtaBtn2Text(data.stories_cta_btn2_text);
         if (data.stories_cta_btn2_visible) setCtaBtn2Visible(data.stories_cta_btn2_visible !== "false");
+        if (data.stories_hero_image) {
+          setHeroImage(data.stories_hero_image);
+          new Image().src = data.stories_hero_image;
+        }
       })
       .catch(() => {});
     const ctx = gsap.context(() => {
@@ -173,7 +178,7 @@ const StudentStoriesPage = () => {
       {/* Hero */}
       <div className="relative min-h-[55vh] flex items-end overflow-hidden">
         <img
-          src={storiesHero}
+                src={heroImage}
           alt="Graduate success"
           className="absolute inset-0 w-full h-full object-cover rounded-none"
         />

@@ -48,6 +48,7 @@ const ImpactPage = () => {
   const [ctaBtn2Text, setCtaBtn2Text] = useState("Sponsor a Student");
   const [ctaBtn2Visible, setCtaBtn2Visible] = useState(true);
   const [impactStats, setImpactStats] = useState(fallbackStats);
+  const [heroImage, setHeroImage] = useState<string>(aboutHero);
   const { data: remoteStories, isLoading } = useContentCollection<StudentStory>("student_stories", []);
 
   useCountUp(statsRef, ".count-up", [impactStats]);
@@ -94,6 +95,10 @@ const ImpactPage = () => {
             const parsed = JSON.parse(data.impact_stats);
             if (Array.isArray(parsed) && parsed.length > 0) setImpactStats(parsed);
           } catch {}
+        }
+        if (data.impact_hero_image) {
+          setHeroImage(data.impact_hero_image);
+          new Image().src = data.impact_hero_image;
         }
       })
       .catch(() => {});
@@ -147,7 +152,7 @@ const ImpactPage = () => {
       {/* Hero */}
       <div className="relative min-h-[60vh] flex items-end">
         <div className="absolute inset-0 overflow-hidden rounded-none">
-          <img src={aboutHero} alt="Graduate success stories" className="w-full h-full object-cover rounded-none" />
+          <img src={heroImage} alt="Graduate success stories" className="w-full h-full object-cover rounded-none" />
           <div className="absolute inset-0 bg-primary/70 rounded-none" />
         </div>
         <div className="relative z-10 px-8 md:px-16 pb-24 pt-40 impact-hero-text max-w-4xl">

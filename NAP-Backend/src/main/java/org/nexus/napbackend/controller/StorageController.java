@@ -93,6 +93,7 @@ public class StorageController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, contentType)
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable")
                 .body(resource);
     }
 

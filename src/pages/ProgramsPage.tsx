@@ -54,6 +54,7 @@ const ProgramsPage = () => {
   const [categories, setCategories] = useState<ProgramCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [uncategorizedPrograms, setUncategorizedPrograms] = useState<Program[]>([]);
+  const [heroImage, setHeroImage] = useState<string>(aboutHero);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -68,6 +69,10 @@ const ProgramsPage = () => {
         if (data.programs_section_tagline) setSectionTagline(data.programs_section_tagline);
         if (data.programs_section_heading) setSectionHeading(data.programs_section_heading);
         if (data.programs_section_description) setSectionDescription(data.programs_section_description);
+        if (data.programs_hero_image) {
+          setHeroImage(data.programs_hero_image);
+          new Image().src = data.programs_hero_image;
+        }
       })
       .catch(() => {});
 
@@ -125,7 +130,7 @@ const ProgramsPage = () => {
       {/* Hero */}
       <div className="relative min-h-[60vh] flex items-end">
         <div className="absolute inset-0 overflow-hidden rounded-none">
-          <img src={aboutHero} alt="Students learning vocational skills" className="w-full h-full object-cover rounded-none" />
+          <img src={heroImage} alt="Students learning vocational skills" className="w-full h-full object-cover rounded-none" />
           <div className="absolute inset-0 bg-primary/70 rounded-none" />
         </div>
         <div className="relative z-10 px-8 md:px-16 pb-24 pt-40 programs-hero-text max-w-4xl">
