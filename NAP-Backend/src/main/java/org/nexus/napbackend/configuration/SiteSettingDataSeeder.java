@@ -97,6 +97,10 @@ public class SiteSettingDataSeeder implements CommandLineRunner {
             seedIfEmpty("stories_cta_btn1_visible", "true");
             seedIfEmpty("stories_cta_btn2_text", "View Programs");
             seedIfEmpty("stories_cta_btn2_visible", "true");
+            seedIfEmpty("gallery_hero_tagline", "Photo Gallery");
+            seedIfEmpty("gallery_hero_heading_1", "See the Impact");
+            seedIfEmpty("gallery_hero_heading_2", "In Action");
+            seedIfEmpty("gallery_hero_description", "Photos from our training sessions, graduation ceremonies, student projects, and community activities.");
         } catch (Exception e) {
             log.warn("SiteSetting seeder skipped — table may not exist yet: {}", e.getMessage());
         }
