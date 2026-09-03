@@ -106,6 +106,21 @@ public class SiteSettingDataSeeder implements CommandLineRunner {
             seedIfEmpty("splash_name", "Institute Uganda");
             seedIfEmpty("splash_motto", "Empowering Through Vocational Skills");
             seedIfEmpty("splash_status_text", "Preparing Experience");
+            seedIfEmpty("impact_hero_tagline", "Real Transformation");
+            seedIfEmpty("impact_hero_heading_1", "Lives Changed.");
+            seedIfEmpty("impact_hero_heading_2", "Communities Transformed.");
+            seedIfEmpty("impact_hero_description", "Our graduates are proof that practical skills — combined with determination — can break the cycle of poverty in a single generation.");
+            seedIfEmpty("impact_stats_tagline", "By The Numbers");
+            seedIfEmpty("impact_stats_heading", "Our Impact In Numbers");
+            seedIfEmpty("impact_stories_tagline", "Graduate Stories");
+            seedIfEmpty("impact_stories_heading", "Meet Our Graduates");
+            seedIfEmpty("impact_stories_description", "Behind every statistic is a real person with a real story. These are just a few of the lives transformed by our programs.");
+            seedIfEmpty("impact_cta_heading", "Help Write the Next Success Story");
+            seedIfEmpty("impact_cta_description", "Your donation directly funds a student's journey from vulnerability to self-sufficiency.");
+            seedIfEmpty("impact_cta_btn1_text", "Donate Now");
+            seedIfEmpty("impact_cta_btn1_visible", "true");
+            seedIfEmpty("impact_cta_btn2_text", "Sponsor a Student");
+            seedIfEmpty("impact_cta_btn2_visible", "true");
         } catch (Exception e) {
             log.warn("SiteSetting seeder skipped — table may not exist yet: {}", e.getMessage());
         }
