@@ -92,7 +92,7 @@ const PartnersPage = () => {
     statsTagline: "Our Network",
     statsHeading: "Current Partners",
     stats: [
-      { value: "{count}", label: "Active Partners" },
+      { value: "4", label: "Active Partners" },
       { value: "$240K", label: "Funds Mobilised" },
       { value: "1,200+", label: "Students Supported" },
       { value: "6", label: "Countries Represented" },
@@ -184,12 +184,7 @@ const PartnersPage = () => {
       .catch((err) => console.error("[PartnersPage] site-settings fetch failed:", err));
   }, []);
 
-  const renderStats = content.stats.map((stat, i) => ({
-    ...stat,
-    value: i === 0 && stat.value.trim() === "{count}"
-      ? `${partnersList.length}`
-      : stat.value,
-  }));
+  const renderStats = content.stats;
 
   const renderPartnerTypes = content.partnerTypes.length > 0 ? content.partnerTypes : pagePartnerTypes;
   console.log("[PartnersPage] render - content.partnerTypes:", content.partnerTypes.length, "items:", content.partnerTypes.map(t => t.title));
