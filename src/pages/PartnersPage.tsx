@@ -68,6 +68,7 @@ type PartnersContent = {
   typesHeading2: string;
   statsTagline: string;
   statsHeading: string;
+  statsDescription: string;
   stats: PartnerStat[];
   partnerTypes: PartnerType[];
   ctaTagline: string;
@@ -91,6 +92,7 @@ const PartnersPage = () => {
     typesHeading2: "To Make an Impact",
     statsTagline: "Our Network",
     statsHeading: "Current Partners",
+    statsDescription: "We are grateful to work with organisations and individuals who share our vision of empowerment through practical education.",
     stats: [
       { value: "4", label: "Active Partners" },
       { value: "$240K", label: "Funds Mobilised" },
@@ -148,6 +150,7 @@ const PartnersPage = () => {
           typesHeading2: data.partners_types_heading_2 || prev.typesHeading2,
           statsTagline: data.partners_stats_tagline || prev.statsTagline,
           statsHeading: data.partners_stats_heading || prev.statsHeading,
+          statsDescription: data.partners_stats_description || prev.statsDescription,
           ctaTagline: data.partners_cta_tagline || prev.ctaTagline,
           ctaHeading1: data.partners_cta_heading_1 || prev.ctaHeading1,
           ctaHeading2: data.partners_cta_heading_2 || prev.ctaHeading2,
@@ -421,8 +424,7 @@ const PartnersPage = () => {
             {content.statsHeading}
           </h2>
           <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6 max-w-lg">
-            We are grateful to work with organisations and individuals who share
-            our vision of empowerment through practical education.
+            {content.statsDescription}
           </p>
         </div>
         <div
@@ -438,19 +440,16 @@ const PartnersPage = () => {
               No partners added yet.
             </p>
           ) : (
-            partnersList.map(({ name, type, since }, index) => (
+            partnersList.map(({ name, type }, index) => (
               <div
                 key={`${name}-${index}`}
                 className="current-partner opacity-0 group p-6 border border-border rounded-2xl hover:border-accent/40 transition-all duration-500 magnetic-card"
               >
-                <div className="flex items-start justify-between mb-3">
+                <div className="mb-3">
                   <Handshake
                     size={20}
                     className="text-accent/60 group-hover:text-accent transition-colors duration-500"
                   />
-                  <span className="font-body text-[10px] tracking-[0.2em] uppercase text-muted-foreground/60">
-                    Since {since}
-                  </span>
                 </div>
                 <h3 className="font-heading text-xl font-light text-foreground mb-1">
                   {name}
