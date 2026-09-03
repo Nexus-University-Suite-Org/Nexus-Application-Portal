@@ -56,6 +56,8 @@ type PartnerDoc = {
 
 type PartnerType = { title: string; description: string; benefits: string[] };
 
+type PartnerStat = { value: string; label: string };
+
 type PartnersContent = {
   heroTagline: string;
   heroHeading1: string;
@@ -66,6 +68,7 @@ type PartnersContent = {
   typesHeading2: string;
   statsTagline: string;
   statsHeading: string;
+  stats: PartnerStat[];
   partnerTypes: PartnerType[];
   ctaTagline: string;
   ctaHeading1: string;
@@ -88,6 +91,12 @@ const PartnersPage = () => {
     typesHeading2: "To Make an Impact",
     statsTagline: "Our Network",
     statsHeading: "Current Partners",
+    stats: [
+      { value: "{count}", label: "Active Partners" },
+      { value: "$240K", label: "Funds Mobilised" },
+      { value: "1,200+", label: "Students Supported" },
+      { value: "6", label: "Countries Represented" },
+    ],
     partnerTypes: fallbackPartnerTypes,
     ctaTagline: "Become a Partner",
     ctaHeading1: "Ready to Change Lives",
@@ -106,13 +115,6 @@ const PartnersPage = () => {
     type: partner.category || "Partner",
     since: "Now",
   }));
-
-  const dynamicImpactNumbers = [
-    { value: `${partnersList.length}`, label: "Active Partners" },
-    { value: "$240K", label: "Funds Mobilised" },
-    { value: "1,200+", label: "Students Supported" },
-    { value: "6", label: "Countries Represented" },
-  ];
 
   useSpotlightCards(cardsRef);
 
@@ -152,9 +154,26 @@ const PartnersPage = () => {
             /* keep fallback partner types */
           }
         }
+        if (data.partners_stats) {
+          try {
+            const parsed = JSON.parse(data.partners_stats) as PartnerStat[];
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setContent((prev) => ({ ...prev, stats: parsed }));
+            }
+          } catch {
+            /* keep fallback stats */
+          }
+        }
       })
       .catch(() => {});
   }, []);
+
+  const renderStats = content.stats.map((stat, i) => ({
+    ...stat,
+    value: i === 0 && stat.value.trim() === "{count}"
+      ? `${partnersList.length}`
+      : stat.value,
+  }));
 
   const renderPartnerTypes = content.partnerTypes.length > 0 ? content.partnerTypes : pagePartnerTypes;
 
@@ -290,7 +309,7 @@ const PartnersPage = () => {
       {/* Partnership Stats */}
       <div ref={statsRef} className="px-8 md:px-16 py-16 bg-secondary/20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
-          {dynamicImpactNumbers.map(({ value, label }) => (
+          {renderStats.map(({ value, label }) => (
             <div
               key={label}
               className="stat-item opacity-0 text-center p-6 bg-background border border-border rounded-2xl stat-glow"
