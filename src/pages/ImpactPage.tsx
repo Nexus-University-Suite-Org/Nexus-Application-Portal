@@ -55,13 +55,9 @@ const ImpactPage = () => {
   const [ctaBtn1Visible, setCtaBtn1Visible] = useState(true);
   const [ctaBtn2Text, setCtaBtn2Text] = useState("Sponsor a Student");
   const [ctaBtn2Visible, setCtaBtn2Visible] = useState(true);
+  const [impactStats, setImpactStats] = useState(fallbackStats);
   const { data: remoteStories, isLoading } = useContentCollection<StudentStory>("student_stories", []);
   const { data: sections } = useContentCollection<PageSection>("page_sections", []);
-  const impactSections = sections.filter((s) => s.page_key === "impact");
-  const statsSection = impactSections.find((s) => s.section_key === "stats");
-  const impactStats = statsSection?.body
-    ? (() => { try { return JSON.parse(statsSection.body); } catch { return fallbackStats; } })()
-    : fallbackStats;
 
   useCountUp(statsRef, ".count-up", [impactStats]);
   useSpotlightCards(storiesRef, ".story-card");
@@ -101,6 +97,7 @@ const ImpactPage = () => {
         if (data.impact_cta_btn1_visible) setCtaBtn1Visible(data.impact_cta_btn1_visible !== "false");
         if (data.impact_cta_btn2_text) setCtaBtn2Text(data.impact_cta_btn2_text);
         if (data.impact_cta_btn2_visible) setCtaBtn2Visible(data.impact_cta_btn2_visible !== "false");
+        if (data.impact_stats) { try { const parsed = JSON.parse(data.impact_stats); if (parsed.length > 0) setImpactStats(parsed); } catch {} }
       })
       .catch(() => {});
     const ctx = gsap.context(() => {

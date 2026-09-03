@@ -121,6 +121,7 @@ public class SiteSettingDataSeeder implements CommandLineRunner {
             seedIfEmpty("impact_cta_btn1_visible", "true");
             seedIfEmpty("impact_cta_btn2_text", "Sponsor a Student");
             seedIfEmpty("impact_cta_btn2_visible", "true");
+            seedIfEmpty("impact_stats", "[{\"value\":1200,\"suffix\":\"+\",\"label\":\"Total Graduates\"},{\"value\":300,\"suffix\":\"+\",\"label\":\"Businesses Started\"},{\"value\":70,\"suffix\":\"%\",\"label\":\"Women & Single Mothers\"},{\"value\":12,\"suffix\":\"+\",\"label\":\"Communities Reached\"},{\"value\":85,\"suffix\":\"%\",\"label\":\"Employment Rate\"},{\"value\":8,\"suffix\":\"\",\"label\":\"Vocational Programs\"}]");
         } catch (Exception e) {
             log.warn("SiteSetting seeder skipped — table may not exist yet: {}", e.getMessage());
         }
