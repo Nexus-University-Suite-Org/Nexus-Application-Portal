@@ -11,7 +11,6 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -28,19 +27,18 @@ const quickLinks = [
 ];
 
 const fallbackProgramNames = [
-  "Tailoring & Design",
-  "Plumbing",
-  "Electrical Installation",
-  "Welding & Fabrication",
-  "Hairdressing",
-  "Beauty Therapy",
-  "Auto Mechanics",
-  "Soap Making",
+  "Bachelor of Medicine and Bachelor of Surgery",
+  "Master of Science in Data Science",
+  "Bachelor of Arts in Education",
+  "Bachelor of Engineering in Mechanical Engineering",
+  "Bachelor of Business Administration",
+  "Bachelor of Science in Computer Science",
 ];
 
-type CourseDoc = {
-  id: string;
-  name?: string;
+type ProgramDoc = {
+  id: number;
+  programName: string;
+  status?: string;
 };
 
 const Footer = () => {
@@ -58,20 +56,27 @@ const Footer = () => {
   const [organizationAddress, setOrganizationAddress] = useState(
     "Plot 7, Nakawa Road, Kampala, Uganda",
   );
-  const { data: courseDocs } = useContentCollection<CourseDoc>(
-    "courses",
-    fallbackProgramNames.map((name, index) => ({
-      id: `fallback-course-${index}`,
-      name,
-    })),
-    { orderBy: { field: "name", direction: "asc" } },
+  const [programLinks, setProgramLinks] = useState(
+    fallbackProgramNames.map((name) => ({ label: name, href: "/programs" })),
   );
 
-  const programLinks = [...new Set(
-    courseDocs
-      .map((course) => course.name?.trim())
-      .filter((name): name is string => Boolean(name))
-  )].map((name) => ({ label: name, href: "/admissions/courses" }));
+  useEffect(() => {
+    fetch("/api/v1/programs")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((progs: ProgramDoc[] | null) => {
+        if (!progs || !Array.isArray(progs)) return;
+        const active = progs.filter((p) => p.status === "Active");
+        const names = [...new Set(
+          (active.length ? active : progs)
+            .map((p) => p.programName?.trim())
+            .filter((n): n is string => Boolean(n)),
+        )];
+        if (names.length) {
+          setProgramLinks(names.map((label) => ({ label, href: "/programs" })));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     console.log("[Footer] fetching site-settings from", "/api/v1/content/site-settings");
