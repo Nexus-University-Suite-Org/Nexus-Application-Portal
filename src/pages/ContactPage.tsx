@@ -59,10 +59,10 @@ const ContactPage = () => {
     message: "",
   });
   const [sending, setSending] = useState(false);
-  const [organizationEmail] = useState("");
-  const [organizationPhone] = useState("+256 700 000 000");
-  const [organizationWhatsappCta] = useState("WhatsApp Us");
-  const [organizationAddress] = useState(
+  const [organizationEmail, setOrganizationEmail] = useState("");
+  const [organizationPhone, setOrganizationPhone] = useState("+256 700 000 000");
+  const [organizationWhatsappCta, setOrganizationWhatsappCta] = useState("WhatsApp Us");
+  const [organizationAddress, setOrganizationAddress] = useState(
     "Plot 7, Nakawa Road, Kampala, Uganda",
   );
   const [heroImage, setHeroImage] = useState<string>(heroCampus);
@@ -83,9 +83,14 @@ const ContactPage = () => {
     fetch("/api/v1/content/site-settings")
       .then((res) => (res.ok ? res.json() : null))
       .then((data: Record<string, string> | null) => {
-        if (!data?.contact_hero_image) return;
-        setHeroImage(data.contact_hero_image);
-        new Image().src = data.contact_hero_image;
+        if (data?.contact_hero_image) {
+          setHeroImage(data.contact_hero_image);
+          new Image().src = data.contact_hero_image;
+        }
+        if (data?.footer_email) setOrganizationEmail(data.footer_email);
+        if (data?.footer_phone) setOrganizationPhone(data.footer_phone);
+        if (data?.footer_whatsapp_cta) setOrganizationWhatsappCta(data.footer_whatsapp_cta);
+        if (data?.footer_address) setOrganizationAddress(data.footer_address);
       })
       .catch(() => {});
   }, []);
