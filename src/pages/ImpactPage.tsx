@@ -134,7 +134,7 @@ const ImpactPage = () => {
       }
     });
     return () => ctx.revert();
-  }, [successStories]);
+  }, [successStories, impactStats]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -190,8 +190,8 @@ const ImpactPage = () => {
           ) : successStories.length === 0 ? (
             <p className="font-body text-muted-foreground text-center col-span-full py-12">Impact stories coming soon.</p>
           ) : (
-            successStories.map(({ name, program, duration, story, outcome, tag }) => (
-              <div key={name} className="story-card spotlight-card opacity-0 group flex flex-col p-8 border border-border rounded-[20px]">
+            successStories.map(({ name, program, duration, story, outcome, tag }, i) => (
+              <div key={`${name}-${i}`} className="story-card spotlight-card opacity-0 group flex flex-col p-8 border border-border rounded-[20px]">
                 <div className="relative z-10 flex flex-col flex-1">
                   <div className="flex items-start justify-between mb-6">
                     <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center icon-bounce">
