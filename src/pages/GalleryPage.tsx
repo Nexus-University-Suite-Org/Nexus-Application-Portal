@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useContentCollection } from "@/hooks/useContentCollection";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -25,6 +26,10 @@ const GalleryPage = () => {
   const gridRef = useRef<HTMLDivElement>(null);
   const lightboxRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
+  const [heroTagline, setHeroTagline] = useState("Photo Gallery");
+  const [heroHeading1, setHeroHeading1] = useState("See the Impact");
+  const [heroHeading2, setHeroHeading2] = useState("In Action");
+  const [heroDescription, setHeroDescription] = useState("Photos from our training sessions, graduation ceremonies, student projects, and community activities.");
   const { data: galleryItems, isLoading } = useContentCollection<GalleryItem>(
     "gallery",
     [],
@@ -72,6 +77,15 @@ const GalleryPage = () => {
   // Hero entrance
   useEffect(() => {
     window.scrollTo(0, 0);
+    fetch("http://localhost:8080/api/v1/content/site-settings")
+      .then(r => r.json())
+      .then((data: Record<string, string>) => {
+        if (data.gallery_hero_tagline) setHeroTagline(data.gallery_hero_tagline);
+        if (data.gallery_hero_heading_1) setHeroHeading1(data.gallery_hero_heading_1);
+        if (data.gallery_hero_heading_2) setHeroHeading2(data.gallery_hero_heading_2);
+        if (data.gallery_hero_description) setHeroDescription(data.gallery_hero_description);
+      })
+      .catch(() => {});
     const ctx = gsap.context(() => {
       gsap.fromTo(
         ".gallery-hero-text > *",
@@ -183,16 +197,15 @@ const GalleryPage = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/60 to-primary/20 rounded-none" />
         <div className="relative z-10 px-8 md:px-16 pb-20 pt-40 gallery-hero-text max-w-4xl">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-5 opacity-0">
-            Photo Gallery
+            {heroTagline}
           </p>
           <h1 className="font-heading text-5xl md:text-7xl font-light text-primary-foreground leading-[0.92] mb-6 opacity-0">
-            See the Impact
+            {heroHeading1}
             <br />
-            <em className="text-accent">In Action</em>
+            <em className="text-accent">{heroHeading2}</em>
           </h1>
           <p className="font-body text-base text-primary-foreground/70 max-w-xl leading-relaxed opacity-0">
-            Photos from our training sessions, graduation ceremonies, student
-            projects, and community activities.
+            {heroDescription}
           </p>
         </div>
       </div>

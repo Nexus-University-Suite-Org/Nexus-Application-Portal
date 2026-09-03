@@ -32,8 +32,20 @@ public class StudentStory {
     @Column(nullable = false)
     private String content;
 
-    @Column(length = 200)
+    @Column(name = "student_name", length = 300)
+    private String studentName;
+
+    @Column(length = 300)
     private String author;
+
+    @Column(length = 300)
+    private String program;
+
+    @Column(name = "graduation_year")
+    private Integer graduationYear;
+
+    @Column(name = "image_url", length = 1000)
+    private String imageUrl;
 
     @Column(nullable = false)
     private Boolean featured;
