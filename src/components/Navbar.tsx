@@ -59,13 +59,22 @@ const Navbar = () => {
 
   useEffect(() => {
     const API_BASE = "http://localhost:8080";
+    console.log("[Navbar] fetching site-settings from", `${API_BASE}/api/v1/content/site-settings`);
     fetch(`${API_BASE}/api/v1/content/site-settings`)
       .then((res) => {
+        console.log("[Navbar] site-settings response status:", res.status);
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();
       })
       .then((data: Record<string, string>) => {
-        if (data.portal_name) setPortalName(data.portal_name);
+        console.log("[Navbar] site-settings raw data:", data);
+        console.log("[Navbar] portal_name from API:", data.portal_name);
+        if (data.portal_name) {
+          console.log("[Navbar] setting portalName to:", data.portal_name);
+          setPortalName(data.portal_name);
+        } else {
+          console.log("[Navbar] portal_name is empty/falsy, keeping default");
+        }
         if (data.nav_links) {
           try {
             const parsed = JSON.parse(data.nav_links);
@@ -81,7 +90,8 @@ const Navbar = () => {
           } catch {}
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("[Navbar] failed to fetch site-settings:", err);
         // Use defaults if API is down
       });
   }, []);

@@ -74,20 +74,31 @@ const Footer = () => {
   )].map((name) => ({ label: name, href: "/admissions/courses" }));
 
   useEffect(() => {
+    console.log("[Footer] fetching site-settings from", "http://localhost:8080/api/v1/content/site-settings");
     fetch("http://localhost:8080/api/v1/content/site-settings")
       .then((res) => {
+        console.log("[Footer] site-settings response status:", res.status);
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();
       })
       .then((data: Record<string, string>) => {
-        if (data.portal_name) setPortalName(data.portal_name);
+        console.log("[Footer] site-settings raw data:", data);
+        console.log("[Footer] portal_name from API:", data.portal_name);
+        if (data.portal_name) {
+          console.log("[Footer] setting portalName to:", data.portal_name);
+          setPortalName(data.portal_name);
+        } else {
+          console.log("[Footer] portal_name is empty/falsy, keeping default");
+        }
         if (data.footer_mission) setOrganizationMission(data.footer_mission);
         if (data.footer_email) setOrganizationEmail(data.footer_email);
         if (data.footer_phone) setOrganizationPhone(data.footer_phone);
         if (data.footer_whatsapp_cta) setOrganizationWhatsappCta(data.footer_whatsapp_cta);
         if (data.footer_address) setOrganizationAddress(data.footer_address);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("[Footer] failed to fetch site-settings:", err);
+      });
   }, []);
 
   useEffect(() => {
