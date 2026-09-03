@@ -137,7 +137,7 @@ const ImpactPage = () => {
       }
     });
     return () => ctx.revert();
-  }, []);
+  }, [successStories]);
 
   return (
     <div className="min-h-screen bg-background">
