@@ -6,60 +6,119 @@ import Footer from "@/components/Footer";
 import { Heart, Users, Check, ChevronDown } from "lucide-react";
 import heroCampus from "@/assets/hero-campus.jpg";
 import { useSpotlightCards, useParallax } from "@/hooks/useScrollReveal";
-import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
-
-type PageSection = Record<string, unknown> & {
-  id: string;
-  page_key?: string;
-  section_key?: string;
-  title?: string;
-  body?: string;
-};
-
-const fallbackDonationTiers = [
-  { amount: "$10", usd: 10, label: "Learning Materials", description: "Provides one student with notebooks, pens, and essential reading materials for a month.", impact: "Learning materials for 1 student", color: "border-border hover:border-accent/40" },
-  { amount: "$25", usd: 25, label: "Training Tools", description: "Covers specialized tools and supplies needed for hands-on vocational training — needles, thread, fittings, or electrical components.", impact: "Training tools for 1 student", color: "border-border hover:border-accent/40" },
-  { amount: "$50", usd: 50, label: "Monthly Sponsorship", description: "Sponsors a student for a full month, covering training fees, materials, and basic support. The most popular giving level.", impact: "Full monthly support for 1 student", color: "border-accent bg-accent/5 shadow-[0_20px_60px_-20px_hsl(var(--accent)/0.25)]", featured: true },
-  { amount: "$200", usd: 200, label: "Full Program Support", description: "Covers a significant portion of a student's full training program from start to finish — a transformative gift that changes a life completely.", impact: "Covers most of a full training program", color: "border-border hover:border-accent/40" },
-];
-
-const fallbackFaqs = [
-  { q: "How is my donation used?", a: "100% of your donation goes directly to student training — covering fees, materials, tools, and basic support. We publish annual impact reports so you can see exactly how funds are used." },
-  { q: "Can I sponsor a specific student?", a: "Yes! Through our Sponsor a Student program, we match you with a student in our program. You'll receive updates on their progress and a letter from them upon graduation." },
-  { q: "Is my donation tax-deductible?", a: "We are a registered non-profit organization. Depending on your country, your donation may be tax-deductible. Contact us for official documentation." },
-  { q: "Can organizations or companies donate?", a: "Absolutely. We welcome corporate partnerships, NGO funding, and institutional support. Please visit our Partners page or contact us directly to discuss collaboration." },
-  { q: "What payment methods do you accept?", a: "We accept bank transfers, mobile money (MTN/Airtel), PayPal, and credit/debit cards. Contact us via WhatsApp or email to get payment details." },
-];
-
-const parseJson = (body: string | undefined, fallback: unknown) => {
-  if (!body) return fallback;
-  try { return JSON.parse(body); } catch { return fallback; }
-};
 
 const DonatePage = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [selectedTierUsd, setSelectedTierUsd] = useState<number>(50);
+  const [donateContent, setDonateContent] = useState({
+    heroTagline: "Make A Difference",
+    heroHeading1: "Your Gift Builds",
+    heroHeading2: "A Better Tomorrow",
+    heroDescription: "One donation. One student. One family lifted out of poverty. Your support is the bridge between vulnerability and self-sufficiency.",
+    tiersTagline: "Choose Your Level",
+    tiersHeading: "Every Amount Makes an Impact",
+    tiersDescription: "All donations go directly to student training, materials, and support. No overhead. Real impact.",
+    sponsorTagline: "Personal Impact",
+    sponsorHeading: "Sponsor a Student Directly",
+    sponsorDescription: "Through our Sponsor a Student program, you are matched with a specific student. You receive:",
+    sponsorBenefits: ["A profile and story of the student you're supporting", "Regular progress updates throughout their program", "A personal letter and certificate upon their graduation", "The knowledge that you directly changed a life"],
+    sponsorBtnText: "Start Sponsoring",
+    sponsorBtnVisible: true,
+    faqTagline: "Questions",
+    faqHeading: "Frequently Asked Questions",
+    faqs: [] as { q: string; a: string }[],
+    tiers: [] as { amount: string; usd: number; label: string; description: string; impact: string; color?: string; featured?: boolean }[],
+    statAmount: "$50",
+    statPeriod: "/month",
+    statText: "Sponsors one student for a month",
+    statProgress: "68",
+    statProgressText: "68% of monthly spots filled",
+    statVisible: true,
+    needLabel: "Current Need",
+    needHeading: "47 students awaiting sponsorship",
+    needText: "These students are enrolled and ready to start but need a sponsor to begin their program.",
+    needVisible: true,
+  });
   const tiersRef = useRef<HTMLDivElement>(null);
   const faqRef = useRef<HTMLDivElement>(null);
   const faqAnswerRefs = useRef<Array<HTMLDivElement | null>>([]);
   const pageRef = useRef<HTMLDivElement>(null);
 
-  const { data: pageSections } = useContentCollection<PageSection>("page_sections", []);
-  const tiersSections = pageSections.filter(s => s.page_key === "donate" && s.section_key === "donation_tiers");
-  const donationTiers = tiersSections.length > 0
-    ? parseJson(tiersSections[0].body, fallbackDonationTiers) as { amount: string; usd: number; label: string; description: string; impact: string; color: string; featured?: boolean }[]
-    : fallbackDonationTiers;
-  const faqsSections = pageSections.filter(s => s.page_key === "donate" && s.section_key === "faqs");
-  const faqs = faqsSections.length > 0
-    ? parseJson(faqsSections[0].body, fallbackFaqs) as { q: string; a: string }[]
-    : fallbackFaqs;
+  useEffect(() => {
+    fetch("/api/v1/content/site-settings")
+      .then((r) => r.json())
+      .then((data: Record<string, string>) => {
+        setDonateContent((prev) => {
+          const next = {
+            ...prev,
+            heroTagline: data.donate_hero_tagline || prev.heroTagline,
+            heroHeading1: data.donate_hero_heading_1 || prev.heroHeading1,
+            heroHeading2: data.donate_hero_heading_2 || prev.heroHeading2,
+            heroDescription: data.donate_hero_description || prev.heroDescription,
+            tiersTagline: data.donate_tiers_tagline || prev.tiersTagline,
+            tiersHeading: data.donate_tiers_heading || prev.tiersHeading,
+            tiersDescription: data.donate_tiers_description || prev.tiersDescription,
+            sponsorTagline: data.donate_sponsor_tagline || prev.sponsorTagline,
+            sponsorHeading: data.donate_sponsor_heading || prev.sponsorHeading,
+            sponsorDescription: data.donate_sponsor_description || prev.sponsorDescription,
+            sponsorBtnText: data.donate_sponsor_btn_text || prev.sponsorBtnText,
+            sponsorBtnVisible: data.donate_sponsor_btn_visible === undefined ? prev.sponsorBtnVisible : data.donate_sponsor_btn_visible !== "false",
+            faqTagline: data.donate_faq_tagline || prev.faqTagline,
+            faqHeading: data.donate_faq_heading || prev.faqHeading,
+            statAmount: data.donate_stat_amount || prev.statAmount,
+            statPeriod: data.donate_stat_period || prev.statPeriod,
+            statText: data.donate_stat_text || prev.statText,
+            statProgress: data.donate_stat_progress || prev.statProgress,
+            statProgressText: data.donate_stat_progress_text || prev.statProgressText,
+            statVisible: data.donate_stat_visible === undefined ? prev.statVisible : data.donate_stat_visible !== "false",
+            needLabel: data.donate_need_label || prev.needLabel,
+            needHeading: data.donate_need_heading || prev.needHeading,
+            needText: data.donate_need_text || prev.needText,
+            needVisible: data.donate_need_visible === undefined ? prev.needVisible : data.donate_need_visible !== "false",
+          };
+          if (data.donate_sponsor_benefits) {
+            try {
+              const parsed = JSON.parse(data.donate_sponsor_benefits);
+              if (Array.isArray(parsed) && parsed.length > 0) next.sponsorBenefits = parsed;
+            } catch (e) { console.error("[DonatePage] failed to parse donate_sponsor_benefits:", e); }
+          }
+          if (data.donate_faqs) {
+            try {
+              const parsed = JSON.parse(data.donate_faqs);
+              if (Array.isArray(parsed) && parsed.length > 0) next.faqs = parsed;
+            } catch (e) { console.error("[DonatePage] failed to parse donate_faqs:", e); }
+          }
+          if (data.donate_page_tiers) {
+            try {
+              const parsed = JSON.parse(data.donate_page_tiers);
+              if (Array.isArray(parsed) && parsed.length > 0) next.tiers = parsed;
+            } catch (e) { console.error("[DonatePage] failed to parse donate_page_tiers:", e); }
+          }
+          return next;
+        });
+      })
+      .catch((err) => console.error("[DonatePage] site-settings fetch failed:", err));
+  }, []);
+
+  const donationTiers = donateContent.tiers;
+  const faqs = donateContent.faqs;
 
   const selectedTier = donationTiers.find((tier) => tier.usd === selectedTierUsd) ?? donationTiers[0];
 
   useSpotlightCards(tiersRef, ".tier-card");
   useParallax(pageRef);
+
+  useEffect(() => {
+    if (!tiersRef.current) return;
+    const cards = tiersRef.current.querySelectorAll(".tier-card");
+    if (cards.length === 0) return;
+    const ctx = gsap.context(() => {
+      gsap.fromTo(cards, { y: 60, opacity: 0, scale: 0.9 }, { y: 0, opacity: 1, scale: 1, duration: 0.85, stagger: 0.1, ease: "back.out(1.3)" });
+    });
+    return () => ctx.revert();
+  }, [donationTiers.map((t) => t.amount).join(",")]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -122,12 +181,12 @@ const DonatePage = () => {
           <div className="absolute inset-0 bg-primary/75 rounded-none" />
         </div>
         <div className="relative z-10 px-8 md:px-16 pb-24 pt-40 donate-hero-text max-w-4xl">
-          <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6 opacity-0">Make A Difference</p>
+          <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6 opacity-0">{donateContent.heroTagline}</p>
           <h1 className="font-heading text-5xl md:text-7xl font-light text-primary-foreground leading-[0.92] mb-8 opacity-0">
-            Your Gift Builds<br /><em className="text-accent">A Better Tomorrow</em>
+            {donateContent.heroHeading1}<br /><em className="text-accent">{donateContent.heroHeading2}</em>
           </h1>
           <p className="font-body text-lg text-primary-foreground/70 max-w-xl leading-relaxed opacity-0">
-            One donation. One student. One family lifted out of poverty. Your support is the bridge between vulnerability and self-sufficiency.
+            {donateContent.heroDescription}
           </p>
         </div>
       </div>
@@ -135,12 +194,17 @@ const DonatePage = () => {
       {/* Donation Tiers */}
       <div ref={tiersRef} className="px-8 md:px-16 py-24 md:py-32">
         <div className="max-w-2xl mx-auto text-center mb-16">
-          <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">Choose Your Level</p>
-          <h2 className="font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">Every Amount Makes an Impact</h2>
-          <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6">All donations go directly to student training, materials, and support. No overhead. Real impact.</p>
+          <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">{donateContent.tiersTagline}</p>
+          <h2 className="font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">{donateContent.tiersHeading}</h2>
+          <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6">{donateContent.tiersDescription}</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-          {donationTiers.map(({ amount, usd, label, description, impact, featured }) => (
+          {donationTiers.length === 0 ? (
+            <p className="col-span-full text-center font-body text-sm text-muted-foreground py-12">
+              Donation tiers coming soon.
+            </p>
+          ) : (
+          donationTiers.map(({ amount, usd, label, description, impact, featured }) => (
             <div
               key={amount}
               role="button"
@@ -170,9 +234,11 @@ const DonatePage = () => {
                 </button>
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
 
+        {selectedTier && (
         <div className="mt-10 max-w-3xl mx-auto p-6 md:p-8 border border-accent/30 bg-accent/5 rounded-[20px]">
           <p className="font-body text-xs tracking-[0.24em] uppercase text-accent mb-3">Selected Donation</p>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -189,53 +255,61 @@ const DonatePage = () => {
             </button>
           </div>
         </div>
+        )}
       </div>
 
       {/* Sponsor a Student Section */}
       <div id="sponsor" className="px-8 md:px-16 py-24 bg-primary text-primary-foreground">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
-            <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6">Personal Impact</p>
-            <h2 className="font-heading text-4xl md:text-6xl font-light text-primary-foreground leading-tight mb-8">Sponsor a Student Directly</h2>
-            <p className="font-body text-base text-primary-foreground/70 leading-relaxed mb-6">Through our Sponsor a Student program, you are matched with a specific student. You receive:</p>
+            <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6">{donateContent.sponsorTagline}</p>
+            <h2 className="font-heading text-4xl md:text-6xl font-light text-primary-foreground leading-tight mb-8">{donateContent.sponsorHeading}</h2>
+            <p className="font-body text-base text-primary-foreground/70 leading-relaxed mb-6">{donateContent.sponsorDescription}</p>
             <ul className="space-y-4 mb-10">
-              {["A profile and story of the student you're supporting", "Regular progress updates throughout their program", "A personal letter and certificate upon their graduation", "The knowledge that you directly changed a life"].map((item) => (
+              {donateContent.sponsorBenefits.map((item) => (
                 <li key={item} className="flex items-start gap-3 font-body text-sm text-primary-foreground/80">
                   <Heart size={16} className="text-accent fill-accent shrink-0 mt-0.5" /><span>{item}</span>
                 </li>
               ))}
             </ul>
+            {donateContent.sponsorBtnVisible && (
             <button
               onClick={() => { const msg = encodeURIComponent("Hello, I would like to sponsor a student. Please tell me more about the Sponsor a Student program."); window.open(`https://wa.me/256700000000?text=${msg}`, "_blank", "noopener,noreferrer"); }}
               className="group flex items-center gap-2 px-10 py-4 bg-accent text-accent-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 btn-lift"
             >
-              <Users size={16} />Start Sponsoring
+              <Users size={16} />{donateContent.sponsorBtnText}
             </button>
+            )}
           </div>
           <div className="space-y-6">
+            {donateContent.statVisible && (
             <div className="p-8 bg-primary-foreground/5 border border-primary-foreground/10 rounded-[20px] stat-glow">
-              <p className="stat-value font-heading text-4xl font-light text-accent mb-2">$50<span className="text-xl text-primary-foreground/50">/month</span></p>
-              <p className="font-body text-sm text-primary-foreground/60 mb-4">Sponsors one student for a month</p>
-              <div className="w-full bg-primary-foreground/10 rounded-full h-1.5"><div className="bg-accent h-1.5 rounded-full w-[68%]" /></div>
-              <p className="font-body text-xs text-primary-foreground/40 mt-2">68% of monthly spots filled</p>
+              <p className="stat-value font-heading text-4xl font-light text-accent mb-2">{donateContent.statAmount}<span className="text-xl text-primary-foreground/50">{donateContent.statPeriod}</span></p>
+              <p className="font-body text-sm text-primary-foreground/60 mb-4">{donateContent.statText}</p>
+              <div className="w-full bg-primary-foreground/10 rounded-full h-1.5"><div className="bg-accent h-1.5 rounded-full" style={{ width: `${donateContent.statProgress}%` }} /></div>
+              <p className="font-body text-xs text-primary-foreground/40 mt-2">{donateContent.statProgressText}</p>
             </div>
+            )}
+            {donateContent.needVisible && (
             <div className="p-8 bg-primary-foreground/5 border border-primary-foreground/10 rounded-[20px] stat-glow">
-              <p className="font-body text-xs tracking-[0.2em] uppercase text-accent mb-3">Current Need</p>
-              <p className="font-heading text-2xl font-light text-primary-foreground mb-2">47 students awaiting sponsorship</p>
-              <p className="font-body text-sm text-primary-foreground/60">These students are enrolled and ready to start but need a sponsor to begin their program.</p>
+              <p className="font-body text-xs tracking-[0.2em] uppercase text-accent mb-3">{donateContent.needLabel}</p>
+              <p className="font-heading text-2xl font-light text-primary-foreground mb-2">{donateContent.needHeading}</p>
+              <p className="font-body text-sm text-primary-foreground/60">{donateContent.needText}</p>
             </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* FAQ */}
+      {faqs.length > 0 && (
       <div ref={faqRef} className="relative px-8 md:px-16 py-24 md:py-32 overflow-hidden">
         <div className="parallax-el pointer-events-none absolute -top-16 -right-24 h-72 w-72 rounded-full bg-accent/10 blur-3xl" data-speed="0.3" />
         <div className="parallax-el pointer-events-none absolute -bottom-24 -left-12 h-64 w-64 rounded-full bg-primary/10 blur-3xl" data-speed="0.5" />
         <div className="max-w-3xl mx-auto">
           <div className="mb-16">
-            <p className="faq-anim font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">Questions</p>
-            <h2 className="faq-anim font-heading text-4xl md:text-5xl font-light text-foreground leading-tight">Frequently Asked Questions</h2>
+            <p className="faq-anim font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">{donateContent.faqTagline}</p>
+            <h2 className="faq-anim font-heading text-4xl md:text-5xl font-light text-foreground leading-tight">{donateContent.faqHeading}</h2>
           </div>
           <div className="space-y-4">
             {faqs.map(({ q, a }, i) => (
@@ -254,6 +328,7 @@ const DonatePage = () => {
           </div>
         </div>
       </div>
+      )}
 
       <Footer />
     </div>
