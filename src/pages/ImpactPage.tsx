@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"; // refresh
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -15,14 +15,6 @@ type StudentStory = Record<string, unknown> & {
   program?: string;
   title?: string;
   content?: string;
-};
-
-type PageSection = Record<string, unknown> & {
-  id: string;
-  page_key?: string;
-  section_key?: string;
-  title?: string;
-  body?: string;
 };
 
 gsap.registerPlugin(ScrollTrigger);
@@ -57,14 +49,13 @@ const ImpactPage = () => {
   const [ctaBtn2Visible, setCtaBtn2Visible] = useState(true);
   const [impactStats, setImpactStats] = useState(fallbackStats);
   const { data: remoteStories, isLoading } = useContentCollection<StudentStory>("student_stories", []);
-  const { data: sections } = useContentCollection<PageSection>("page_sections", []);
 
   useCountUp(statsRef, ".count-up", [impactStats]);
-  useSpotlightCards(storiesRef, ".story-card");
+  useSpotlightCards(storiesRef, ".story-card", [remoteStories]);
 
   const successStories = remoteStories.length > 0
-    ? remoteStories.slice(0, 6).map((s) => ({
-        name: s.student_name || "Graduate",
+    ? remoteStories.slice(0, 6).map((s, i) => ({
+        name: s.student_name || `Graduate ${i + 1}`,
         program: s.program || "Vocational Training",
         duration: "",
         story: (typeof s.content === "string" && s.content.slice(0, 200)) || "A story of transformation through education.",
@@ -77,6 +68,7 @@ const ImpactPage = () => {
         { name: "Grace Achieng", program: "Welding", duration: "", story: "Orphaned woman who proved women can do technical work.", outcome: "Certified welder", tag: "Breaking Barriers" },
       ];
 
+  // Fetch site settings (runs once)
   useEffect(() => {
     window.scrollTo(0, 0);
     fetch("http://localhost:8080/api/v1/content/site-settings")
@@ -97,44 +89,56 @@ const ImpactPage = () => {
         if (data.impact_cta_btn1_visible) setCtaBtn1Visible(data.impact_cta_btn1_visible !== "false");
         if (data.impact_cta_btn2_text) setCtaBtn2Text(data.impact_cta_btn2_text);
         if (data.impact_cta_btn2_visible) setCtaBtn2Visible(data.impact_cta_btn2_visible !== "false");
-        if (data.impact_stats) { try { const parsed = JSON.parse(data.impact_stats); if (parsed.length > 0) setImpactStats(parsed); } catch {} }
+        if (data.impact_stats) {
+          try {
+            const parsed = JSON.parse(data.impact_stats);
+            if (Array.isArray(parsed) && parsed.length > 0) setImpactStats(parsed);
+          } catch {}
+        }
       })
       .catch(() => {});
+  }, []);
+
+  // GSAP animations — re-run when data changes
+  useEffect(() => {
     const ctx = gsap.context(() => {
-      // Hero
       gsap.fromTo(".impact-hero-text > *",
         { y: 80, opacity: 0, clipPath: "inset(100% 0% 0% 0%)" },
         { y: 0, opacity: 1, clipPath: "inset(0% 0% 0% 0%)", duration: 1.3, stagger: 0.18, ease: "power3.out", delay: 0.3 }
       );
 
-      // Stats — scale bounce
       if (statsRef.current) {
-        gsap.fromTo(statsRef.current.querySelectorAll(".stat-card"),
-          { y: 50, opacity: 0, scale: 0.85 },
-          {
-            y: 0, opacity: 1, scale: 1,
-            duration: 0.8, stagger: 0.08,
-            ease: "back.out(1.6)",
-            scrollTrigger: { trigger: statsRef.current, start: "top 82%", toggleActions: "play none none reverse" },
-          }
-        );
+        const statCards = statsRef.current.querySelectorAll(".stat-card");
+        if (statCards.length) {
+          gsap.fromTo(statCards,
+            { y: 50, opacity: 0, scale: 0.85 },
+            {
+              y: 0, opacity: 1, scale: 1,
+              duration: 0.8, stagger: 0.08,
+              ease: "back.out(1.6)",
+              scrollTrigger: { trigger: statsRef.current, start: "top 82%", toggleActions: "play none none reverse" },
+            }
+          );
+        }
       }
 
-      // Stories — staggered with rotation
       if (storiesRef.current) {
-        gsap.fromTo(storiesRef.current.querySelectorAll(".story-card"),
-          { y: 60, opacity: 0, rotateY: 6 },
-          {
-            y: 0, opacity: 1, rotateY: 0,
-            duration: 0.9, stagger: 0.12,
-            ease: "power3.out",
-            scrollTrigger: { trigger: storiesRef.current, start: "top 82%", toggleActions: "play none none reverse" },
-          }
-        );
+        const storyCards = storiesRef.current.querySelectorAll(".story-card");
+        if (storyCards.length) {
+          gsap.fromTo(storyCards,
+            { y: 60, opacity: 0, rotateY: 6 },
+            {
+              y: 0, opacity: 1, rotateY: 0,
+              duration: 0.9, stagger: 0.12,
+              ease: "power3.out",
+              scrollTrigger: { trigger: storiesRef.current, start: "top 82%", toggleActions: "play none none reverse" },
+            }
+          );
+        }
       }
     });
     return () => ctx.revert();
-  }, [successStories, impactStats]);
+  }, [impactStats, successStories]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -164,8 +168,8 @@ const ImpactPage = () => {
           <h2 className="font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">{statsHeading}</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          {impactStats.map(({ value, suffix, label }) => (
-            <div key={label} className="stat-card opacity-0 p-8 bg-background border border-border rounded-[20px] text-center stat-glow">
+          {impactStats.map(({ value, suffix, label }, i) => (
+            <div key={`${label}-${i}`} className="stat-card opacity-0 p-8 bg-background border border-border rounded-[20px] text-center stat-glow">
               <p className="stat-value font-heading text-4xl font-light text-accent mb-2">
                 <span className="count-up" data-target={value} data-suffix={suffix}>0{suffix}</span>
               </p>
@@ -199,11 +203,11 @@ const ImpactPage = () => {
                     </div>
                     <span className="font-body text-xs tracking-[0.2em] uppercase text-accent border border-accent/30 px-3 py-1 rounded-full">{tag}</span>
                   </div>
-                  <p className="font-body text-sm text-muted-foreground leading-relaxed flex-1 mb-6 italic">"{story}"</p>
+                  <p className="font-body text-sm text-muted-foreground leading-relaxed flex-1 mb-6 italic">&ldquo;{story}&rdquo;</p>
                   <div className="border-t border-border pt-6">
                     <p className="font-heading text-xl font-light text-foreground mb-1">{name}</p>
                     <p className="font-body text-xs tracking-[0.15em] uppercase text-accent mb-1">{program}</p>
-                    <p className="font-body text-xs text-muted-foreground mb-3">{duration}</p>
+                    {duration && <p className="font-body text-xs text-muted-foreground mb-3">{duration}</p>}
                     <p className="font-body text-xs text-foreground/70 flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />{outcome}
                     </p>
