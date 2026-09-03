@@ -45,7 +45,7 @@ const CampusLifeSection = () => {
   const cardsRef = useRef<HTMLDivElement>(null);
   const statsBarRef = useRef<HTMLDivElement>(null);
 
-  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const { data: pageSections } = useContentCollection<PageSection>("page_sections", []);
   const highlightsSections = pageSections.filter(s => s.page_key === "campus_life" && s.section_key === "highlights");
   const highlights = highlightsSections.length > 0
     ? parseJson(highlightsSections[0].body, fallbackHighlights) as { title: string; stat: string; description: string }[]

@@ -70,7 +70,7 @@ const ContactPage = () => {
 
   useSpotlightCards(partnersRef, ".partner-card");
 
-  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const { data: pageSections } = useContentCollection<PageSection>("page_sections", []);
   const partnerTypesSections = pageSections.filter(s => s.page_key === "contact" && s.section_key === "partner_types");
   const partnerTypes = partnerTypesSections.length > 0
     ? parseJson(partnerTypesSections[0].body, fallbackPartnerTypes) as { title: string; description: string }[]

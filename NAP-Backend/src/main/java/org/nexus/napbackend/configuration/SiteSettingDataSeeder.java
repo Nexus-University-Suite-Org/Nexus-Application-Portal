@@ -112,6 +112,7 @@ public class SiteSettingDataSeeder implements CommandLineRunner {
             seedIfEmpty("impact_hero_description", "Our graduates are proof that practical skills — combined with determination — can break the cycle of poverty in a single generation.");
             seedIfEmpty("impact_stats_tagline", "By The Numbers");
             seedIfEmpty("impact_stats_heading", "Our Impact In Numbers");
+            seedIfEmpty("impact_stats", "[{\"value\":1200,\"suffix\":\"+\",\"label\":\"Total Graduates\"},{\"value\":300,\"suffix\":\"+\",\"label\":\"Businesses Started\"},{\"value\":70,\"suffix\":\"%\",\"label\":\"Women & Single Mothers\"},{\"value\":12,\"suffix\":\"+\",\"label\":\"Communities Reached\"},{\"value\":85,\"suffix\":\"%\",\"label\":\"Employment Rate\"},{\"value\":8,\"suffix\":\"\",\"label\":\"Vocational Programs\"}]");
             seedIfEmpty("impact_stories_tagline", "Graduate Stories");
             seedIfEmpty("impact_stories_heading", "Meet Our Graduates");
             seedIfEmpty("impact_stories_description", "Behind every statistic is a real person with a real story. These are just a few of the lives transformed by our programs.");
@@ -121,7 +122,20 @@ public class SiteSettingDataSeeder implements CommandLineRunner {
             seedIfEmpty("impact_cta_btn1_visible", "true");
             seedIfEmpty("impact_cta_btn2_text", "Sponsor a Student");
             seedIfEmpty("impact_cta_btn2_visible", "true");
-            seedIfEmpty("impact_stats", "[{\"value\":1200,\"suffix\":\"+\",\"label\":\"Total Graduates\"},{\"value\":300,\"suffix\":\"+\",\"label\":\"Businesses Started\"},{\"value\":70,\"suffix\":\"%\",\"label\":\"Women & Single Mothers\"},{\"value\":12,\"suffix\":\"+\",\"label\":\"Communities Reached\"},{\"value\":85,\"suffix\":\"%\",\"label\":\"Employment Rate\"},{\"value\":8,\"suffix\":\"\",\"label\":\"Vocational Programs\"}]");
+            seedIfEmpty("partners_hero_tagline", "Partnerships");
+            seedIfEmpty("partners_hero_heading_1", "Together We Build");
+            seedIfEmpty("partners_hero_heading_2", "Stronger Futures");
+            seedIfEmpty("partners_hero_description", "Our partners make transformation possible — from corporate sponsors to individual volunteers, every collaboration amplifies our impact.");
+            seedIfEmpty("partners_types_tagline", "Ways to Partner");
+            seedIfEmpty("partners_types_heading_1", "Find Your Way");
+            seedIfEmpty("partners_types_heading_2", "To Make an Impact");
+            seedIfEmpty("partners_stats_tagline", "Our Network");
+            seedIfEmpty("partners_stats_heading", "Current Partners");
+            seedIfEmpty("partners_partner_types", "[{\"title\":\"Corporate Sponsors\",\"description\":\"Fund training programs, supply equipment, or create internship pipelines for graduates. Your CSR investment directly translates to measurable community impact.\",\"benefits\":[\"Tax-deductible contributions\",\"Brand visibility at events\",\"Impact reports & tracking\",\"Employee volunteer days\"]},{\"title\":\"NGOs & Foundations\",\"description\":\"Collaborate on joint programs, share expertise, or channel funding through our proven training model to reach vulnerable communities.\",\"benefits\":[\"Co-branded programs\",\"Shared impact metrics\",\"Community access\",\"Grant collaboration\"]},{\"title\":\"Volunteer Instructors\",\"description\":\"Share your skills as a guest instructor, mentor graduates, or help with curriculum development. Your expertise creates ripple effects across generations.\",\"benefits\":[\"Flexible commitment\",\"Teaching resources provided\",\"Community connection\",\"Certificate of service\"]},{\"title\":\"Individual Donors\",\"description\":\"Sponsor a student's full training, cover material costs, or contribute monthly to sustain ongoing operations. Every contribution changes a life.\",\"benefits\":[\"Student progress updates\",\"Direct communication\",\"Annual impact letter\",\"Tax receipts\"]}]");
+            seedIfEmpty("partners_cta_tagline", "Become a Partner");
+            seedIfEmpty("partners_cta_heading_1", "Ready to Change Lives");
+            seedIfEmpty("partners_cta_heading_2", "Together?");
+            seedIfEmpty("partners_cta_description", "Whether you represent a corporation, an NGO, or you're an individual with skills to share — we'd love to explore how we can work together.");
         } catch (Exception e) {
             log.warn("SiteSetting seeder skipped — table may not exist yet: {}", e.getMessage());
         }

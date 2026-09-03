@@ -46,7 +46,7 @@ const DonatePage = () => {
   const faqAnswerRefs = useRef<Array<HTMLDivElement | null>>([]);
   const pageRef = useRef<HTMLDivElement>(null);
 
-  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const { data: pageSections } = useContentCollection<PageSection>("page_sections", []);
   const tiersSections = pageSections.filter(s => s.page_key === "donate" && s.section_key === "donation_tiers");
   const donationTiers = tiersSections.length > 0
     ? parseJson(tiersSections[0].body, fallbackDonationTiers) as { amount: string; usd: number; label: string; description: string; impact: string; color: string; featured?: boolean }[]

@@ -38,7 +38,7 @@ const AboutInstitutePage = () => {
   const missionRef = useRef<HTMLDivElement>(null);
   const [portalName] = useState("University Application Portal");
 
-  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const { data: pageSections } = useContentCollection<PageSection>("page_sections", []);
   const highlightsSections = pageSections.filter(s => s.page_key === "about_institute" && s.section_key === "highlights");
   const highlights = highlightsSections.length > 0
     ? parseJson(highlightsSections[0].body, fallbackHighlights) as { title: string; desc: string }[]
