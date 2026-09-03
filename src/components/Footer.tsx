@@ -26,15 +26,6 @@ const quickLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-const fallbackProgramNames = [
-  "Bachelor of Medicine and Bachelor of Surgery",
-  "Master of Science in Data Science",
-  "Bachelor of Arts in Education",
-  "Bachelor of Engineering in Mechanical Engineering",
-  "Bachelor of Business Administration",
-  "Bachelor of Science in Computer Science",
-];
-
 type ProgramDoc = {
   id: number;
   programName: string;
@@ -56,9 +47,7 @@ const Footer = () => {
   const [organizationAddress, setOrganizationAddress] = useState(
     "Plot 7, Nakawa Road, Kampala, Uganda",
   );
-  const [programLinks, setProgramLinks] = useState(
-    fallbackProgramNames.map((name) => ({ label: name, href: "/programs" })),
-  );
+  const [programLinks, setProgramLinks] = useState<{ label: string; href: string }[]>([]);
 
   useEffect(() => {
     fetch("/api/v1/programs")
@@ -250,28 +239,30 @@ const Footer = () => {
           </div>
 
           {/* Programs */}
-          <div className="footer-col">
-            <p className="font-body text-xs tracking-[0.3em] uppercase text-primary-foreground/40 mb-8">
-              Our Programs
-            </p>
-            <ul className="space-y-4">
-              {programLinks.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    to={link.href}
-                    className="group flex items-center gap-2 font-body text-sm text-primary-foreground/70 transition-all duration-500 hover:text-primary-foreground hover:translate-x-1"
-                  >
-                    <span className="w-0 h-px bg-accent group-hover:w-4 transition-all duration-500" />
-                    {link.label}
-                    <ArrowUpRight
-                      size={12}
-                      className="opacity-0 group-hover:opacity-60 transition-opacity duration-500 -ml-1"
-                    />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {programLinks.length > 0 && (
+            <div className="footer-col">
+              <p className="font-body text-xs tracking-[0.3em] uppercase text-primary-foreground/40 mb-8">
+                Our Programs
+              </p>
+              <ul className="space-y-4">
+                {programLinks.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      to={link.href}
+                      className="group flex items-center gap-2 font-body text-sm text-primary-foreground/70 transition-all duration-500 hover:text-primary-foreground hover:translate-x-1"
+                    >
+                      <span className="w-0 h-px bg-accent group-hover:w-4 transition-all duration-500" />
+                      {link.label}
+                      <ArrowUpRight
+                        size={12}
+                        className="opacity-0 group-hover:opacity-60 transition-opacity duration-500 -ml-1"
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Donate & Newsletter */}
           <div className="footer-col">
