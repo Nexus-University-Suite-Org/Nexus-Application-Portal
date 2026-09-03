@@ -63,7 +63,7 @@ const ImpactPage = () => {
     ? (() => { try { return JSON.parse(statsSection.body); } catch { return fallbackStats; } })()
     : fallbackStats;
 
-  useCountUp(statsRef);
+  useCountUp(statsRef, ".count-up", [impactStats]);
   useSpotlightCards(storiesRef, ".story-card");
 
   const successStories = remoteStories.length > 0

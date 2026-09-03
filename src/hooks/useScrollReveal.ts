@@ -135,7 +135,8 @@ export function useSpotlightCards(
  */
 export function useCountUp(
   containerRef: RefObject<HTMLElement | null>,
-  selector = ".count-up"
+  selector = ".count-up",
+  deps: unknown[] = []
 ) {
   useEffect(() => {
     if (!containerRef.current) return;
@@ -165,7 +166,7 @@ export function useCountUp(
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [containerRef.current, ...deps]);
 }
 
 /**
