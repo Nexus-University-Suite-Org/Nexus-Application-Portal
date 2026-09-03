@@ -71,7 +71,7 @@ const ImpactPage = () => {
   // Fetch site settings (runs once)
   useEffect(() => {
     window.scrollTo(0, 0);
-    fetch("http://localhost:8080/api/v1/content/site-settings")
+    fetch("/api/v1/content/site-settings")
       .then(r => r.json())
       .then((data: Record<string, string>) => {
         if (data.impact_hero_tagline) setHeroTagline(data.impact_hero_tagline);

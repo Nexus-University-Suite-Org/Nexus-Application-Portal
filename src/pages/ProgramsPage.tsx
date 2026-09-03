@@ -58,7 +58,7 @@ const ProgramsPage = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
 
-    fetch("http://localhost:8080/api/v1/content/site-settings")
+    fetch("/api/v1/content/site-settings")
       .then(r => r.json())
       .then((data: Record<string, string>) => {
         if (data.programs_hero_tagline) setHeroTagline(data.programs_hero_tagline);
@@ -72,8 +72,8 @@ const ProgramsPage = () => {
       .catch(() => {});
 
     Promise.all([
-      fetch("http://localhost:8080/api/v1/programs").then(r => r.json()),
-      fetch("http://localhost:8080/api/v1/programs/categories").then(r => r.json()),
+      fetch("/api/v1/programs").then(r => r.json()),
+      fetch("/api/v1/programs/categories").then(r => r.json()),
     ])
       .then(([progs, cats]) => {
         const activeProgs = (progs as Program[]).filter(p => p.status === "Active");

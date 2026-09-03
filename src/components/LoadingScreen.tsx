@@ -19,7 +19,7 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [statusText, setStatusText] = useState("Preparing Experience");
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/v1/content/site-settings")
+    fetch("/api/v1/content/site-settings")
       .then(r => r.json())
       .then((data: Record<string, string>) => {
         if (data.splash_logo_url) setLogoUrl(data.splash_logo_url);

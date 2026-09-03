@@ -125,9 +125,18 @@ const PartnersPage = () => {
     : fallbackPartnerTypes;
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/v1/content/site-settings")
-      .then((r) => r.json())
+    console.log("[PartnersPage] fetching site-settings...");
+    fetch("/api/v1/content/site-settings")
+      .then((r) => {
+        console.log("[PartnersPage] site-settings response status:", r.status, r.ok);
+        return r.json();
+      })
       .then((data: Record<string, string>) => {
+        const keys = Object.keys(data);
+        const partnerKeys = keys.filter((k) => k.startsWith("partners_"));
+        console.log("[PartnersPage] site-settings keys:", keys.length, "| partner keys:", partnerKeys);
+        console.log("[PartnersPage] partners_partner_types raw:", data.partners_partner_types);
+        console.log("[PartnersPage] partners_stats raw:", data.partners_stats);
         setContent((prev) => ({
           ...prev,
           heroTagline: data.partners_hero_tagline || prev.heroTagline,
@@ -147,25 +156,32 @@ const PartnersPage = () => {
         if (data.partners_partner_types) {
           try {
             const parsed = JSON.parse(data.partners_partner_types) as PartnerType[];
+            console.log("[PartnersPage] parsed partnerTypes:", parsed);
             if (Array.isArray(parsed) && parsed.length > 0) {
               setContent((prev) => ({ ...prev, partnerTypes: parsed }));
+              console.log("[PartnersPage] partnerTypes state updated with", parsed.length, "items");
+            } else {
+              console.warn("[PartnersPage] parsed partnerTypes is empty or not array:", parsed);
             }
-          } catch {
-            /* keep fallback partner types */
+          } catch (e) {
+            console.error("[PartnersPage] Failed to parse partners_partner_types:", e);
           }
+        } else {
+          console.warn("[PartnersPage] partners_partner_types is missing/empty in response");
         }
         if (data.partners_stats) {
           try {
             const parsed = JSON.parse(data.partners_stats) as PartnerStat[];
+            console.log("[PartnersPage] parsed stats:", parsed);
             if (Array.isArray(parsed) && parsed.length > 0) {
               setContent((prev) => ({ ...prev, stats: parsed }));
             }
-          } catch {
-            /* keep fallback stats */
+          } catch (e) {
+            console.error("[PartnersPage] Failed to parse partners_stats:", e);
           }
         }
       })
-      .catch(() => {});
+      .catch((err) => console.error("[PartnersPage] site-settings fetch failed:", err));
   }, []);
 
   const renderStats = content.stats.map((stat, i) => ({
@@ -176,6 +192,9 @@ const PartnersPage = () => {
   }));
 
   const renderPartnerTypes = content.partnerTypes.length > 0 ? content.partnerTypes : pagePartnerTypes;
+  console.log("[PartnersPage] render - content.partnerTypes:", content.partnerTypes.length, "items:", content.partnerTypes.map(t => t.title));
+  console.log("[PartnersPage] render - pagePartnerTypes:", pagePartnerTypes.length, "items:", pagePartnerTypes.map(t => t.title));
+  console.log("[PartnersPage] render - renderPartnerTypes:", renderPartnerTypes.length, "items:", renderPartnerTypes.map(t => t.title));
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -278,6 +297,20 @@ const PartnersPage = () => {
     });
     return () => ctx.revert();
   }, []);
+
+  useEffect(() => {
+    if (!cardsRef.current) return;
+    const cards = cardsRef.current.querySelectorAll(".partner-card");
+    if (cards.length === 0) return;
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        cards,
+        { y: 60, opacity: 0, scale: 0.94 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.8, stagger: 0.12, ease: "power3.out" },
+      );
+    });
+    return () => ctx.revert();
+  }, [renderPartnerTypes.map((t) => t.title).join(",")]);
 
   return (
     <div className="min-h-screen bg-background">

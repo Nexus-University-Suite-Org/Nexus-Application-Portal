@@ -77,7 +77,7 @@ const GalleryPage = () => {
   // Hero entrance
   useEffect(() => {
     window.scrollTo(0, 0);
-    fetch("http://localhost:8080/api/v1/content/site-settings")
+    fetch("/api/v1/content/site-settings")
       .then(r => r.json())
       .then((data: Record<string, string>) => {
         if (data.gallery_hero_tagline) setHeroTagline(data.gallery_hero_tagline);

@@ -54,7 +54,7 @@ const HeroSection = () => {
     : fallbackStats;
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/v1/content/site-settings")
+    fetch("/api/v1/content/site-settings")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();

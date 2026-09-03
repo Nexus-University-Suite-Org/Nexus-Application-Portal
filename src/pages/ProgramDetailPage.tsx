@@ -56,7 +56,7 @@ const ProgramDetailPage = () => {
     window.scrollTo(0, 0);
     if (!id) { setNotFound(true); setLoading(false); return; }
 
-    fetch(`http://localhost:8080/api/v1/programs/${id}`)
+    fetch(`/api/v1/programs/${id}`)
       .then(r => {
         if (!r.ok) throw new Error("not found");
         return r.json();

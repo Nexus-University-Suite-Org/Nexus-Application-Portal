@@ -74,8 +74,8 @@ const Footer = () => {
   )].map((name) => ({ label: name, href: "/admissions/courses" }));
 
   useEffect(() => {
-    console.log("[Footer] fetching site-settings from", "http://localhost:8080/api/v1/content/site-settings");
-    fetch("http://localhost:8080/api/v1/content/site-settings")
+    console.log("[Footer] fetching site-settings from", "/api/v1/content/site-settings");
+    fetch("/api/v1/content/site-settings")
       .then((res) => {
         console.log("[Footer] site-settings response status:", res.status);
         if (!res.ok) throw new Error("Failed to fetch");
