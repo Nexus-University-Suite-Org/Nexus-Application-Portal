@@ -157,7 +157,7 @@ const Navbar = () => {
                 className={`px-5 py-2.5 font-body text-xs tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:scale-105 ${
                   btn.style === "accent"
                     ? "bg-accent text-accent-foreground hover:bg-accent/90"
-                    : `bg-foreground/10 text-foreground hover:bg-foreground/20`
+                    : `bg-foreground/10 text-white hover:bg-foreground/20`
                 }`}
               >
                 {btn.label === "Donate" && <Heart size={12} className="fill-current mr-1 inline" />}
