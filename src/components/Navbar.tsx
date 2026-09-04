@@ -13,6 +13,7 @@ const defaultNavItems = [
   { label: "About", href: "/about" },
   { label: "News", href: "/news" },
   { label: "Programs", href: "/programs" },
+  { label: "Running Admissions", href: "/admissions/lists" },
   { label: "Impact", href: "/impact" },
   { label: "Stories", href: "/stories" },
   { label: "Gallery", href: "/gallery" },

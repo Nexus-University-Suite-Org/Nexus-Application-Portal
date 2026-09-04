@@ -59,6 +59,49 @@ public class ProgramService {
         } catch (Exception ignored) {}
     }
 
+    @EventListener(ApplicationReadyEvent.class)
+    public void normalizeProgramTypes() {
+        try {
+            List<Program> programs = repository.findAll();
+            java.util.Set<String> canonical = java.util.Set.of("BACHELOR", "DIPLOMA", "CERTIFICATE", "MASTER", "PHD");
+            for (Program p : programs) {
+                String type = p.getProgramType();
+                String trimmed = type == null ? "" : type.trim();
+                String upper = trimmed.toUpperCase(java.util.Locale.ROOT);
+                if (canonical.contains(upper)) {
+                    if (!upper.equals(trimmed)) {
+                        p.setProgramType(upper);
+                        repository.save(p);
+                    }
+                } else if (trimmed.isEmpty() || "UNDERGRADUATE".equals(upper)) {
+                    String normalized = inferAwardType(p.getProgramName(), p.getProgramCode());
+                    if (normalized != null) {
+                        p.setProgramType(normalized);
+                        repository.save(p);
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public static String inferAwardType(String name, String code) {
+        String n = name == null ? "" : name.toLowerCase();
+        String c = code == null ? "" : code.toUpperCase();
+        if (n.startsWith("doctor of") || n.contains("ph.d") || n.contains("phd") || n.contains("doctorate")) {
+            return "PHD";
+        }
+        if (n.startsWith("master") || n.contains(" masters ") || n.contains("master of") || c.startsWith("MSC") || c.startsWith("MA-")) {
+            return "MASTER";
+        }
+        if (n.startsWith("certificate") || n.contains("certificate in") || c.startsWith("CERT")) {
+            return "CERTIFICATE";
+        }
+        if (n.startsWith("diploma") || c.startsWith("DIP")) {
+            return "DIPLOMA";
+        }
+        return "BACHELOR";
+    }
+
     public Program create(Program entity) {
         return repository.save(entity);
     }

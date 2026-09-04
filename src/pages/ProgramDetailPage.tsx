@@ -9,6 +9,7 @@ import {
   CheckCircle2, AlertCircle, FileText,
 } from "lucide-react";
 import aboutHero from "@/assets/about-hero.jpg";
+import { fetchSchemesByProgram, type AdmissionScheme } from "@/lib/schemes";
 
 type Program = {
   id: number; programName: string; programCode: string; programType: string;
@@ -52,6 +53,7 @@ const ProgramDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
+  const [runningSchemes, setRunningSchemes] = useState<AdmissionScheme[]>([]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -66,6 +68,15 @@ const ProgramDetailPage = () => {
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!program) return;
+    let active = true;
+    fetchSchemesByProgram(program.id)
+      .then(data => { if (active) setRunningSchemes(data); })
+      .catch(() => { if (active) setRunningSchemes([]); });
+    return () => { active = false; };
+  }, [program]);
 
   useEffect(() => {
     if (!program) return;
@@ -329,6 +340,28 @@ const ProgramDetailPage = () => {
           {/* ─── Intakes ─── */}
           {tab === "intakes" && (
             <div className="space-y-4">
+              {runningSchemes.length > 0 && (
+                <Section title="Open for Applications">
+                  <div className="space-y-3">
+                    {runningSchemes.map(scheme => (
+                      <div key={scheme.id} className="p-5 rounded-2xl border border-emerald-200 bg-emerald-50/50 space-y-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-semibold text-emerald-800">{scheme.schemeName}</p>
+                          <span className="text-[10px] px-3 py-1 rounded-full font-medium bg-emerald-100 text-emerald-700">Open for applications</span>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-emerald-800/80">
+                          {scheme.academicYear && <div>Academic Year: {scheme.academicYear}</div>}
+                          {scheme.intakeMonth && <div>Intake: {scheme.intakeMonth}</div>}
+                          {scheme.appOpenDate && <div>Opens: {new Date(scheme.appOpenDate).toLocaleDateString("en-GB")}</div>}
+                          {scheme.appCloseDate && <div>Closes: {new Date(scheme.appCloseDate).toLocaleDateString("en-GB")}</div>}
+                          {scheme.capacity != null && <div className="flex items-center gap-1.5"><Users size={12} className="text-emerald-700" /> Capacity: {scheme.capacity}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
               <Section title="Intake Periods">
                 {intakes.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No intake information available.</p>
@@ -409,13 +442,18 @@ const ProgramDetailPage = () => {
         <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-6">
           <div>
             <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-2">Ready to Apply?</p>
-            <p className="text-sm text-muted-foreground">Start your journey today with {program.programName}.</p>
+            <p className="text-sm text-muted-foreground">
+              {runningSchemes.length > 0
+                ? `${program.programName} is currently open for applications.`
+                : `Start your journey today with ${program.programName}.`}
+            </p>
           </div>
           <div className="flex gap-4">
             <button onClick={() => navigate("/programs")} className="flex items-center gap-2 px-8 py-3 border border-border text-sm rounded-full hover:bg-muted transition-colors cursor-pointer">
               <ArrowLeft size={14} /> All Programs
             </button>
             <button onClick={() => navigate("/admissions/application/start")} className="group flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground text-sm rounded-full hover:bg-primary/90 transition-colors cursor-pointer">
+              {runningSchemes.length > 0 && <span className="inline-block w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />}
               Apply Now <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>

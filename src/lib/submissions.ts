@@ -55,6 +55,8 @@ export type ApplicationSubmissionInput = {
   programChoice3: string;
   programChoice4: string;
   startDate: string;
+  studyMode: string;
+  academicYear: string;
   previousInstitution: string;
   highestQualification: string;
   academicCredentialLevel: string;

@@ -5,13 +5,30 @@ import Footer from "@/components/Footer";
 import { ArrowLeft, ArrowRight, Check, Lock, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { uploadFile } from "@/lib/storage";
-import { SearchableSelect } from "@/components/SearchableSelect";
+import { GroupedSearchableSelect } from "@/components/GroupedSearchableSelect";
 import {
   submitApplicationSubmission,
   type ApplicationSubmissionInput,
 } from "@/lib/submissions";
 
 const currentYear = new Date().getFullYear();
+
+const AWARD_ORDER = ["BACHELOR", "DIPLOMA", "CERTIFICATE", "MASTER", "PHD"];
+const AWARD_LABELS: Record<string, string> = {
+  BACHELOR: "Bachelor Degrees",
+  DIPLOMA: "Diplomas",
+  CERTIFICATE: "Certificates",
+  MASTER: "Master Degrees",
+  PHD: "Doctorates (PhD)",
+};
+
+const STUDY_MODES = [
+  "Full-Time",
+  "Part-Time",
+  "Evening",
+  "Weekend",
+  "Distance Learning",
+];
 
 const applicationSteps = [
   {
@@ -86,6 +103,8 @@ type ApplicationStartData = {
   programChoice3: string;
   programChoice4: string;
   startDate: string;
+  studyMode: string;
+  intakeYear: string;
   previousInstitution: string;
   highestQualification: string;
   academicCredentialLevel: string;
@@ -139,6 +158,7 @@ type ProgrammeOption = {
   name: string;
   faculty: string;
   cutoffScore: number;
+  programType: string;
 };
 
 const fallbackProgramOptions = [
@@ -665,6 +685,8 @@ const initialFormData: ApplicationStartData = {
   programChoice3: "",
   programChoice4: "",
   startDate: "",
+  studyMode: "",
+  intakeYear: "",
   previousInstitution: "",
   highestQualification: "",
   academicCredentialLevel: "Uganda Advanced Level Certificate of Education (UACE)",
@@ -766,9 +788,35 @@ const ApplicationStartPage = () => {
   const [documentUploadErrors, setDocumentUploadErrors] = useState<
     Record<string, string>
   >({});
-  const programmeNames = programmes.length > 0
-    ? programmes.map((p) => p.name)
-    : fallbackProgramOptions;
+
+  const programmeGroups = useMemo(() => {
+    const buckets: Record<string, string[]> = {};
+    const ordered = AWARD_ORDER;
+    for (const award of ordered) buckets[award] = [];
+    const source =
+      programmes.length > 0
+        ? programmes
+        : fallbackProgramOptions.map((name) => ({
+            name,
+            programType: "BACHELOR",
+            code: "",
+            faculty: "",
+            cutoffScore: 0,
+          }));
+    source.forEach((p) => {
+      const norm = (p.programType || "BACHELOR").toUpperCase();
+      const key = ordered.includes(norm) ? norm : "BACHELOR";
+      buckets[key].push(p.name);
+    });
+    return ordered
+      .filter((award) => buckets[award].length > 0)
+      .map((award) => ({ label: AWARD_LABELS[award], options: buckets[award] }));
+  }, [programmes]);
+
+  const intakeYearOptions = useMemo(() => {
+    const next = currentYear;
+    return [`${next}/${String(next + 1).slice(2)}`, `${next - 1}/${String(next).slice(2)}`, `${next + 1}/${String(next + 2).slice(2)}`];
+  }, []);
 
   const isUaceSelected = formData.academicCredentialLevel.includes("UACE");
   const isUceSelected = formData.academicCredentialLevel.includes("UCE") && !formData.academicCredentialLevel.includes("UACE");
@@ -1002,7 +1050,7 @@ const ApplicationStartPage = () => {
         const res = await fetch("/api/v1/programs");
         if (res.ok) {
           const data = (await res.json()) as {
-            programCode: string; programName: string; facultySchool: string; cutoffScore: number; status: string;
+            programCode: string; programName: string; facultySchool: string; cutoffScore: number; status: string; programType: string;
           }[];
           const active = data.filter(p => p.status === "Active");
           setProgrammes(active.map(p => ({
@@ -1010,6 +1058,7 @@ const ApplicationStartPage = () => {
             name: p.programName,
             faculty: p.facultySchool,
             cutoffScore: p.cutoffScore,
+            programType: p.programType || "BACHELOR",
           })));
         }
       } catch {
@@ -1338,6 +1387,10 @@ const ApplicationStartPage = () => {
         nextErrors.programChoice4 = "Please select a 4th choice programme.";
       if (!formData.startDate.trim())
         nextErrors.startDate = "Please select a start date.";
+      if (!formData.studyMode.trim())
+        nextErrors.studyMode = "Please select a study mode.";
+      if (!formData.intakeYear.trim())
+        nextErrors.intakeYear = "Please select an intake / academic year.";
       if (!formData.previousInstitution.trim()) {
         nextErrors.previousInstitution = "Previous institution is required.";
       }
@@ -1766,6 +1819,8 @@ const ApplicationStartPage = () => {
         programChoice3: formData.programChoice3,
         programChoice4: formData.programChoice4,
         startDate: formData.startDate,
+        studyMode: formData.studyMode,
+        academicYear: formData.intakeYear,
         previousInstitution: formData.previousInstitution.trim(),
         highestQualification: formData.highestQualification,
         academicCredentialLevel: formData.academicCredentialLevel,
@@ -3149,10 +3204,10 @@ const ApplicationStartPage = () => {
                                 <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                                   {label}
                                 </label>
-                                <SearchableSelect
+                                <GroupedSearchableSelect
                                   value={formData[field]}
                                   onValueChange={(val) => updateField(field, val)}
-                                  options={programmeNames}
+                                  groups={programmeGroups}
                                   placeholder="Type to search programmes..."
                                   className="mt-2"
                                 />
@@ -3192,6 +3247,60 @@ const ApplicationStartPage = () => {
                                 {errors.startDate}
                               </p>
                             )}
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                Intake / Academic Year
+                              </label>
+                              <select
+                                value={formData.intakeYear}
+                                onChange={(e) =>
+                                  updateField("intakeYear", e.target.value)
+                                }
+                                className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                              >
+                                <option value="">
+                                  Select academic year
+                                </option>
+                                {intakeYearOptions.map((opt) => (
+                                  <option key={opt} value={opt}>
+                                    {opt}
+                                  </option>
+                                ))}
+                              </select>
+                              {errors.intakeYear && (
+                                <p className="text-xs text-destructive mt-2">
+                                  {errors.intakeYear}
+                                </p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                Study Mode
+                              </label>
+                              <select
+                                value={formData.studyMode}
+                                onChange={(e) =>
+                                  updateField("studyMode", e.target.value)
+                                }
+                                className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                              >
+                                <option value="">Select study mode</option>
+                                {STUDY_MODES.map((mode) => (
+                                  <option key={mode} value={mode}>
+                                    {mode}
+                                  </option>
+                                ))}
+                              </select>
+                              {errors.studyMode && (
+                                <p className="text-xs text-destructive mt-2">
+                                  {errors.studyMode}
+                                </p>
+                              )}
+                            </div>
                           </div>
 
                           <div>

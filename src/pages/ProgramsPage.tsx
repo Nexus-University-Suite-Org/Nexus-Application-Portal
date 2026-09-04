@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -37,6 +37,16 @@ function parseJson<T>(s: string | null | undefined, fallback: T): T {
   if (!s) return fallback;
   try { return JSON.parse(s) as T; } catch { return fallback; }
 }
+
+const AWARD_ORDER = ["BACHELOR", "DIPLOMA", "CERTIFICATE", "MASTER", "PHD", "OTHER"];
+const AWARD_LABELS: Record<string, string> = {
+  BACHELOR: "Bachelor's Programmes",
+  DIPLOMA: "Diploma Programmes",
+  CERTIFICATE: "Certificate Programmes",
+  MASTER: "Master's Programmes",
+  PHD: "Doctoral (PhD) Programmes",
+  OTHER: "Other Programmes",
+};
 
 const ProgramsPage = () => {
   const navigate = useNavigate();
@@ -123,6 +133,17 @@ const ProgramsPage = () => {
     return { years: years.length, totalCourses, totalCredits };
   };
 
+  const groupedByType = useMemo(() => {
+    const groups: Record<string, Program[]> = {};
+    for (const p of programs) {
+      const t = ((p.programType || "OTHER").toUpperCase() in AWARD_LABELS
+        ? (p.programType || "OTHER").toUpperCase()
+        : "OTHER");
+      (groups[t] = groups[t] || []).push(p);
+    }
+    return groups;
+  }, [programs]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -152,6 +173,23 @@ const ProgramsPage = () => {
 
         {isLoading && <p className="font-body text-sm text-muted-foreground">Loading programs...</p>}
         {!isLoading && programs.length === 0 && <p className="font-body text-sm text-muted-foreground">No programs available yet.</p>}
+
+        {AWARD_ORDER.map(type => {
+          const list = groupedByType[type];
+          if (!list || list.length === 0) return null;
+          return (
+            <div key={type} className="mb-12">
+              <h3 className="font-heading text-2xl font-light text-foreground mb-6">
+                {AWARD_LABELS[type] ?? type}
+              </h3>
+              <div className="space-y-4">
+                {list.map(p => (
+                  <ProgramCard key={p.id} program={p} onClick={() => navigate(`/programs/${p.id}`)} feeInfo={getTotalFees(p)} stats={getCurriculumStats(p)} />
+                ))}
+              </div>
+            </div>
+          );
+        })}
 
         {uncategorizedPrograms.length > 0 && (
           <div className="mb-12">

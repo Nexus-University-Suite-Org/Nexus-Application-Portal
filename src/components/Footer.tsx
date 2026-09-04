@@ -18,6 +18,7 @@ const quickLinks = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
   { label: "Programs", href: "/programs" },
+  { label: "Running Admissions", href: "/admissions/lists" },
   { label: "Impact & Stories", href: "/impact" },
   { label: "Student Stories", href: "/stories" },
   { label: "Gallery", href: "/gallery" },
