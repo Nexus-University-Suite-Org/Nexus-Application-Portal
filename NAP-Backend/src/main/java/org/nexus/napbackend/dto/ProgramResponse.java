@@ -42,5 +42,6 @@ public record ProgramResponse(
         LocalDateTime createdAt,
         String updatedBy,
         LocalDateTime updatedAt,
-        List<String> categoryNames
+        List<String> categoryNames,
+        Double cutoffScore
 ) {}

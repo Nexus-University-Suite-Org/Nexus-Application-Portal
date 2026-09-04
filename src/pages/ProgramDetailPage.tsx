@@ -21,6 +21,7 @@ type Program = {
   studyOptions: string; accreditation: string; documents: string;
   imageUrl: string; shortDescription: string; fullDescription: string;
   featured: boolean; displayOrder: number; categoryNames: string[];
+  cutoffScore?: number;
 };
 
 type Course = { code: string; name: string; credits: number; type: string; prerequisites: string };
@@ -124,6 +125,7 @@ const ProgramDetailPage = () => {
   if (feeInfo.total > 0) quickFacts.push({ icon: <Banknote size={14} />, label: `${feeInfo.currency} ${feeInfo.total.toLocaleString()}` });
   if (program.campus) quickFacts.push({ icon: <Globe size={14} />, label: program.campus });
   if (program.academicCalendar) quickFacts.push({ icon: <Calendar size={14} />, label: program.academicCalendar });
+  if (typeof program.cutoffScore === 'number') quickFacts.push({ icon: <CheckCircle2 size={14} />, label: `Cutoff: ${program.cutoffScore}` });
 
   const typeColor = (t: string) => {
     if (t === "Core") return "bg-accent/10 text-accent";
@@ -300,6 +302,13 @@ const ProgramDetailPage = () => {
           {/* ─── Admission ─── */}
           {tab === "admission" && (
             <div className="space-y-4">
+              {typeof program.cutoffScore === 'number' && (
+                <div className="p-5 rounded-2xl bg-accent/10 border border-accent/30">
+                  <p className="text-[10px] font-medium tracking-[0.2em] uppercase text-accent mb-1.5">Cutoff Score</p>
+                  <p className="text-2xl font-bold text-foreground">{program.cutoffScore}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Minimum weighted score required for admission to this programme.</p>
+                </div>
+              )}
               <Section title="Admission Requirements">
                 {([ ["Minimum Entry Qualification", adm.min_qualification], ["Minimum Grade", adm.min_grade], ["Required Subjects", adm.required_subjects], ["Minimum Points", adm.min_points], ["Direct Entry", adm.direct_entry], ["Diploma Entry", adm.diploma_entry], ["Mature Age Entry", adm.mature_age_entry], ["International Students", adm.international], ["Other Requirements", adm.other] ] as const).filter(([, v]) => v && String(v).trim()).length === 0 ? (
                   <p className="text-sm text-muted-foreground">No admission requirements specified.</p>

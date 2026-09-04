@@ -47,7 +47,7 @@ public final class ProgramMapper {
         return entity;
     }
 
-    public static ProgramResponse toDto(Program entity, List<String> categoryNames) {
+    public static ProgramResponse toDto(Program entity, List<String> categoryNames, Double cutoffScore) {
         return new ProgramResponse(
                 entity.getId(),
                 entity.getProgramName(),
@@ -87,7 +87,8 @@ public final class ProgramMapper {
                 entity.getCreatedAt(),
                 entity.getUpdatedBy(),
                 entity.getUpdatedAt(),
-                categoryNames
+                categoryNames,
+                cutoffScore
         );
     }
 

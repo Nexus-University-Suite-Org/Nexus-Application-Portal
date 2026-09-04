@@ -15,7 +15,7 @@ type Program = {
   fullDescription: string; status: string; facultySchool: string; department: string;
   duration: number; durationUnit: string; numberOfYears: number; numberOfSemesters: number;
   studyMode: string; academicCalendar: string; campus: string;
-  fees: string; curriculum: string;
+  fees: string; curriculum: string; cutoffScore?: number;
 };
 
 type ProgramCategory = {
@@ -215,6 +215,7 @@ function ProgramCard({ program, onClick, feeInfo, stats }: { program: Program; o
             {program.duration > 0 && <span className="flex items-center gap-1"><Clock size={12} /> {program.duration} {program.durationUnit || "years"}</span>}
             {stats.totalCredits > 0 && <span>{stats.totalCredits} credits</span>}
             {program.studyMode && <span>{program.studyMode}</span>}
+            {typeof program.cutoffScore === 'number' && <span className="flex items-center gap-1 font-semibold text-foreground">Cutoff: {program.cutoffScore}</span>}
             {feeInfo.total > 0 && <span className="flex items-center gap-1"><Banknote size={12} /> {feeInfo.currency} {feeInfo.total.toLocaleString()}</span>}
           </div>
           {program.shortDescription && <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{program.shortDescription}</p>}

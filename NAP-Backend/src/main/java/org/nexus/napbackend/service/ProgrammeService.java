@@ -498,6 +498,14 @@ public class ProgrammeService {
         repository.deleteById(id);
     }
 
+    public Optional<ProgrammeResponse> updateCutoffByCode(String code, double cutoffScore) {
+        return repository.findByCode(code).map(entity -> {
+            entity.setCutoffScore(cutoffScore);
+            Programme saved = repository.save(entity);
+            return toDto(saved);
+        });
+    }
+
     private ProgrammeResponse toDto(Programme p) {
         return new ProgrammeResponse(
                 p.getId(), p.getCode(), p.getName(), p.getFaculty(),
