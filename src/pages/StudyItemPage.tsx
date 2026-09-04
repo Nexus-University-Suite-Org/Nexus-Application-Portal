@@ -361,7 +361,7 @@ const StudyItemPage = () => {
   );
   const [formError, setFormError] = useState("");
 
-  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const { data: pageSections } = useContentCollection<PageSection>("page_sections", []);
 
   const getCmsData = (pageKey: string, sectionKey: string, fallback: unknown) => {
     const sections = pageSections.filter(s => s.page_key === pageKey && s.section_key === sectionKey);

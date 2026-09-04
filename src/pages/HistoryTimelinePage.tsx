@@ -37,7 +37,7 @@ const HistoryTimelinePage = () => {
   const heroTextRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<HTMLDivElement>(null);
 
-  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const { data: pageSections } = useContentCollection<PageSection>("page_sections", []);
   const timelineSections = pageSections.filter(s => s.page_key === "history_timeline" && s.section_key === "timeline");
   const timeline = timelineSections.length > 0
     ? parseJson(timelineSections[0].body, fallbackTimeline) as { year: string; title: string; desc: string }[]

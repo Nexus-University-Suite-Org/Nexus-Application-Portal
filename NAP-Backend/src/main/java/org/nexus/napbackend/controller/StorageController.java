@@ -93,6 +93,7 @@ public class StorageController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, contentType)
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable")
                 .body(resource);
     }
 
@@ -100,8 +101,13 @@ public class StorageController {
         String lower = filename.toLowerCase();
         if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return MediaType.IMAGE_JPEG_VALUE;
         if (lower.endsWith(".png")) return MediaType.IMAGE_PNG_VALUE;
-        if (lower.endsWith(".pdf")) return "application/pdf";
+        if (lower.endsWith(".gif")) return MediaType.IMAGE_GIF_VALUE;
         if (lower.endsWith(".webp")) return "image/webp";
+        if (lower.endsWith(".svg")) return "image/svg+xml";
+        if (lower.endsWith(".bmp")) return "image/bmp";
+        if (lower.endsWith(".ico")) return "image/x-icon";
+        if (lower.endsWith(".avif")) return "image/avif";
+        if (lower.endsWith(".pdf")) return "application/pdf";
         return MediaType.APPLICATION_OCTET_STREAM_VALUE;
     }
 }

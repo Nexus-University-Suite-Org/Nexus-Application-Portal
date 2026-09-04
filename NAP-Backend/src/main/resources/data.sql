@@ -225,39 +225,6 @@ INSERT INTO cms_events (tenant_id, title, description, event_date, image_url, pu
 (1, 'Alumni Homecoming', 'Annual alumni reunion with networking sessions, campus tours, and gala dinner.', NOW() + INTERVAL '90 days', '/api/v1/content/events/homecoming.jpg', true, NOW(), NOW());
 
 -- ============================================
--- GALLERY ITEMS
--- ============================================
-INSERT INTO gallery_items (tenant_id, src, alt, caption, category, span, created_at) VALUES
-(1, '/api/v1/content/gallery/tailoring-class.jpg', 'Tailoring class in session', 'Tailoring students perfecting their craft', 'Training', 2, NOW());
-
-INSERT INTO gallery_items (tenant_id, src, alt, caption, category, span, created_at) VALUES
-(1, '/api/v1/content/gallery/graduation-ceremony.jpg', 'Graduation ceremony', 'Class of 2024 Graduation Day', 'Graduation', 1, NOW());
-
-INSERT INTO gallery_items (tenant_id, src, alt, caption, category, span, created_at) VALUES
-(1, '/api/v1/content/gallery/electrical-training.jpg', 'Electrical installation training', 'Students practice electrical wiring', 'Training', 3, NOW());
-
-INSERT INTO gallery_items (tenant_id, src, alt, caption, category, span, created_at) VALUES
-(1, '/api/v1/content/gallery/community-outreach.jpg', 'Community outreach event', 'Outreach day in Nakawa', 'Community', 2, NOW());
-
-INSERT INTO gallery_items (tenant_id, src, alt, caption, category, span, created_at) VALUES
-(1, '/api/v1/content/gallery/soap-products.jpg', 'Handmade soap products', 'Graduate showcases her soap business', 'Projects', 3, NOW());
-
-INSERT INTO gallery_items (tenant_id, src, alt, caption, category, span, created_at) VALUES
-(1, '/api/v1/content/gallery/beauty-therapy.jpg', 'Beauty therapy class', 'Beauty therapy practical session', 'Training', 1, NOW());
-
-INSERT INTO gallery_items (tenant_id, src, alt, caption, category, span, created_at) VALUES
-(1, '/api/v1/content/gallery/welding-workshop.jpg', 'Welding in workshop', 'Welding fabrication workshop', 'Training', 2, NOW());
-
-INSERT INTO gallery_items (tenant_id, src, alt, caption, category, span, created_at) VALUES
-(1, '/api/v1/content/gallery/graduates-group.jpg', 'Graduation group photo', 'Proud graduates with certificates', 'Graduation', 2, NOW());
-
-INSERT INTO gallery_items (tenant_id, src, alt, caption, category, span, created_at) VALUES
-(1, '/api/v1/content/gallery/plumbing-training.jpg', 'Plumbing training', 'Students in plumbing practical session', 'Training', 3, NOW());
-
-INSERT INTO gallery_items (tenant_id, src, alt, caption, category, span, created_at) VALUES
-(1, '/api/v1/content/gallery/community-market.jpg', 'Community market', 'Graduates sell products at community market', 'Projects', 1, NOW());
-
--- ============================================
 -- FAQs
 -- ============================================
 INSERT INTO faqs (tenant_id, category, question, answer, display_order, created_at) VALUES
@@ -505,18 +472,6 @@ INSERT INTO fee_assignments (tenant_id, item_name, category, year_level, semeste
 
 INSERT INTO fee_assignments (tenant_id, item_name, category, year_level, semester, academic_year, amount, currency, college, notes, created_at) VALUES
 (1, 'Technology Fee', 'Service', 'Year 1', 'Semester 1', '2026', 400000, 'UGX', 'College of Business', 'Lab and digital resources', NOW());
-
--- ============================================
--- NOTIFICATIONS (sample for user_id=1)
--- ============================================
-INSERT INTO notifications (tenant_id, user_id, type, title, message, "read", created_at) VALUES
-(1, 1, 'info', 'Welcome to Nexus Portal', 'Your account has been created successfully. Explore the portal to get started.', false, NOW());
-
-INSERT INTO notifications (tenant_id, user_id, type, title, message, "read", created_at) VALUES
-(1, 1, 'announcement', 'New Scholarship Available', 'The STEM Women Scholarship is now open for applications. Deadline is in 30 days.', false, NOW());
-
-INSERT INTO notifications (tenant_id, user_id, type, title, message, "read", created_at) VALUES
-(1, 1, 'success', 'Application Received', 'Your application has been successfully submitted. You will receive updates via email.', true, NOW());
 
 -- ============================================
 -- MESSAGES (sample for user_id=1)

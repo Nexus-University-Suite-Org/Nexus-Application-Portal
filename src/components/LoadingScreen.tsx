@@ -12,7 +12,24 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const progressTextRef = useRef<HTMLSpanElement>(null);
   const statusRef = useRef<HTMLParagraphElement>(null);
   const haloRef = useRef<HTMLDivElement>(null);
-  const [portalName] = useState("Institute Uganda");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [logoText, setLogoText] = useState("IU");
+  const [portalName, setPortalName] = useState("Institute Uganda");
+  const [motto, setMotto] = useState("Empowering Through Vocational Skills");
+  const [statusText, setStatusText] = useState("Preparing Experience");
+
+  useEffect(() => {
+    fetch("/api/v1/content/site-settings")
+      .then(r => r.json())
+      .then((data: Record<string, string>) => {
+        if (data.splash_logo_url) setLogoUrl(data.splash_logo_url);
+        if (data.splash_logo_text) setLogoText(data.splash_logo_text);
+        if (data.splash_name) setPortalName(data.splash_name);
+        if (data.splash_motto) setMotto(data.splash_motto);
+        if (data.splash_status_text) setStatusText(data.splash_status_text);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia(
@@ -139,8 +156,12 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
           ref={brandBlockRef}
           className="flex flex-col items-center opacity-0"
         >
-          <span className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-full border border-primary-foreground/30 text-xs font-body tracking-[0.22em] text-primary-foreground/75">
-            IU
+          <span className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-full border border-primary-foreground/30 text-xs font-body tracking-[0.22em] text-primary-foreground/75 overflow-hidden">
+            {logoUrl ? (
+              <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+            ) : (
+              logoText
+            )}
           </span>
 
           <div
@@ -154,7 +175,7 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
             ref={mottoRef}
             className="mt-3 font-body text-[11px] uppercase tracking-[0.28em] text-primary-foreground/65 md:text-xs"
           >
-            Empowering Through Vocational Skills
+            {motto}
           </p>
 
           <div className="mt-10 w-[230px] md:w-[280px]">
@@ -165,7 +186,7 @@ const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
               />
             </div>
             <div className="mt-3 flex items-center justify-between font-body text-[10px] uppercase tracking-[0.22em] text-primary-foreground/70 md:text-[11px]">
-              <p ref={statusRef}>Preparing Experience</p>
+              <p ref={statusRef}>{statusText}</p>
               <span ref={progressTextRef}>0%</span>
             </div>
           </div>

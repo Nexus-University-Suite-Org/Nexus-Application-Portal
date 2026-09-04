@@ -46,6 +46,7 @@ const HeroSection = () => {
   const [heroCtaLearnMore, setHeroCtaLearnMore] = useState("Learn More");
   const [heroCtaLearnMoreVisible, setHeroCtaLearnMoreVisible] = useState(true);
   const [heroStats, setHeroStats] = useState(fallbackStats);
+  const [heroImage, setHeroImage] = useState<string>(heroCampus);
   const { data: sections } = useContentCollection<PageSection>("page_sections", []);
   const homeSections = sections.filter((s) => s.page_key === "home");
   const statsSection = homeSections.find((s) => s.section_key === "impact-stats");
@@ -54,7 +55,7 @@ const HeroSection = () => {
     : fallbackStats;
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/v1/content/site-settings")
+    fetch("/api/v1/content/site-settings")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();
@@ -76,6 +77,10 @@ const HeroSection = () => {
             const parsed = JSON.parse(data.hero_stats);
             if (Array.isArray(parsed) && parsed.length > 0) setHeroStats(parsed);
           } catch {}
+        }
+        if (data.home_hero_image) {
+          setHeroImage(data.home_hero_image);
+          new Image().src = data.home_hero_image;
         }
       })
       .catch(() => {});
@@ -198,7 +203,7 @@ const HeroSection = () => {
       {/* Hero Image */}
       <div ref={imageRef} className="absolute inset-0 -top-10">
         <img
-          src={heroCampus}
+          src={heroImage}
           alt="Students learning practical vocational skills at the institute"
           className="w-full h-[130%] object-cover"
         />

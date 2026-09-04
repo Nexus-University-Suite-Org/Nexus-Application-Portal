@@ -46,6 +46,7 @@ const AboutPage = () => {
     { title: "Practical Education", desc: "Our programs are designed to give students immediately applicable skills for the real world." },
     { title: "Community Impact", desc: "When we invest in one person, we invest in their entire community. Our graduates create ripple effects of change." },
   ]);
+  const [heroImage, setHeroImage] = useState<string>(aboutHero);
 
   const foundingParagraphs = foundingStory.split(/\n\s*\n/).map((p) => p.trim()).filter((p) => p.length > 0);
 
@@ -53,7 +54,7 @@ const AboutPage = () => {
   useParallax(pageRef);
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/v1/content/site-settings")
+    fetch("/api/v1/content/site-settings")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();
@@ -82,6 +83,10 @@ const AboutPage = () => {
             const parsed = JSON.parse(data.about_values);
             if (Array.isArray(parsed) && parsed.length > 0) setValues(parsed);
           } catch { /* keep fallback */ }
+        }
+        if (data.about_hero_image) {
+          setHeroImage(data.about_hero_image);
+          new Image().src = data.about_hero_image;
         }
       })
       .catch(() => {});
@@ -167,7 +172,7 @@ const AboutPage = () => {
       {/* Hero */}
       <div className="relative min-h-screen flex items-end">
         <div className="absolute inset-0 overflow-hidden rounded-none">
-          <img ref={imageRef} src={aboutHero} alt="Students at the institute" className="w-full h-full object-cover rounded-none" />
+          <img ref={imageRef} src={heroImage} alt="Students at the institute" className="w-full h-full object-cover rounded-none" />
           <div className="absolute inset-0 bg-primary/70 rounded-none" />
         </div>
         <div className="relative z-10 px-8 md:px-16 pb-24 pt-40 about-hero-text max-w-4xl">

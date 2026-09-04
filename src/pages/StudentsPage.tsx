@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -28,6 +28,18 @@ const StudentsPage = () => {
   const statsRef = useRef<HTMLDivElement>(null);
   const servicesRef = useRef<HTMLDivElement>(null);
   const testimonialsRef = useRef<HTMLDivElement>(null);
+  const [heroImage, setHeroImage] = useState<string>(studentsHero);
+
+  useEffect(() => {
+    fetch("/api/v1/content/site-settings")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: Record<string, string> | null) => {
+        if (!data?.students_hero_image) return;
+        setHeroImage(data.students_hero_image);
+        new Image().src = data.students_hero_image;
+      })
+      .catch(() => {});
+  }, []);
 
   const { data: sections, isLoading } = useContentCollection<PageSection>("page_sections", []);
 
@@ -166,7 +178,7 @@ const StudentsPage = () => {
         <div className="absolute inset-0 overflow-hidden rounded-none">
           <img
             ref={imageRef}
-            src={studentsHero}
+            src={heroImage}
             alt="Students on campus"
             className="w-full h-full object-cover rounded-none"
           />

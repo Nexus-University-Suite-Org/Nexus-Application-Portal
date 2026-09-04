@@ -44,7 +44,7 @@ const VisitInstitutePage = () => {
   const toursRef = useRef<HTMLDivElement>(null);
   const highlightsRef = useRef<HTMLDivElement>(null);
 
-  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const { data: pageSections } = useContentCollection<PageSection>("page_sections", []);
   const toursSections = pageSections.filter(s => s.page_key === "visit_institute" && s.section_key === "tours");
   const tours = toursSections.length > 0
     ? parseJson(toursSections[0].body, fallbackTours) as { name: string; duration: string; group: string; frequency: string }[]

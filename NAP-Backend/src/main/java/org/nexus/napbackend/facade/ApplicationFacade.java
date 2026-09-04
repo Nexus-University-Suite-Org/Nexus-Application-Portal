@@ -5,10 +5,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.nexus.napbackend.dto.ApplicationCreateRequest;
 import org.nexus.napbackend.dto.ApplicationResponse;
+import org.nexus.napbackend.dto.NotificationCreateRequest;
 import org.nexus.napbackend.mapper.ApplicationMapper;
+import org.nexus.napbackend.mapper.NotificationMapper;
 import org.nexus.napbackend.model.Application;
 import org.nexus.napbackend.model.Programme;
 import org.nexus.napbackend.service.ApplicationService;
+import org.nexus.napbackend.service.NotificationService;
 import org.nexus.napbackend.service.ProgrammeService;
 import org.nexus.napbackend.service.WeightingService;
 
@@ -18,13 +21,16 @@ public class ApplicationFacade {
     private final ApplicationService service;
     private final ProgrammeService programmeService;
     private final WeightingService weightingService;
+    private final NotificationService notificationService;
 
     public ApplicationFacade(ApplicationService service,
                              ProgrammeService programmeService,
-                             WeightingService weightingService) {
+                             WeightingService weightingService,
+                             NotificationService notificationService) {
         this.service = service;
         this.programmeService = programmeService;
         this.weightingService = weightingService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -32,6 +38,8 @@ public class ApplicationFacade {
         Application entity = ApplicationMapper.toEntity(request);
         entity.setPrn(generatePrn());
         Application saved = service.create(entity);
+        notifyApplicant(saved.getId(), "success", "Application Submitted",
+                "Your application has been received and is under review. You will be notified when a decision is made.");
         return ApplicationMapper.toDto(saved);
     }
 
@@ -79,8 +87,25 @@ public class ApplicationFacade {
             entity.setStatus("WAITLISTED");
         }
 
+        String resolvedStatus = entity.getStatus();
+        String notificationType = switch (resolvedStatus) {
+            case "ADMITTED" -> "success";
+            case "REJECTED" -> "warning";
+            default -> "announcement";
+        };
+        notifyApplicant(entity.getId(), notificationType,
+                "Application " + resolvedStatus,
+                "Your application status has been updated to " + resolvedStatus + "."
+                        + (notes != null && !notes.isBlank() ? " " + notes : ""));
+
         Application updated = service.update(entity);
         return ApplicationMapper.toDto(updated);
+    }
+
+    private void notifyApplicant(Long userId, String type, String title, String message) {
+        NotificationCreateRequest request = new NotificationCreateRequest(
+                userId, type, title, message, userId, "/notifications");
+        notificationService.create(NotificationMapper.toEntity(request));
     }
 
     @Transactional

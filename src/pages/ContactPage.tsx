@@ -59,24 +59,41 @@ const ContactPage = () => {
     message: "",
   });
   const [sending, setSending] = useState(false);
-  const [organizationEmail] = useState("");
-  const [organizationPhone] = useState("+256 700 000 000");
-  const [organizationWhatsappCta] = useState("WhatsApp Us");
-  const [organizationAddress] = useState(
+  const [organizationEmail, setOrganizationEmail] = useState("");
+  const [organizationPhone, setOrganizationPhone] = useState("+256 700 000 000");
+  const [organizationWhatsappCta, setOrganizationWhatsappCta] = useState("WhatsApp Us");
+  const [organizationAddress, setOrganizationAddress] = useState(
     "Plot 7, Nakawa Road, Kampala, Uganda",
   );
+  const [heroImage, setHeroImage] = useState<string>(heroCampus);
   const partnersRef = useRef<HTMLDivElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
 
   useSpotlightCards(partnersRef, ".partner-card");
 
-  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const { data: pageSections } = useContentCollection<PageSection>("page_sections", []);
   const partnerTypesSections = pageSections.filter(s => s.page_key === "contact" && s.section_key === "partner_types");
   const partnerTypes = partnerTypesSections.length > 0
     ? parseJson(partnerTypesSections[0].body, fallbackPartnerTypes) as { title: string; description: string }[]
     : fallbackPartnerTypes;
 
   const phoneDigits = organizationPhone.replace(/\D/g, "");
+
+  useEffect(() => {
+    fetch("/api/v1/content/site-settings")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: Record<string, string> | null) => {
+        if (data?.contact_hero_image) {
+          setHeroImage(data.contact_hero_image);
+          new Image().src = data.contact_hero_image;
+        }
+        if (data?.footer_email) setOrganizationEmail(data.footer_email);
+        if (data?.footer_phone) setOrganizationPhone(data.footer_phone);
+        if (data?.footer_whatsapp_cta) setOrganizationWhatsappCta(data.footer_whatsapp_cta);
+        if (data?.footer_address) setOrganizationAddress(data.footer_address);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -221,7 +238,7 @@ const ContactPage = () => {
       <div className="relative min-h-[50vh] flex items-end">
         <div className="absolute inset-0 overflow-hidden rounded-none">
           <img
-            src={heroCampus}
+            src={heroImage}
             alt="Contact us"
             className="w-full h-full object-cover rounded-none"
           />

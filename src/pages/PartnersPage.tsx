@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -54,36 +54,150 @@ type PartnerDoc = {
   category?: string;
 };
 
+type PartnerType = { title: string; description: string; benefits: string[] };
+
+type PartnerStat = { value: string; label: string };
+
+type PartnersContent = {
+  heroTagline: string;
+  heroHeading1: string;
+  heroHeading2: string;
+  heroDescription: string;
+  typesTagline: string;
+  typesHeading1: string;
+  typesHeading2: string;
+  statsTagline: string;
+  statsHeading: string;
+  statsDescription: string;
+  stats: PartnerStat[];
+  partnerTypes: PartnerType[];
+  ctaTagline: string;
+  ctaHeading1: string;
+  ctaHeading2: string;
+  ctaDescription: string;
+};
+
 const PartnersPage = () => {
   const navigate = useNavigate();
   const cardsRef = useRef<HTMLDivElement>(null);
   const partnersGridRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
+  const [content, setContent] = useState<PartnersContent>({
+    heroTagline: fallbackPartnerTypes.length ? "Partnerships" : "Partnerships",
+    heroHeading1: "Together We Build",
+    heroHeading2: "Stronger Futures",
+    heroDescription: "Our partners make transformation possible — from corporate sponsors to individual volunteers, every collaboration amplifies our impact.",
+    typesTagline: "Ways to Partner",
+    typesHeading1: "Find Your Way",
+    typesHeading2: "To Make an Impact",
+    statsTagline: "Our Network",
+    statsHeading: "Current Partners",
+    statsDescription: "We are grateful to work with organisations and individuals who share our vision of empowerment through practical education.",
+    stats: [
+      { value: "4", label: "Active Partners" },
+      { value: "$240K", label: "Funds Mobilised" },
+      { value: "1,200+", label: "Students Supported" },
+      { value: "6", label: "Countries Represented" },
+    ],
+    partnerTypes: fallbackPartnerTypes,
+    ctaTagline: "Become a Partner",
+    ctaHeading1: "Ready to Change Lives",
+    ctaHeading2: "Together?",
+    ctaDescription: "Whether you represent a corporation, an NGO, or you're an individual with skills to share — we'd love to explore how we can work together.",
+  });
+  const [heroImage, setHeroImage] = useState<string>(partnersHero);
   const { data: partnerDocs, isLoading } =
     useContentCollection<PartnerDoc>("partners", [], {
       orderBy: { field: "name", direction: "asc" },
     });
 
-  const partnersList = partnerDocs.map((partner) => ({
+  const partnersList = Array.from(
+    new Map(partnerDocs.map((partner) => [partner.name, partner])).values(),
+  ).map((partner) => ({
     name: partner.name,
     type: partner.category || "Partner",
     since: "Now",
   }));
 
-  const dynamicImpactNumbers = [
-    { value: `${partnersList.length}`, label: "Active Partners" },
-    { value: "$240K", label: "Funds Mobilised" },
-    { value: "1,200+", label: "Students Supported" },
-    { value: "6", label: "Countries Represented" },
-  ];
-
   useSpotlightCards(cardsRef);
 
-  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const { data: pageSections } = useContentCollection<PageSection>("page_sections", []);
   const partnerTypesSections = pageSections.filter(s => s.page_key === "partners" && s.section_key === "partner_types");
-  const partnerTypes = partnerTypesSections.length > 0
+  const pagePartnerTypes = partnerTypesSections.length > 0
     ? parseJson(partnerTypesSections[0].body, fallbackPartnerTypes) as { title: string; description: string; benefits: string[] }[]
     : fallbackPartnerTypes;
+
+  useEffect(() => {
+    console.log("[PartnersPage] fetching site-settings...");
+    fetch("/api/v1/content/site-settings")
+      .then((r) => {
+        console.log("[PartnersPage] site-settings response status:", r.status, r.ok);
+        return r.json();
+      })
+      .then((data: Record<string, string>) => {
+        const keys = Object.keys(data);
+        const partnerKeys = keys.filter((k) => k.startsWith("partners_"));
+        console.log("[PartnersPage] site-settings keys:", keys.length, "| partner keys:", partnerKeys);
+        console.log("[PartnersPage] partners_partner_types raw:", data.partners_partner_types);
+        console.log("[PartnersPage] partners_stats raw:", data.partners_stats);
+        setContent((prev) => ({
+          ...prev,
+          heroTagline: data.partners_hero_tagline || prev.heroTagline,
+          heroHeading1: data.partners_hero_heading_1 || prev.heroHeading1,
+          heroHeading2: data.partners_hero_heading_2 || prev.heroHeading2,
+          heroDescription: data.partners_hero_description || prev.heroDescription,
+          typesTagline: data.partners_types_tagline || prev.typesTagline,
+          typesHeading1: data.partners_types_heading_1 || prev.typesHeading1,
+          typesHeading2: data.partners_types_heading_2 || prev.typesHeading2,
+          statsTagline: data.partners_stats_tagline || prev.statsTagline,
+          statsHeading: data.partners_stats_heading || prev.statsHeading,
+          statsDescription: data.partners_stats_description || prev.statsDescription,
+          ctaTagline: data.partners_cta_tagline || prev.ctaTagline,
+          ctaHeading1: data.partners_cta_heading_1 || prev.ctaHeading1,
+          ctaHeading2: data.partners_cta_heading_2 || prev.ctaHeading2,
+          ctaDescription: data.partners_cta_description || prev.ctaDescription,
+        }));
+        if (data.partners_partner_types) {
+          try {
+            const parsed = JSON.parse(data.partners_partner_types) as PartnerType[];
+            console.log("[PartnersPage] parsed partnerTypes:", parsed);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setContent((prev) => ({ ...prev, partnerTypes: parsed }));
+              console.log("[PartnersPage] partnerTypes state updated with", parsed.length, "items");
+            } else {
+              console.warn("[PartnersPage] parsed partnerTypes is empty or not array:", parsed);
+            }
+          } catch (e) {
+            console.error("[PartnersPage] Failed to parse partners_partner_types:", e);
+          }
+        } else {
+          console.warn("[PartnersPage] partners_partner_types is missing/empty in response");
+        }
+        if (data.partners_stats) {
+          try {
+            const parsed = JSON.parse(data.partners_stats) as PartnerStat[];
+            console.log("[PartnersPage] parsed stats:", parsed);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setContent((prev) => ({ ...prev, stats: parsed }));
+            }
+          } catch (e) {
+            console.error("[PartnersPage] Failed to parse partners_stats:", e);
+          }
+        }
+        if (data.partners_hero_image) {
+          setHeroImage(data.partners_hero_image);
+          new Image().src = data.partners_hero_image;
+        }
+      })
+      .catch((err) => console.error("[PartnersPage] site-settings fetch failed:", err));
+  }, []);
+
+  const renderStats = content.stats;
+
+  const renderPartnerTypes = content.partnerTypes.length > 0 ? content.partnerTypes : pagePartnerTypes;
+  console.log("[PartnersPage] render - content.partnerTypes:", content.partnerTypes.length, "items:", content.partnerTypes.map(t => t.title));
+  console.log("[PartnersPage] render - pagePartnerTypes:", pagePartnerTypes.length, "items:", pagePartnerTypes.map(t => t.title));
+  console.log("[PartnersPage] render - renderPartnerTypes:", renderPartnerTypes.length, "items:", renderPartnerTypes.map(t => t.title));
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -187,6 +301,20 @@ const PartnersPage = () => {
     return () => ctx.revert();
   }, []);
 
+  useEffect(() => {
+    if (!cardsRef.current) return;
+    const cards = cardsRef.current.querySelectorAll(".partner-card");
+    if (cards.length === 0) return;
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        cards,
+        { y: 60, opacity: 0, scale: 0.94 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.8, stagger: 0.12, ease: "power3.out" },
+      );
+    });
+    return () => ctx.revert();
+  }, [renderPartnerTypes.map((t) => t.title).join(",")]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -194,23 +322,22 @@ const PartnersPage = () => {
       {/* Hero */}
       <div className="relative min-h-[55vh] flex items-end overflow-hidden">
         <img
-          src={partnersHero}
+          src={heroImage}
           alt="Partnership meeting"
           className="absolute inset-0 w-full h-full object-cover rounded-none"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/60 to-primary/20 rounded-none" />
         <div className="relative z-10 px-8 md:px-16 pb-20 pt-40 partners-hero-text max-w-4xl">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-5 opacity-0">
-            Partnerships
+            {content.heroTagline}
           </p>
           <h1 className="font-heading text-5xl md:text-7xl font-light text-primary-foreground leading-[0.92] mb-6 opacity-0">
-            Together We Build
+            {content.heroHeading1}
             <br />
-            <em className="text-accent">Stronger Futures</em>
+            <em className="text-accent">{content.heroHeading2}</em>
           </h1>
           <p className="font-body text-base text-primary-foreground/70 max-w-xl leading-relaxed opacity-0">
-            Our partners make transformation possible — from corporate sponsors
-            to individual volunteers, every collaboration amplifies our impact.
+            {content.heroDescription}
           </p>
         </div>
       </div>
@@ -218,7 +345,7 @@ const PartnersPage = () => {
       {/* Partnership Stats */}
       <div ref={statsRef} className="px-8 md:px-16 py-16 bg-secondary/20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
-          {dynamicImpactNumbers.map(({ value, label }) => (
+          {renderStats.map(({ value, label }) => (
             <div
               key={label}
               className="stat-item opacity-0 text-center p-6 bg-background border border-border rounded-2xl stat-glow"
@@ -238,16 +365,16 @@ const PartnersPage = () => {
       <section className="py-24 md:py-32 px-8 md:px-16">
         <div className="max-w-2xl mb-16">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">
-            Ways to Partner
+            {content.typesTagline}
           </p>
           <h2 className="section-heading font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">
-            Find Your Way
+            {content.typesHeading1}
             <br />
-            To Make an Impact
+            {content.typesHeading2}
           </h2>
         </div>
         <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {partnerTypes.map(({ title, description, benefits }) => {
+          {renderPartnerTypes.map(({ title, description, benefits }) => {
             const Icon = iconMap[title] || Building2;
             return (
             <div
@@ -296,14 +423,13 @@ const PartnersPage = () => {
       <section className="py-24 md:py-32 px-8 md:px-16">
         <div className="max-w-2xl mb-16">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">
-            Our Network
+            {content.statsTagline}
           </p>
           <h2 className="section-heading font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">
-            Current Partners
+            {content.statsHeading}
           </h2>
           <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6 max-w-lg">
-            We are grateful to work with organisations and individuals who share
-            our vision of empowerment through practical education.
+            {content.statsDescription}
           </p>
         </div>
         <div
@@ -319,19 +445,16 @@ const PartnersPage = () => {
               No partners added yet.
             </p>
           ) : (
-            partnersList.map(({ name, type, since }) => (
+            partnersList.map(({ name, type }, index) => (
               <div
-                key={name}
+                key={`${name}-${index}`}
                 className="current-partner opacity-0 group p-6 border border-border rounded-2xl hover:border-accent/40 transition-all duration-500 magnetic-card"
               >
-                <div className="flex items-start justify-between mb-3">
+                <div className="mb-3">
                   <Handshake
                     size={20}
                     className="text-accent/60 group-hover:text-accent transition-colors duration-500"
                   />
-                  <span className="font-body text-[10px] tracking-[0.2em] uppercase text-muted-foreground/60">
-                    Since {since}
-                  </span>
                 </div>
                 <h3 className="font-heading text-xl font-light text-foreground mb-1">
                   {name}
@@ -354,17 +477,15 @@ const PartnersPage = () => {
         />
         <div className="relative z-10 max-w-3xl mx-auto text-center">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6">
-            Become a Partner
+            {content.ctaTagline}
           </p>
           <h2 className="font-heading text-4xl md:text-6xl font-light text-primary-foreground leading-tight mb-8">
-            Ready to Change Lives
+            {content.ctaHeading1}
             <br />
-            Together?
+            {content.ctaHeading2}
           </h2>
           <p className="font-body text-sm text-primary-foreground/60 leading-relaxed mb-10 max-w-lg mx-auto">
-            Whether you represent a corporation, an NGO, or you're an individual
-            with skills to share — we'd love to explore how we can work
-            together.
+            {content.ctaDescription}
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <button

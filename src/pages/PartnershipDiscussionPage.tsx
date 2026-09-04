@@ -52,7 +52,7 @@ const PartnershipDiscussionPage = () => {
     message: "",
   });
 
-  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const { data: pageSections } = useContentCollection<PageSection>("page_sections", []);
   const tracksSections = pageSections.filter(s => s.page_key === "partnership_discussion" && s.section_key === "tracks");
   const tracks = tracksSections.length > 0
     ? parseJson(tracksSections[0].body, fallbackTracks) as { title: string; description: string }[]

@@ -58,9 +58,7 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    const API_BASE = "http://localhost:8080";
-    console.log("[Navbar] fetching site-settings from", `${API_BASE}/api/v1/content/site-settings`);
-    fetch(`${API_BASE}/api/v1/content/site-settings`)
+    fetch("/api/v1/content/site-settings")
       .then((res) => {
         console.log("[Navbar] site-settings response status:", res.status);
         if (!res.ok) throw new Error("Failed to fetch");

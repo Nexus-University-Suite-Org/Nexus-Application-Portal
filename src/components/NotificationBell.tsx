@@ -7,7 +7,14 @@ import {
   type Notification,
 } from "@/lib/notifications";
 
-const DEMO_USER_ID = 1;
+const APPLICANT_ID_STORAGE_KEY = "nexus_applicant_id";
+
+const getCurrentApplicantId = (): number | null => {
+  const raw = localStorage.getItem(APPLICANT_ID_STORAGE_KEY);
+  if (!raw) return null;
+  const id = Number(raw);
+  return Number.isInteger(id) && id > 0 ? id : null;
+};
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -15,14 +22,18 @@ const NotificationBell = () => {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getNotifications(DEMO_USER_ID)
+    const applicantId = getCurrentApplicantId();
+    if (applicantId == null) return;
+    getNotifications(applicantId)
       .then(setNotifications)
       .catch(() => {});
   }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      getNotifications(DEMO_USER_ID)
+      const applicantId = getCurrentApplicantId();
+      if (applicantId == null) return;
+      getNotifications(applicantId)
         .then(setNotifications)
         .catch(() => {});
     }, 30000);
@@ -49,7 +60,9 @@ const NotificationBell = () => {
   };
 
   const handleMarkAllRead = async () => {
-    await markAllNotificationsRead(DEMO_USER_ID);
+    const applicantId = getCurrentApplicantId();
+    if (applicantId == null) return;
+    await markAllNotificationsRead(applicantId);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 

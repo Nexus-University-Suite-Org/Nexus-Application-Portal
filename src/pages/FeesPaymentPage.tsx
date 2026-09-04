@@ -37,7 +37,7 @@ const FeesPaymentPage = () => {
   const [feeAssignments, setFeeAssignments] = useState<FeeAssignment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const { items: pageSections } = useContentCollection<PageSection>("page_sections");
+  const { data: pageSections } = useContentCollection<PageSection>("page_sections", []);
   const plansSections = pageSections.filter(s => s.page_key === "fees_payment" && s.section_key === "payment_plans");
   const paymentPlans = plansSections.length > 0
     ? parseJson(plansSections[0].body, fallbackPaymentPlans) as { name: string; desc: string; discount?: string; interest?: string; flexible?: string }[]

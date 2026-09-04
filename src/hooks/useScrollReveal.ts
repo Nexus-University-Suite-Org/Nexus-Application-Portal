@@ -94,7 +94,8 @@ export function useScrollReveal<T extends HTMLElement = HTMLDivElement>(
  */
 export function useSpotlightCards(
   containerRef: RefObject<HTMLElement | null>,
-  selector = ".spotlight-card"
+  selector = ".spotlight-card",
+  deps: unknown[] = []
 ) {
   useEffect(() => {
     if (!containerRef.current) return;
@@ -127,7 +128,7 @@ export function useSpotlightCards(
     });
 
     return () => handlers.forEach((cleanup) => cleanup());
-  }, []);
+  }, [containerRef.current, ...deps]);
 }
 
 /**
@@ -135,7 +136,8 @@ export function useSpotlightCards(
  */
 export function useCountUp(
   containerRef: RefObject<HTMLElement | null>,
-  selector = ".count-up"
+  selector = ".count-up",
+  deps: unknown[] = []
 ) {
   useEffect(() => {
     if (!containerRef.current) return;
@@ -165,7 +167,7 @@ export function useCountUp(
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [containerRef.current, ...deps]);
 }
 
 /**

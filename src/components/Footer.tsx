@@ -11,7 +11,6 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -27,20 +26,10 @@ const quickLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-const fallbackProgramNames = [
-  "Tailoring & Design",
-  "Plumbing",
-  "Electrical Installation",
-  "Welding & Fabrication",
-  "Hairdressing",
-  "Beauty Therapy",
-  "Auto Mechanics",
-  "Soap Making",
-];
-
-type CourseDoc = {
-  id: string;
-  name?: string;
+type ProgramDoc = {
+  id: number;
+  programName: string;
+  status?: string;
 };
 
 const Footer = () => {
@@ -58,24 +47,29 @@ const Footer = () => {
   const [organizationAddress, setOrganizationAddress] = useState(
     "Plot 7, Nakawa Road, Kampala, Uganda",
   );
-  const { data: courseDocs } = useContentCollection<CourseDoc>(
-    "courses",
-    fallbackProgramNames.map((name, index) => ({
-      id: `fallback-course-${index}`,
-      name,
-    })),
-    { orderBy: { field: "name", direction: "asc" } },
-  );
-
-  const programLinks = [...new Set(
-    courseDocs
-      .map((course) => course.name?.trim())
-      .filter((name): name is string => Boolean(name))
-  )].map((name) => ({ label: name, href: "/admissions/courses" }));
+  const [programLinks, setProgramLinks] = useState<{ label: string; href: string }[]>([]);
 
   useEffect(() => {
-    console.log("[Footer] fetching site-settings from", "http://localhost:8080/api/v1/content/site-settings");
-    fetch("http://localhost:8080/api/v1/content/site-settings")
+    fetch("/api/v1/programs")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((progs: ProgramDoc[] | null) => {
+        if (!progs || !Array.isArray(progs)) return;
+        const active = progs.filter((p) => p.status === "Active");
+        const names = [...new Set(
+          (active.length ? active : progs)
+            .map((p) => p.programName?.trim())
+            .filter((n): n is string => Boolean(n)),
+        )];
+        if (names.length) {
+          setProgramLinks(names.map((label) => ({ label, href: "/programs" })));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    console.log("[Footer] fetching site-settings from", "/api/v1/content/site-settings");
+    fetch("/api/v1/content/site-settings")
       .then((res) => {
         console.log("[Footer] site-settings response status:", res.status);
         if (!res.ok) throw new Error("Failed to fetch");
@@ -141,14 +135,34 @@ const Footer = () => {
     return () => ctx.revert();
   }, []);
 
+  const [subscribing, setSubscribing] = useState(false);
+
   const handleNewsletterSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!email.trim()) return;
-    toast({
-      title: "Subscribed",
-      description: `Updates will be sent to ${email.trim()}.`,
-    });
-    setEmail("");
+    const value = email.trim();
+    if (!value || subscribing) return;
+    setSubscribing(true);
+    fetch("/api/v1/newsletter/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: value }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("subscribe failed");
+        setEmail("");
+        toast({
+          title: "Subscribed",
+          description: `Updates will be sent to ${value}.`,
+        });
+      })
+      .catch(() => {
+        toast({
+          title: "Subscription Failed",
+          description: "Please enter a valid email address and try again.",
+          variant: "destructive",
+        });
+      })
+      .finally(() => setSubscribing(false));
   };
 
   const whatsappDigits = organizationPhone.replace(/\D/g, "");
@@ -245,28 +259,30 @@ const Footer = () => {
           </div>
 
           {/* Programs */}
-          <div className="footer-col">
-            <p className="font-body text-xs tracking-[0.3em] uppercase text-primary-foreground/40 mb-8">
-              Our Programs
-            </p>
-            <ul className="space-y-4">
-              {programLinks.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    to={link.href}
-                    className="group flex items-center gap-2 font-body text-sm text-primary-foreground/70 transition-all duration-500 hover:text-primary-foreground hover:translate-x-1"
-                  >
-                    <span className="w-0 h-px bg-accent group-hover:w-4 transition-all duration-500" />
-                    {link.label}
-                    <ArrowUpRight
-                      size={12}
-                      className="opacity-0 group-hover:opacity-60 transition-opacity duration-500 -ml-1"
-                    />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {programLinks.length > 0 && (
+            <div className="footer-col">
+              <p className="font-body text-xs tracking-[0.3em] uppercase text-primary-foreground/40 mb-8">
+                Our Programs
+              </p>
+              <ul className="space-y-4">
+                {programLinks.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      to={link.href}
+                      className="group flex items-center gap-2 font-body text-sm text-primary-foreground/70 transition-all duration-500 hover:text-primary-foreground hover:translate-x-1"
+                    >
+                      <span className="w-0 h-px bg-accent group-hover:w-4 transition-all duration-500" />
+                      {link.label}
+                      <ArrowUpRight
+                        size={12}
+                        className="opacity-0 group-hover:opacity-60 transition-opacity duration-500 -ml-1"
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Donate & Newsletter */}
           <div className="footer-col">

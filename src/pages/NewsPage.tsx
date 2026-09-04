@@ -77,6 +77,7 @@ const NewsPage = () => {
   const [settingNewsArticles, setSettingNewsArticles] = useState<Array<{ category: string; title: string; excerpt: string }>>([]);
   const [settingEvents, setSettingEvents] = useState<Array<{ title: string; date: string; type: string }>>([]);
   const [modalItem, setModalItem] = useState<{ kind: "news" | "event"; title: string; subtitle?: string; body?: string; category?: string; date?: string } | null>(null);
+  const [heroImage, setHeroImage] = useState<string>(newsHero);
 
   const { data: rawNewsData, isLoading: newsLoading } = useContentCollection<RemoteNewsArticle>(
     "NewsArticles",
@@ -92,7 +93,7 @@ const NewsPage = () => {
   );
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/v1/content/site-settings")
+    fetch("/api/v1/content/site-settings")
       .then((r) => r.json())
       .then((data: Record<string, string>) => {
         if (data.news_hero_tagline) setHeroTagline(data.news_hero_tagline);
@@ -107,6 +108,10 @@ const NewsPage = () => {
         if (data.news_featured_excerpt) setFeaturedExcerptOverride(data.news_featured_excerpt);
         try { if (data.news_articles) setSettingNewsArticles(JSON.parse(data.news_articles)); } catch {}
         try { if (data.news_events) setSettingEvents(JSON.parse(data.news_events)); } catch {}
+        if (data.news_hero_image) {
+          setHeroImage(data.news_hero_image);
+          new Image().src = data.news_hero_image;
+        }
       })
       .catch(() => {});
   }, []);
@@ -245,7 +250,7 @@ const NewsPage = () => {
         <div className="absolute inset-0 overflow-hidden rounded-none">
           <img
             ref={imageRef}
-            src={newsHero}
+            src={heroImage}
             alt="University news"
             className="w-full h-full object-cover rounded-none"
           />
