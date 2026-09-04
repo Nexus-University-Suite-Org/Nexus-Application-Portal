@@ -78,7 +78,13 @@ const Navbar = () => {
           try {
             const parsed = JSON.parse(data.nav_links);
             const visible = parsed.filter((l: { visible?: boolean }) => l.visible !== false);
-            if (visible.length > 0) setNavItems(visible);
+            if (visible.length > 0) {
+              const hasAdmissions = visible.some((l: { href?: string }) => l.href === "/admissions/lists");
+              if (!hasAdmissions) {
+                visible.splice(4, 0, { label: "Running Admissions", href: "/admissions/lists", visible: true });
+              }
+              setNavItems(visible);
+            }
           } catch {}
         }
         if (data.cta_buttons) {

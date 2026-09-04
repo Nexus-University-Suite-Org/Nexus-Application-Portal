@@ -23,6 +23,7 @@ import {
   UserCog,
   Activity,
   CreditCard,
+  CalendarClock,
   LogOut,
   Menu,
   X,
@@ -69,6 +70,7 @@ const sidebarSections: SidebarSection[] = [
   {
     title: "Admissions",
     items: [
+      { label: "Schemes", path: "/admin/schemes", icon: <CalendarClock size={18} /> },
       { label: "Applications", path: "/admin/applications", icon: <FileText size={18} /> },
     ],
   },

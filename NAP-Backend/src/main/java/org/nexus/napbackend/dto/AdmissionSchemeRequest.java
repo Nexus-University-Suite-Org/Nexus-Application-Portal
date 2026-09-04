@@ -15,6 +15,7 @@ public record AdmissionSchemeRequest(
         LocalDateTime appCloseDate,
         Integer capacity,
         String applicationFees,
+        String preferredStartDate,
         BigDecimal serviceFee,
         String status,
         List<Long> programIds

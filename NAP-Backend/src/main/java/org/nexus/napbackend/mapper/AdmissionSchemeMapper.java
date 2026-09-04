@@ -21,6 +21,7 @@ public final class AdmissionSchemeMapper {
         entity.setAppCloseDate(request.appCloseDate());
         entity.setCapacity(request.capacity());
         entity.setApplicationFees(request.applicationFees());
+        entity.setPreferredStartDate(request.preferredStartDate());
         entity.setServiceFee(request.serviceFee());
         entity.setStatus(request.status() != null ? request.status() : "CLOSED");
     }
@@ -52,6 +53,7 @@ public final class AdmissionSchemeMapper {
                 entity.getAppCloseDate(),
                 entity.getCapacity(),
                 entity.getApplicationFees(),
+                entity.getPreferredStartDate(),
                 entity.getServiceFee(),
                 entity.getStatus(),
                 daysLeft,

@@ -15,6 +15,7 @@ public record AdmissionSchemeResponse(
         LocalDateTime appCloseDate,
         Integer capacity,
         String applicationFees,
+        String preferredStartDate,
         BigDecimal serviceFee,
         String status,
         Long daysLeft,

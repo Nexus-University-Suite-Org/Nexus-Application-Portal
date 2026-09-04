@@ -12,6 +12,7 @@ import {
   fetchRunningSchemes,
   type AdmissionScheme,
   parseFees,
+  parsePreferredStartDates,
   formatMoney,
 } from "@/lib/schemes";
 
@@ -95,7 +96,7 @@ const AdmissionsListsPage = () => {
   const grouped = useMemo(() => {
     const groups: Record<string, AdmissionScheme[]> = {};
     for (const s of schemes) {
-      const key = CATEGORY_LABELS[s.category] ?? s.category || "Other";
+      const key = CATEGORY_LABELS[s.category] ?? (s.category || "Other");
       (groups[key] = groups[key] || []).push(s);
     }
     return groups;
@@ -281,10 +282,15 @@ const AdmissionsListsPage = () => {
                               <Clock size={15} className="text-accent" />
                               To: {formatDateWithTime(scheme.appCloseDate)}
                             </span>
-                            {scheme.capacity != null && (
+                              {scheme.capacity != null && (
                               <span className="inline-flex items-center gap-1.5">
                                 <Users size={15} className="text-accent" />
                                 Capacity: {scheme.capacity}
+                              </span>
+                            )}
+                            {parsePreferredStartDates(scheme.preferredStartDate).length > 0 && (
+                              <span className="inline-flex items-center gap-1.5 text-accent font-medium">
+                                Start Dates: {parsePreferredStartDates(scheme.preferredStartDate).join(", ")}
                               </span>
                             )}
                           </div>

@@ -21,6 +21,7 @@ export type AdmissionScheme = {
   appCloseDate: string | null;
   capacity: number | null;
   applicationFees: string;
+  preferredStartDate: string | null;
   serviceFee: number | null;
   status: string;
   daysLeft: number | null;
@@ -50,6 +51,18 @@ export const formatMoney = (value?: number | null): string =>
   value == null
     ? "—"
     : `UGX ${Number(value).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+
+export const parsePreferredStartDates = (raw: string | null | undefined): string[] => {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.filter((d: unknown) => typeof d === "string" && d.trim());
+    if (typeof parsed === "string" && parsed.trim()) return [parsed.trim()];
+  } catch {
+    return raw.split(",").map((d) => d.trim()).filter(Boolean);
+  }
+  return [];
+};
 
 const parseErrorDetail = async (response: Response) => {
   let data: unknown = null;

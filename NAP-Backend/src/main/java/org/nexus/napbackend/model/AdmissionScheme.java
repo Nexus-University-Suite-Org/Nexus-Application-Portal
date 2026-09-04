@@ -55,6 +55,9 @@ public class AdmissionScheme {
     @Column(name = "application_fees", columnDefinition = "text")
     private String applicationFees;
 
+    @Column(name = "preferred_start_date", columnDefinition = "text")
+    private String preferredStartDate;
+
     @Column(name = "service_fee")
     private BigDecimal serviceFee;
 

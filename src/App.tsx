@@ -80,6 +80,7 @@ const ScholarshipsAdminPage = lazy(() => import("./pages/admin/ScholarshipsPage.
 const StudentStoriesAdminPage = lazy(() => import("./pages/admin/StudentStoriesPage.tsx"));
 const CoursesPage = lazy(() => import("./pages/admin/CoursesPage.tsx"));
 const FacultyPage = lazy(() => import("./pages/admin/FacultyPage.tsx"));
+const SchemesAdminPage = lazy(() => import("./pages/admin/SchemesPage.tsx"));
 const ApplicationsPage = lazy(() => import("./pages/admin/ApplicationsPage.tsx"));
 const FeeAssignmentsPage = lazy(() => import("./pages/admin/FeeAssignmentsPage.tsx"));
 const ContactsAdminPage = lazy(() => import("./pages/admin/ContactsPage.tsx"));
@@ -199,6 +200,7 @@ const AnimatedRoutes = () => {
               <Route path="courses" element={<CoursesPage />} />
               <Route path="faculty" element={<FacultyPage />} />
               <Route path="programmes" element={<Navigate to="/admin/applications" replace />} />
+              <Route path="schemes" element={<SchemesAdminPage />} />
               <Route path="applications" element={<ApplicationsPage />} />
               <Route path="fees" element={<FeeAssignmentsPage />} />
               <Route path="contacts" element={<ContactsAdminPage />} />

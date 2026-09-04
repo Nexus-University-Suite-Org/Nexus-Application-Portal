@@ -10,6 +10,7 @@ import {
   submitApplicationSubmission,
   type ApplicationSubmissionInput,
 } from "@/lib/submissions";
+import { fetchRunningSchemes, type AdmissionScheme } from "@/lib/schemes";
 
 const currentYear = new Date().getFullYear();
 
@@ -777,6 +778,7 @@ const ApplicationStartPage = () => {
   const [academicSubStep, setAcademicSubStep] = useState(0);
   const [documentSubStep, setDocumentSubStep] = useState(0);
   const [programmes, setProgrammes] = useState<ProgrammeOption[]>([]);
+  const [runningSchemes, setRunningSchemes] = useState<AdmissionScheme[]>([]);
   const [uploadingDocuments, setUploadingDocuments] = useState<
     Partial<
       Record<
@@ -1067,6 +1069,38 @@ const ApplicationStartPage = () => {
     };
     fetchProgrammes();
   }, []);
+
+  useEffect(() => {
+    fetchRunningSchemes()
+      .then((data) => setRunningSchemes(data))
+      .catch(() => {});
+  }, []);
+
+  const schemeStartDates = useMemo(() => {
+    const dates = new Set<string>();
+    for (const s of runningSchemes) {
+      if (s.preferredStartDate) {
+        try {
+          const parsed = JSON.parse(s.preferredStartDate);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((d: string) => dates.add(d));
+          } else if (typeof parsed === "string") {
+            dates.add(parsed);
+          }
+        } catch {
+          s.preferredStartDate.split(",").forEach((d) => {
+            const trimmed = d.trim();
+            if (trimmed) dates.add(trimmed);
+          });
+        }
+      }
+    }
+    return Array.from(dates);
+  }, [runningSchemes]);
+
+  const effectiveStartDates = schemeStartDates.length > 0
+    ? schemeStartDates
+    : [`June ${currentYear}`, `September ${currentYear}`, `January ${currentYear + 1}`];
 
   useEffect(() => {
     if (activeStep !== 2) {
@@ -3232,15 +3266,9 @@ const ApplicationStartPage = () => {
                               className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
                             >
                               <option value="">Select date</option>
-                              <option value={`June ${currentYear}`}>
-                                {`June ${currentYear}`}
-                              </option>
-                              <option value={`September ${currentYear}`}>
-                                {`September ${currentYear}`}
-                              </option>
-                              <option value={`January ${currentYear + 1}`}>
-                                {`January ${currentYear + 1}`}
-                              </option>
+                              {effectiveStartDates.map((d) => (
+                                <option key={d} value={d}>{d}</option>
+                              ))}
                             </select>
                             {errors.startDate && (
                               <p className="text-xs text-destructive mt-2">

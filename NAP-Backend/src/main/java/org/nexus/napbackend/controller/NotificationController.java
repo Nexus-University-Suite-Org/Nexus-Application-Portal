@@ -8,7 +8,9 @@ import org.nexus.napbackend.dto.AnnouncementResponse;
 import org.nexus.napbackend.dto.NotificationCreateRequest;
 import org.nexus.napbackend.dto.NotificationResponse;
 import org.nexus.napbackend.facade.NotificationFacade;
+import org.nexus.napbackend.service.NotificationBroadcaster;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,15 +21,25 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @RequestMapping("/api/v1")
 public class NotificationController {
 
     private final NotificationFacade facade;
+    private final NotificationBroadcaster broadcaster;
 
-    public NotificationController(NotificationFacade facade) {
+    public NotificationController(NotificationFacade facade, NotificationBroadcaster broadcaster) {
         this.facade = facade;
+        this.broadcaster = broadcaster;
+    }
+
+    @GetMapping(value = "/notifications/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter stream() {
+        SseEmitter emitter = new SseEmitter(0L);
+        broadcaster.connect(emitter);
+        return emitter;
     }
 
     @PostMapping("/notifications")
