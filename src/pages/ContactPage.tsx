@@ -19,6 +19,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import heroCampus from "@/assets/hero-campus.jpg";
 import { useSpotlightCards } from "@/hooks/useScrollReveal";
+import { useContentCollection } from "@/hooks/useContentCollection";
 import { submitContactSubmission } from "@/lib/submissions";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -66,6 +67,11 @@ const ContactPage = () => {
     "Plot 7, Nakawa Road, Kampala, Uganda",
   );
   const [heroImage, setHeroImage] = useState<string>(heroCampus);
+  const [contactHeroTagline, setContactHeroTagline] = useState("Get In Touch");
+  const [contactHeroHeading, setContactHeroHeading] = useState("Contact & Partnerships");
+  const [contactHeroDescription, setContactHeroDescription] = useState(
+    "Whether you want to donate, partner, volunteer, or just learn more — we'd love to hear from you.",
+  );
   const partnersRef = useRef<HTMLDivElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
 
@@ -91,6 +97,9 @@ const ContactPage = () => {
         if (data?.footer_phone) setOrganizationPhone(data.footer_phone);
         if (data?.footer_whatsapp_cta) setOrganizationWhatsappCta(data.footer_whatsapp_cta);
         if (data?.footer_address) setOrganizationAddress(data.footer_address);
+        if (data?.contact_hero_tagline) setContactHeroTagline(data.contact_hero_tagline);
+        if (data?.contact_hero_heading) setContactHeroHeading(data.contact_hero_heading);
+        if (data?.contact_hero_description) setContactHeroDescription(data.contact_hero_description);
       })
       .catch(() => {});
   }, []);
@@ -246,15 +255,13 @@ const ContactPage = () => {
         </div>
         <div className="relative z-10 px-8 md:px-16 pb-24 pt-40 contact-hero-text max-w-4xl">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6 opacity-0">
-            Get In Touch
+            {contactHeroTagline}
           </p>
           <h1 className="font-heading text-5xl md:text-7xl font-light text-primary-foreground leading-[0.92] mb-8 opacity-0">
-            Contact &<br />
-            <em className="text-accent">Partnerships</em>
+            {contactHeroHeading}
           </h1>
           <p className="font-body text-lg text-primary-foreground/70 max-w-xl leading-relaxed opacity-0">
-            Whether you want to donate, partner, volunteer, or just learn more —
-            we'd love to hear from you.
+            {contactHeroDescription}
           </p>
         </div>
       </div>
