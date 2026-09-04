@@ -21,4 +21,8 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
     List<Program> findByDeletedAtIsNullAndProgramTypeOrderByProgramNameAsc(String programType);
 
     boolean existsByProgramCodeAndDeletedAtIsNull(String programCode);
+
+    Optional<Program> findByProgramNameIgnoreCaseAndDeletedAtIsNull(String programName);
+
+    Optional<Program> findByProgramCodeIgnoreCaseAndDeletedAtIsNull(String programCode);
 }

@@ -36,5 +36,11 @@ public record ProgramRequest(
         String fullDescription,
         Boolean featured,
         Integer displayOrder,
-        Double cutoffScore
+        Double cutoffScore,
+        String essentialSubjects,
+        String relevantSubjects,
+        String desirableSubjects,
+        Integer minimumUcePasses,
+        Integer capacity,
+        String intakeYear
 ) {}

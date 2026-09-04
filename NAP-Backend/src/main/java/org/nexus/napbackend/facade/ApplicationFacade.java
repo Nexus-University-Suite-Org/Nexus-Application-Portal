@@ -9,26 +9,26 @@ import org.nexus.napbackend.dto.NotificationCreateRequest;
 import org.nexus.napbackend.mapper.ApplicationMapper;
 import org.nexus.napbackend.mapper.NotificationMapper;
 import org.nexus.napbackend.model.Application;
-import org.nexus.napbackend.model.Programme;
+import org.nexus.napbackend.model.Program;
 import org.nexus.napbackend.service.ApplicationService;
 import org.nexus.napbackend.service.NotificationService;
-import org.nexus.napbackend.service.ProgrammeService;
+import org.nexus.napbackend.service.ProgramService;
 import org.nexus.napbackend.service.WeightingService;
 
 @Facade
 public class ApplicationFacade {
 
     private final ApplicationService service;
-    private final ProgrammeService programmeService;
+    private final ProgramService programService;
     private final WeightingService weightingService;
     private final NotificationService notificationService;
 
     public ApplicationFacade(ApplicationService service,
-                             ProgrammeService programmeService,
+                             ProgramService programService,
                              WeightingService weightingService,
                              NotificationService notificationService) {
         this.service = service;
-        this.programmeService = programmeService;
+        this.programService = programService;
         this.weightingService = weightingService;
         this.notificationService = notificationService;
     }
@@ -67,7 +67,7 @@ public class ApplicationFacade {
         entity.setReviewerNotes(notes);
         entity.setReviewedAt(LocalDateTime.now());
 
-        List<Programme> programmes = programmeService.findActiveEntities();
+        List<Program> programmes = programService.findAll();
         String qualificationResultsJson = weightingService.evaluateAllChoices(entity, programmes);
         entity.setQualificationResults(qualificationResultsJson);
 

@@ -43,5 +43,11 @@ public record ProgramResponse(
         String updatedBy,
         LocalDateTime updatedAt,
         List<String> categoryNames,
-        Double cutoffScore
+        Double cutoffScore,
+        String essentialSubjects,
+        String relevantSubjects,
+        String desirableSubjects,
+        Integer minimumUcePasses,
+        Integer capacity,
+        String intakeYear
 ) {}

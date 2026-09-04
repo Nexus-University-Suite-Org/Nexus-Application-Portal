@@ -6,7 +6,6 @@ import org.nexus.napbackend.dto.ProgramRequest;
 import org.nexus.napbackend.dto.ProgramResponse;
 import org.nexus.napbackend.mapper.ProgramMapper;
 import org.nexus.napbackend.model.Program;
-import org.nexus.napbackend.repository.ProgrammeRepository;
 import org.nexus.napbackend.service.ProgramCategoryService;
 import org.nexus.napbackend.service.ProgramService;
 import org.springframework.stereotype.Component;
@@ -16,12 +15,10 @@ public class ProgramFacade {
 
     private final ProgramService programService;
     private final ProgramCategoryService categoryService;
-    private final ProgrammeRepository programmeRepository;
 
-    public ProgramFacade(ProgramService programService, ProgramCategoryService categoryService, ProgrammeRepository programmeRepository) {
+    public ProgramFacade(ProgramService programService, ProgramCategoryService categoryService) {
         this.programService = programService;
         this.categoryService = categoryService;
-        this.programmeRepository = programmeRepository;
     }
 
     @Transactional
@@ -29,7 +26,6 @@ public class ProgramFacade {
         Program entity = ProgramMapper.toEntity(request);
         entity.setCreatedBy(userEmail);
         Program saved = programService.create(entity);
-        syncCutoff(request);
         return toDto(saved);
     }
 
@@ -75,17 +71,7 @@ public class ProgramFacade {
         ProgramMapper.updateEntity(entity, request);
         entity.setUpdatedBy(userEmail);
         Program updated = programService.update(id, entity);
-        syncCutoff(request);
         return toDto(updated);
-    }
-
-    private void syncCutoff(ProgramRequest request) {
-        if (request.programCode() != null && request.cutoffScore() != null) {
-            programmeRepository.findByCode(request.programCode()).ifPresent(p -> {
-                p.setCutoffScore(request.cutoffScore());
-                programmeRepository.save(p);
-            });
-        }
     }
 
     @Transactional
@@ -109,12 +95,6 @@ public class ProgramFacade {
                         .map(c -> c.getName())
                         .orElse("Unknown"))
                 .toList();
-        Double cutoffScore = null;
-        if (entity.getProgramCode() != null) {
-            cutoffScore = programmeRepository.findByCode(entity.getProgramCode())
-                    .map(p -> p.getCutoffScore())
-                    .orElse(null);
-        }
-        return ProgramMapper.toDto(entity, categoryNames, cutoffScore);
+        return ProgramMapper.toDto(entity, categoryNames);
     }
 }

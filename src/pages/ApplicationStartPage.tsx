@@ -999,10 +999,18 @@ const ApplicationStartPage = () => {
   useEffect(() => {
     const fetchProgrammes = async () => {
       try {
-        const res = await fetch("/api/v1/programmes");
+        const res = await fetch("/api/v1/programs");
         if (res.ok) {
-          const data = (await res.json()) as ProgrammeOption[];
-          setProgrammes(data);
+          const data = (await res.json()) as {
+            programCode: string; programName: string; facultySchool: string; cutoffScore: number; status: string;
+          }[];
+          const active = data.filter(p => p.status === "Active");
+          setProgrammes(active.map(p => ({
+            code: p.programCode,
+            name: p.programName,
+            faculty: p.facultySchool,
+            cutoffScore: p.cutoffScore,
+          })));
         }
       } catch {
         // fallback to static list

@@ -13,7 +13,6 @@ import {
   Award,
   BookOpen,
   GraduationCap,
-  Library,
   Link2,
   FileText,
   LayoutList,
@@ -65,7 +64,6 @@ const sidebarSections: SidebarSection[] = [
     items: [
       { label: "Courses", path: "/admin/courses", icon: <GraduationCap size={18} /> },
       { label: "Faculty", path: "/admin/faculty", icon: <Users size={18} /> },
-      { label: "Programmes", path: "/admin/programmes", icon: <Library size={18} /> },
     ],
   },
   {

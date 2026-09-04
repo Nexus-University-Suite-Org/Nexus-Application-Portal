@@ -1,6 +1,6 @@
 import { Suspense, lazy } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation, Outlet } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation, Outlet } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -80,7 +80,6 @@ const ScholarshipsAdminPage = lazy(() => import("./pages/admin/ScholarshipsPage.
 const StudentStoriesAdminPage = lazy(() => import("./pages/admin/StudentStoriesPage.tsx"));
 const CoursesPage = lazy(() => import("./pages/admin/CoursesPage.tsx"));
 const FacultyPage = lazy(() => import("./pages/admin/FacultyPage.tsx"));
-const ProgrammesPage = lazy(() => import("./pages/admin/ProgrammesPage.tsx"));
 const ApplicationsPage = lazy(() => import("./pages/admin/ApplicationsPage.tsx"));
 const FeeAssignmentsPage = lazy(() => import("./pages/admin/FeeAssignmentsPage.tsx"));
 const ContactsAdminPage = lazy(() => import("./pages/admin/ContactsPage.tsx"));
@@ -199,7 +198,7 @@ const AnimatedRoutes = () => {
               <Route path="student-stories" element={<StudentStoriesAdminPage />} />
               <Route path="courses" element={<CoursesPage />} />
               <Route path="faculty" element={<FacultyPage />} />
-              <Route path="programmes" element={<ProgrammesPage />} />
+              <Route path="programmes" element={<Navigate to="/admin/applications" replace />} />
               <Route path="applications" element={<ApplicationsPage />} />
               <Route path="fees" element={<FeeAssignmentsPage />} />
               <Route path="contacts" element={<ContactsAdminPage />} />

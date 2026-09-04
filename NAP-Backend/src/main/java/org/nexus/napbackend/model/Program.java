@@ -135,6 +135,27 @@ public class Program {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    @Column(name = "cutoff_score")
+    private Double cutoffScore = 0.0;
+
+    @Column(name = "essential_subjects", columnDefinition = "text")
+    private String essentialSubjects;
+
+    @Column(name = "relevant_subjects", columnDefinition = "text")
+    private String relevantSubjects;
+
+    @Column(name = "desirable_subjects", columnDefinition = "text")
+    private String desirableSubjects;
+
+    @Column(name = "minimum_uce_passes")
+    private Integer minimumUcePasses = 5;
+
+    @Column(nullable = false)
+    private Integer capacity = 100;
+
+    @Column(name = "intake_year", length = 10)
+    private String intakeYear;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
