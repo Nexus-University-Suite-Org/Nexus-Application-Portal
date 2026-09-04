@@ -474,18 +474,6 @@ INSERT INTO fee_assignments (tenant_id, item_name, category, year_level, semeste
 (1, 'Technology Fee', 'Service', 'Year 1', 'Semester 1', '2026', 400000, 'UGX', 'College of Business', 'Lab and digital resources', NOW());
 
 -- ============================================
--- NOTIFICATIONS (sample for user_id=1)
--- ============================================
-INSERT INTO notifications (tenant_id, user_id, type, title, message, "read", created_at) VALUES
-(1, 1, 'info', 'Welcome to Nexus Portal', 'Your account has been created successfully. Explore the portal to get started.', false, NOW());
-
-INSERT INTO notifications (tenant_id, user_id, type, title, message, "read", created_at) VALUES
-(1, 1, 'announcement', 'New Scholarship Available', 'The STEM Women Scholarship is now open for applications. Deadline is in 30 days.', false, NOW());
-
-INSERT INTO notifications (tenant_id, user_id, type, title, message, "read", created_at) VALUES
-(1, 1, 'success', 'Application Received', 'Your application has been successfully submitted. You will receive updates via email.', true, NOW());
-
--- ============================================
 -- MESSAGES (sample for user_id=1)
 -- ============================================
 INSERT INTO messages (tenant_id, from_user_id, to_user_id, subject, body, sender_deleted, recipient_deleted, sender_starred, recipient_starred, sender_archived, recipient_archived, read_at, created_at) VALUES

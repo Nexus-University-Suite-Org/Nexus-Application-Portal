@@ -629,6 +629,7 @@ const OTP_API_BASE =
   import.meta.env.VITE_API_BASE_URL?.trim() || "/api/v1";
 
 const APPLICATION_DRAFT_STORAGE_KEY = "application_start_draft_v1";
+const APPLICANT_ID_STORAGE_KEY = "nexus_applicant_id";
 
 const initialFormData: ApplicationStartData = {
   email: "",
@@ -1817,6 +1818,7 @@ const ApplicationStartPage = () => {
       const submission = await submitApplicationSubmission(payload);
       console.log("[SUBMIT] success, id:", submission.id);
       localStorage.removeItem(APPLICATION_DRAFT_STORAGE_KEY);
+      localStorage.setItem(APPLICANT_ID_STORAGE_KEY, String(submission.id));
       setApplicationId(submission.id);
       setSubmitted(true);
       toast(
