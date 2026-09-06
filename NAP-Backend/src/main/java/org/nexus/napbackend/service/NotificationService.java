@@ -16,17 +16,22 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final AnnouncementRepository announcementRepository;
+    private final NotificationBroadcaster broadcaster;
 
     public NotificationService(NotificationRepository notificationRepository,
-                               AnnouncementRepository announcementRepository) {
+                               AnnouncementRepository announcementRepository,
+                               NotificationBroadcaster broadcaster) {
         this.notificationRepository = notificationRepository;
         this.announcementRepository = announcementRepository;
+        this.broadcaster = broadcaster;
     }
 
     public Notification create(Notification entity) {
         entity.setTenantId(DEMO_TENANT_ID);
         entity.setCreatedAt(LocalDateTime.now());
-        return notificationRepository.save(entity);
+        Notification saved = notificationRepository.save(entity);
+        broadcaster.broadcast(saved);
+        return saved;
     }
 
     public Optional<Notification> findById(Long id) {

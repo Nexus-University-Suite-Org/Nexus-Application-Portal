@@ -24,11 +24,14 @@ public class ContactService {
 
     private final ContactSubmissionRepository repository;
     private final EmailJsSender emailJsSender;
+    private final ContactMailService contactMailService;
     private final ExecutorService notificationExecutor;
 
-    public ContactService(ContactSubmissionRepository repository, EmailJsSender emailJsSender) {
+    public ContactService(ContactSubmissionRepository repository, EmailJsSender emailJsSender,
+                          ContactMailService contactMailService) {
         this.repository = repository;
         this.emailJsSender = emailJsSender;
+        this.contactMailService = contactMailService;
         this.notificationExecutor = Executors.newVirtualThreadPerTaskExecutor();
     }
 
@@ -63,8 +66,12 @@ public class ContactService {
 
     private void deliverNotification(Long id, String name, String email, String subject, String message,
                                      String receivedAt) {
-        boolean delivered = emailJsSender.send(name, email, subject, message, receivedAt);
-        log.info("EmailJS notification result for submission id={}: delivered={}", id, delivered);
+        boolean delivered = contactMailService.send(name, email, subject, message, receivedAt);
+        if (!delivered) {
+            log.info("SMTP delivery not used for submission id={}; falling back to EmailJS", id);
+            delivered = emailJsSender.send(name, email, subject, message, receivedAt);
+        }
+        log.info("Notification result for submission id={}: delivered={}", id, delivered);
         if (delivered) {
             markEmailed(id);
         }

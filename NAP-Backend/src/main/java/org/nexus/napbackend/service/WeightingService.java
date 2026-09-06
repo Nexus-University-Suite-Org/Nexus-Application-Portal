@@ -3,12 +3,13 @@ package org.nexus.napbackend.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import org.nexus.napbackend.dto.QualificationResult;
 import org.nexus.napbackend.dto.QualificationResult.SubjectScore;
 import org.nexus.napbackend.model.Application;
-import org.nexus.napbackend.model.Programme;
+import org.nexus.napbackend.model.Program;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -30,7 +31,7 @@ public class WeightingService {
         }
     }
 
-    public double calculateALevelWeight(String uaceSubjectsJson, Programme programme) {
+    public double calculateALevelWeight(String uaceSubjectsJson, Program programme) {
         try {
             List<SubjectGrade> subjects = parseSubjects(uaceSubjectsJson);
             List<String> essential = parseSubjectList(programme.getEssentialSubjects());
@@ -63,7 +64,7 @@ public class WeightingService {
 
     private static final double GENDER_BONUS = 1.5;
 
-    public QualificationResult evaluateQualification(Application app, Programme programme) {
+    public QualificationResult evaluateQualification(Application app, Program programme) {
         double oLevelScore = calculateOLevelWeight(app.getOLevelSubjects());
         double aLevelScore = calculateALevelWeight(app.getUacePrincipalSubjects(), programme);
         double totalScore = oLevelScore + aLevelScore;
@@ -108,20 +109,20 @@ public class WeightingService {
         }
 
         return new QualificationResult(
-                programme.getCode(), programme.getName(), qualified,
+                programme.getProgramCode(), programme.getProgramName(), qualified,
                 totalScore, adjustedScore, isFemale,
                 programme.getCutoffScore(),
                 oLevelScore, aLevelScore, breakdown, reason
         );
     }
 
-    public String evaluateAllChoices(Application app, List<Programme> programmes) {
+    public String evaluateAllChoices(Application app, List<Program> programmes) {
         List<QualificationResult> results = new ArrayList<>();
         String[] choices = {app.getProgramChoice1(), app.getProgramChoice2(), app.getProgramChoice3(), app.getProgramChoice4()};
         for (String choice : choices) {
             if (choice == null || choice.isBlank()) continue;
             programmes.stream()
-                    .filter(p -> p.getCode().equalsIgnoreCase(choice) || p.getName().equalsIgnoreCase(choice))
+                    .filter(p -> p.getProgramCode() != null && (p.getProgramCode().equalsIgnoreCase(choice) || p.getProgramName().equalsIgnoreCase(choice)))
                     .findFirst()
                     .ifPresent(programme -> results.add(evaluateQualification(app, programme)));
         }
@@ -132,15 +133,15 @@ public class WeightingService {
         }
     }
 
-    public String findAssignedProgramme(Application app, List<Programme> programmes) {
+    public String findAssignedProgramme(Application app, List<Program> programmes) {
         String[] choices = {app.getProgramChoice1(), app.getProgramChoice2(), app.getProgramChoice3(), app.getProgramChoice4()};
         for (String choice : choices) {
             if (choice == null || choice.isBlank()) continue;
-            for (Programme programme : programmes) {
-                if (programme.getCode().equalsIgnoreCase(choice) || programme.getName().equalsIgnoreCase(choice)) {
+            for (Program programme : programmes) {
+                if (programme.getProgramCode() != null && (programme.getProgramCode().equalsIgnoreCase(choice) || programme.getProgramName().equalsIgnoreCase(choice))) {
                     QualificationResult result = evaluateQualification(app, programme);
                     if (result.qualified()) {
-                        return programme.getCode();
+                        return programme.getProgramCode();
                     }
                 }
             }
@@ -193,7 +194,7 @@ public class WeightingService {
         try {
             return objectMapper.readValue(json, new TypeReference<>() {});
         } catch (Exception e) {
-            return List.of();
+            return Arrays.stream(json.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
         }
     }
 

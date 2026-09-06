@@ -5,25 +5,25 @@ import java.util.List;
 import org.nexus.napbackend.configuration.JwtUtil;
 import org.nexus.napbackend.dto.StudentLoginResponse;
 import org.nexus.napbackend.model.Application;
-import org.nexus.napbackend.model.Programme;
+import org.nexus.napbackend.model.Program;
 import org.nexus.napbackend.repository.ApplicationRepository;
-import org.nexus.napbackend.repository.ProgrammeRepository;
+import org.nexus.napbackend.repository.ProgramRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Facade
 public class StudentAuthFacade {
 
     private final ApplicationRepository applicationRepository;
-    private final ProgrammeRepository programmeRepository;
+    private final ProgramRepository programRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     public StudentAuthFacade(ApplicationRepository applicationRepository,
-                             ProgrammeRepository programmeRepository,
+                             ProgramRepository programRepository,
                              PasswordEncoder passwordEncoder,
                              JwtUtil jwtUtil) {
         this.applicationRepository = applicationRepository;
-        this.programmeRepository = programmeRepository;
+        this.programRepository = programRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
@@ -74,8 +74,8 @@ public class StudentAuthFacade {
         String faculty = null;
         String programmeName = a.getAssignedProgramme() != null ? a.getAssignedProgramme() : a.getProgramChoice1();
         if (programmeName != null && !programmeName.isBlank()) {
-            faculty = programmeRepository.findByNameIgnoreCase(programmeName)
-                    .map(Programme::getFaculty)
+            faculty = programRepository.findByProgramNameIgnoreCaseAndDeletedAtIsNull(programmeName)
+                    .map(Program::getFacultySchool)
                     .orElse(null);
         }
         return new StudentLoginResponse.StudentProfile(

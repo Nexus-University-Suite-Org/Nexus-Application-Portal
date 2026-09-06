@@ -13,7 +13,6 @@ import {
   Award,
   BookOpen,
   GraduationCap,
-  Library,
   Link2,
   FileText,
   LayoutList,
@@ -24,6 +23,7 @@ import {
   UserCog,
   Activity,
   CreditCard,
+  CalendarClock,
   LogOut,
   Menu,
   X,
@@ -65,12 +65,12 @@ const sidebarSections: SidebarSection[] = [
     items: [
       { label: "Courses", path: "/admin/courses", icon: <GraduationCap size={18} /> },
       { label: "Faculty", path: "/admin/faculty", icon: <Users size={18} /> },
-      { label: "Programmes", path: "/admin/programmes", icon: <Library size={18} /> },
     ],
   },
   {
     title: "Admissions",
     items: [
+      { label: "Schemes", path: "/admin/schemes", icon: <CalendarClock size={18} /> },
       { label: "Applications", path: "/admin/applications", icon: <FileText size={18} /> },
     ],
   },

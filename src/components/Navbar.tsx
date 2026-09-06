@@ -13,6 +13,7 @@ const defaultNavItems = [
   { label: "About", href: "/about" },
   { label: "News", href: "/news" },
   { label: "Programs", href: "/programs" },
+  { label: "Running Admissions", href: "/admissions/lists" },
   { label: "Impact", href: "/impact" },
   { label: "Stories", href: "/stories" },
   { label: "Gallery", href: "/gallery" },
@@ -77,7 +78,13 @@ const Navbar = () => {
           try {
             const parsed = JSON.parse(data.nav_links);
             const visible = parsed.filter((l: { visible?: boolean }) => l.visible !== false);
-            if (visible.length > 0) setNavItems(visible);
+            if (visible.length > 0) {
+              const hasAdmissions = visible.some((l: { href?: string }) => l.href === "/admissions/lists");
+              if (!hasAdmissions) {
+                visible.splice(4, 0, { label: "Running Admissions", href: "/admissions/lists", visible: true });
+              }
+              setNavItems(visible);
+            }
           } catch {}
         }
         if (data.cta_buttons) {
@@ -156,7 +163,7 @@ const Navbar = () => {
                 className={`px-5 py-2.5 font-body text-xs tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:scale-105 ${
                   btn.style === "accent"
                     ? "bg-accent text-accent-foreground hover:bg-accent/90"
-                    : `bg-foreground/10 text-foreground hover:bg-foreground/20`
+                    : `bg-foreground/10 text-white hover:bg-foreground/20`
                 }`}
               >
                 {btn.label === "Donate" && <Heart size={12} className="fill-current mr-1 inline" />}

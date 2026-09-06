@@ -44,6 +44,13 @@ public final class ProgramMapper {
         entity.setFullDescription(request.fullDescription());
         entity.setFeatured(request.featured() != null ? request.featured() : false);
         entity.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : 0);
+        entity.setCutoffScore(request.cutoffScore() != null ? request.cutoffScore() : 0.0);
+        entity.setEssentialSubjects(request.essentialSubjects());
+        entity.setRelevantSubjects(request.relevantSubjects());
+        entity.setDesirableSubjects(request.desirableSubjects());
+        entity.setMinimumUcePasses(request.minimumUcePasses() != null ? request.minimumUcePasses() : 5);
+        entity.setCapacity(request.capacity() != null ? request.capacity() : 100);
+        entity.setIntakeYear(request.intakeYear());
         return entity;
     }
 
@@ -87,7 +94,14 @@ public final class ProgramMapper {
                 entity.getCreatedAt(),
                 entity.getUpdatedBy(),
                 entity.getUpdatedAt(),
-                categoryNames
+                categoryNames,
+                entity.getCutoffScore(),
+                entity.getEssentialSubjects(),
+                entity.getRelevantSubjects(),
+                entity.getDesirableSubjects(),
+                entity.getMinimumUcePasses(),
+                entity.getCapacity(),
+                entity.getIntakeYear()
         );
     }
 
@@ -125,5 +139,12 @@ public final class ProgramMapper {
         if (request.fullDescription() != null) entity.setFullDescription(request.fullDescription());
         if (request.featured() != null) entity.setFeatured(request.featured());
         if (request.displayOrder() != null) entity.setDisplayOrder(request.displayOrder());
+        if (request.cutoffScore() != null) entity.setCutoffScore(request.cutoffScore());
+        if (request.essentialSubjects() != null) entity.setEssentialSubjects(request.essentialSubjects());
+        if (request.relevantSubjects() != null) entity.setRelevantSubjects(request.relevantSubjects());
+        if (request.desirableSubjects() != null) entity.setDesirableSubjects(request.desirableSubjects());
+        if (request.minimumUcePasses() != null) entity.setMinimumUcePasses(request.minimumUcePasses());
+        if (request.capacity() != null) entity.setCapacity(request.capacity());
+        if (request.intakeYear() != null) entity.setIntakeYear(request.intakeYear());
     }
 }

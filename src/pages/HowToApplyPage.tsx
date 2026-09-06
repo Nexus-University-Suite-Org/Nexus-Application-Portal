@@ -72,26 +72,31 @@ const HowToApplyPage = () => {
           },
         );
       }
-
-      // Steps
-      if (stepsRef.current) {
-        gsap.fromTo(
-          stepsRef.current.querySelectorAll(".step-card"),
-          { y: 60, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.9,
-            stagger: 0.12,
-            ease: "power2.out",
-            scrollTrigger: { trigger: stepsRef.current, start: "top 85%" },
-          },
-        );
-      }
     });
 
     return () => ctx.revert();
   }, []);
+
+  // Steps: animate only once the (async) step content has rendered, so the
+  // .step-card elements exist as GSAP targets.
+  useEffect(() => {
+    if (isLoading || !stepsRef.current) return;
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        stepsRef.current!.querySelectorAll(".step-card"),
+        { y: 60, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.9,
+          stagger: 0.12,
+          ease: "power2.out",
+          scrollTrigger: { trigger: stepsRef.current, start: "top 85%" },
+        },
+      );
+    }, stepsRef);
+    return () => ctx.revert();
+  }, [isLoading]);
 
   return (
     <div className="min-h-screen bg-background">

@@ -1,17 +1,35 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { ArrowLeft, ArrowRight, Check, Lock, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Eye, EyeOff, Lock, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { uploadFile } from "@/lib/storage";
-import { SearchableSelect } from "@/components/SearchableSelect";
+import { GroupedSearchableSelect } from "@/components/GroupedSearchableSelect";
 import {
   submitApplicationSubmission,
   type ApplicationSubmissionInput,
 } from "@/lib/submissions";
+import { fetchRunningSchemes, type AdmissionScheme } from "@/lib/schemes";
 
 const currentYear = new Date().getFullYear();
+
+const AWARD_ORDER = ["BACHELOR", "DIPLOMA", "CERTIFICATE", "MASTER", "PHD"];
+const AWARD_LABELS: Record<string, string> = {
+  BACHELOR: "Bachelor Degrees",
+  DIPLOMA: "Diplomas",
+  CERTIFICATE: "Certificates",
+  MASTER: "Master Degrees",
+  PHD: "Doctorates (PhD)",
+};
+
+const STUDY_MODES = [
+  "Full-Time",
+  "Part-Time",
+  "Evening",
+  "Weekend",
+  "Distance Learning",
+];
 
 const applicationSteps = [
   {
@@ -86,6 +104,8 @@ type ApplicationStartData = {
   programChoice3: string;
   programChoice4: string;
   startDate: string;
+  studyMode: string;
+  intakeYear: string;
   previousInstitution: string;
   highestQualification: string;
   academicCredentialLevel: string;
@@ -139,6 +159,7 @@ type ProgrammeOption = {
   name: string;
   faculty: string;
   cutoffScore: number;
+  programType: string;
 };
 
 const fallbackProgramOptions = [
@@ -665,6 +686,8 @@ const initialFormData: ApplicationStartData = {
   programChoice3: "",
   programChoice4: "",
   startDate: "",
+  studyMode: "",
+  intakeYear: "",
   previousInstitution: "",
   highestQualification: "",
   academicCredentialLevel: "Uganda Advanced Level Certificate of Education (UACE)",
@@ -755,6 +778,7 @@ const ApplicationStartPage = () => {
   const [academicSubStep, setAcademicSubStep] = useState(0);
   const [documentSubStep, setDocumentSubStep] = useState(0);
   const [programmes, setProgrammes] = useState<ProgrammeOption[]>([]);
+  const [runningSchemes, setRunningSchemes] = useState<AdmissionScheme[]>([]);
   const [uploadingDocuments, setUploadingDocuments] = useState<
     Partial<
       Record<
@@ -766,9 +790,62 @@ const ApplicationStartPage = () => {
   const [documentUploadErrors, setDocumentUploadErrors] = useState<
     Record<string, string>
   >({});
-  const programmeNames = programmes.length > 0
-    ? programmes.map((p) => p.name)
-    : fallbackProgramOptions;
+  const [genderOpen, setGenderOpen] = useState(false);
+  const genderRef = useRef<HTMLDivElement>(null);
+  const [maritalOpen, setMaritalOpen] = useState(false);
+  const maritalRef = useRef<HTMLDivElement>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [ugandanOpen, setUgandanOpen] = useState(false);
+  const ugandanRef = useRef<HTMLDivElement>(null);
+  const [natlIdOpen, setNatlIdOpen] = useState(false);
+  const natlIdRef = useRef<HTMLDivElement>(null);
+  const [guardianTypeOpen, setGuardianTypeOpen] = useState(false);
+  const guardianTypeRef = useRef<HTMLDivElement>(null);
+  const [kinRelOpen, setKinRelOpen] = useState(false);
+  const kinRelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (genderRef.current && !genderRef.current.contains(e.target as Node)) setGenderOpen(false);
+      if (maritalRef.current && !maritalRef.current.contains(e.target as Node)) setMaritalOpen(false);
+      if (ugandanRef.current && !ugandanRef.current.contains(e.target as Node)) setUgandanOpen(false);
+      if (natlIdRef.current && !natlIdRef.current.contains(e.target as Node)) setNatlIdOpen(false);
+      if (guardianTypeRef.current && !guardianTypeRef.current.contains(e.target as Node)) setGuardianTypeOpen(false);
+      if (kinRelRef.current && !kinRelRef.current.contains(e.target as Node)) setKinRelOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const programmeGroups = useMemo(() => {
+    const buckets: Record<string, string[]> = {};
+    const ordered = AWARD_ORDER;
+    for (const award of ordered) buckets[award] = [];
+    const source =
+      programmes.length > 0
+        ? programmes
+        : fallbackProgramOptions.map((name) => ({
+            name,
+            programType: "BACHELOR",
+            code: "",
+            faculty: "",
+            cutoffScore: 0,
+          }));
+    source.forEach((p) => {
+      const norm = (p.programType || "BACHELOR").toUpperCase();
+      const key = ordered.includes(norm) ? norm : "BACHELOR";
+      buckets[key].push(p.name);
+    });
+    return ordered
+      .filter((award) => buckets[award].length > 0)
+      .map((award) => ({ label: AWARD_LABELS[award], options: buckets[award] }));
+  }, [programmes]);
+
+  const intakeYearOptions = useMemo(() => {
+    const next = currentYear;
+    return [`${next}/${String(next + 1).slice(2)}`, `${next - 1}/${String(next).slice(2)}`, `${next + 1}/${String(next + 2).slice(2)}`];
+  }, []);
 
   const isUaceSelected = formData.academicCredentialLevel.includes("UACE");
   const isUceSelected = formData.academicCredentialLevel.includes("UCE") && !formData.academicCredentialLevel.includes("UACE");
@@ -999,10 +1076,19 @@ const ApplicationStartPage = () => {
   useEffect(() => {
     const fetchProgrammes = async () => {
       try {
-        const res = await fetch("/api/v1/programmes");
+        const res = await fetch("/api/v1/programs");
         if (res.ok) {
-          const data = (await res.json()) as ProgrammeOption[];
-          setProgrammes(data);
+          const data = (await res.json()) as {
+            programCode: string; programName: string; facultySchool: string; cutoffScore: number; status: string; programType: string;
+          }[];
+          const active = data.filter(p => p.status === "Active");
+          setProgrammes(active.map(p => ({
+            code: p.programCode,
+            name: p.programName,
+            faculty: p.facultySchool,
+            cutoffScore: p.cutoffScore,
+            programType: p.programType || "BACHELOR",
+          })));
         }
       } catch {
         // fallback to static list
@@ -1010,6 +1096,38 @@ const ApplicationStartPage = () => {
     };
     fetchProgrammes();
   }, []);
+
+  useEffect(() => {
+    fetchRunningSchemes()
+      .then((data) => setRunningSchemes(data))
+      .catch(() => {});
+  }, []);
+
+  const schemeStartDates = useMemo(() => {
+    const dates = new Set<string>();
+    for (const s of runningSchemes) {
+      if (s.preferredStartDate) {
+        try {
+          const parsed = JSON.parse(s.preferredStartDate);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((d: string) => dates.add(d));
+          } else if (typeof parsed === "string") {
+            dates.add(parsed);
+          }
+        } catch {
+          s.preferredStartDate.split(",").forEach((d) => {
+            const trimmed = d.trim();
+            if (trimmed) dates.add(trimmed);
+          });
+        }
+      }
+    }
+    return Array.from(dates);
+  }, [runningSchemes]);
+
+  const effectiveStartDates = schemeStartDates.length > 0
+    ? schemeStartDates
+    : [`June ${currentYear}`, `September ${currentYear}`, `January ${currentYear + 1}`];
 
   useEffect(() => {
     if (activeStep !== 2) {
@@ -1330,6 +1448,10 @@ const ApplicationStartPage = () => {
         nextErrors.programChoice4 = "Please select a 4th choice programme.";
       if (!formData.startDate.trim())
         nextErrors.startDate = "Please select a start date.";
+      if (!formData.studyMode.trim())
+        nextErrors.studyMode = "Please select a study mode.";
+      if (!formData.intakeYear.trim())
+        nextErrors.intakeYear = "Please select an intake / academic year.";
       if (!formData.previousInstitution.trim()) {
         nextErrors.previousInstitution = "Previous institution is required.";
       }
@@ -1758,6 +1880,8 @@ const ApplicationStartPage = () => {
         programChoice3: formData.programChoice3,
         programChoice4: formData.programChoice4,
         startDate: formData.startDate,
+        studyMode: formData.studyMode,
+        academicYear: formData.intakeYear,
         previousInstitution: formData.previousInstitution.trim(),
         highestQualification: formData.highestQualification,
         academicCredentialLevel: formData.academicCredentialLevel,
@@ -2128,29 +2252,39 @@ const ApplicationStartPage = () => {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
+                          <div ref={genderRef} className="relative">
                             <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                               Gender *
                             </label>
-                            <select
-                              value={formData.gender}
-                              onChange={(e) =>
-                                updateField(
-                                  "gender",
-                                  e.target.value as
-                                    | ""
-                                    | "Male"
-                                    | "Female"
-                                    | "Other",
-                                )
-                              }
-                              className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                            <button
+                              type="button"
+                              onClick={() => setGenderOpen(!genderOpen)}
+                              className="mt-2 w-full flex items-center justify-between border border-border rounded-full px-4 py-3 bg-transparent font-body text-sm cursor-pointer"
                             >
-                              <option value="">Select gender</option>
-                              <option value="Male">Male</option>
-                              <option value="Female">Female</option>
-                              <option value="Other">Other</option>
-                            </select>
+                              <span className={formData.gender ? "text-foreground" : "text-muted-foreground"}>
+                                {formData.gender || "Select gender"}
+                              </span>
+                              <ChevronDown size={16} className={`text-muted-foreground transition-transform ${genderOpen ? "rotate-180" : ""}`} />
+                            </button>
+                            {genderOpen && (
+                              <div className="absolute z-50 mt-1 w-full rounded-2xl border border-border bg-background shadow-lg overflow-hidden">
+                                {(["Male", "Female", "Other"] as const).map((g) => (
+                                  <button
+                                    key={g}
+                                    type="button"
+                                    onClick={() => { updateField("gender", g); setGenderOpen(false); }}
+                                    className={`w-full text-left px-4 py-3 font-body text-sm rounded-full mx-1 my-1 transition-colors ${
+                                      formData.gender === g
+                                        ? "bg-primary/10 text-primary font-medium"
+                                        : "text-foreground hover:bg-muted"
+                                    }`}
+                                    style={{ width: "calc(100% - 8px)" }}
+                                  >
+                                    {g}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                             {errors.gender && (
                               <p className="text-xs text-destructive mt-2">
                                 {errors.gender}
@@ -2166,7 +2300,7 @@ const ApplicationStartPage = () => {
                               onChange={(e) =>
                                 updateField("dateOfBirth", e.target.value)
                               }
-                              className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                              className="mt-2 w-full border border-border rounded-full px-4 py-3 bg-transparent font-body text-sm"
                               type="date"
                             />
                             {errors.dateOfBirth && (
@@ -2175,24 +2309,39 @@ const ApplicationStartPage = () => {
                               </p>
                             )}
                           </div>
-                          <div>
+                          <div ref={maritalRef} className="relative">
                             <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                               Marital Status *
                             </label>
-                            <select
-                              value={formData.maritalStatus}
-                              onChange={(e) =>
-                                updateField("maritalStatus", e.target.value)
-                              }
-                              className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                            <button
+                              type="button"
+                              onClick={() => setMaritalOpen(!maritalOpen)}
+                              className="mt-2 w-full flex items-center justify-between border border-border rounded-full px-4 py-3 bg-transparent font-body text-sm cursor-pointer"
                             >
-                              <option value="">Select marital status</option>
-                              <option value="Single">Single</option>
-                              <option value="Married">Married</option>
-                              <option value="Divorced">Divorced</option>
-                              <option value="Widowed">Widowed</option>
-                              <option value="Separated">Separated</option>
-                            </select>
+                              <span className={formData.maritalStatus ? "text-foreground" : "text-muted-foreground"}>
+                                {formData.maritalStatus || "Select marital status"}
+                              </span>
+                              <ChevronDown size={16} className={`text-muted-foreground transition-transform ${maritalOpen ? "rotate-180" : ""}`} />
+                            </button>
+                            {maritalOpen && (
+                              <div className="absolute z-50 mt-1 w-full rounded-2xl border border-border bg-background shadow-lg overflow-hidden">
+                                {(["Single", "Married", "Divorced", "Widowed", "Separated"] as const).map((s) => (
+                                  <button
+                                    key={s}
+                                    type="button"
+                                    onClick={() => { updateField("maritalStatus", s); setMaritalOpen(false); }}
+                                    className={`w-full text-left px-4 py-3 font-body text-sm rounded-full mx-1 my-1 transition-colors ${
+                                      formData.maritalStatus === s
+                                        ? "bg-primary/10 text-primary font-medium"
+                                        : "text-foreground hover:bg-muted"
+                                    }`}
+                                    style={{ width: "calc(100% - 8px)" }}
+                                  >
+                                    {s}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                             {errors.maritalStatus && (
                               <p className="text-xs text-destructive mt-2">
                                 {errors.maritalStatus}
@@ -2206,15 +2355,24 @@ const ApplicationStartPage = () => {
                             <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                               Password *
                             </label>
-                            <input
-                              value={formData.password}
-                              onChange={(e) =>
-                                updateField("password", e.target.value)
-                              }
-                              className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                              type="password"
-                              placeholder="At least 6 characters"
-                            />
+                            <div className="relative mt-2">
+                              <input
+                                value={formData.password}
+                                onChange={(e) =>
+                                  updateField("password", e.target.value)
+                                }
+                                className="w-full border border-border rounded-[12px] px-4 py-3 pr-10 bg-transparent font-body text-sm"
+                                type={showPassword ? "text" : "password"}
+                                placeholder="At least 6 characters"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                              </button>
+                            </div>
                             {errors.password && (
                               <p className="text-xs text-destructive mt-2">
                                 {errors.password}
@@ -2225,15 +2383,24 @@ const ApplicationStartPage = () => {
                             <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                               Confirm Password *
                             </label>
-                            <input
-                              value={formData.confirmPassword}
-                              onChange={(e) =>
-                                updateField("confirmPassword", e.target.value)
-                              }
-                              className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                              type="password"
-                              placeholder="Re-enter password"
-                            />
+                            <div className="relative mt-2">
+                              <input
+                                value={formData.confirmPassword}
+                                onChange={(e) =>
+                                  updateField("confirmPassword", e.target.value)
+                                }
+                                className="w-full border border-border rounded-[12px] px-4 py-3 pr-10 bg-transparent font-body text-sm"
+                                type={showConfirmPassword ? "text" : "password"}
+                                placeholder="Re-enter password"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                              </button>
+                            </div>
                             {errors.confirmPassword && (
                               <p className="text-xs text-destructive mt-2">
                                 {errors.confirmPassword}
@@ -2462,24 +2629,39 @@ const ApplicationStartPage = () => {
                           </div>
                         </div>
 
-                        <div>
+                        <div ref={ugandanRef} className="relative">
                           <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                             Is the Applicant Ugandan? *
                           </label>
-                          <select
-                            value={formData.isUgandan}
-                            onChange={(e) =>
-                              updateField(
-                                "isUgandan",
-                                e.target.value as "" | "yes" | "no",
-                              )
-                            }
-                            className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                          <button
+                            type="button"
+                            onClick={() => setUgandanOpen(!ugandanOpen)}
+                            className="mt-2 w-full flex items-center justify-between border border-border rounded-full px-4 py-3 bg-transparent font-body text-sm cursor-pointer"
                           >
-                            <option value="">Select an option</option>
-                            <option value="yes">Yes, Ugandan</option>
-                            <option value="no">No, non-Ugandan</option>
-                          </select>
+                            <span className={formData.isUgandan ? "text-foreground" : "text-muted-foreground"}>
+                              {formData.isUgandan === "yes" ? "Yes, Ugandan" : formData.isUgandan === "no" ? "No, non-Ugandan" : "Select an option"}
+                            </span>
+                            <ChevronDown size={16} className={`text-muted-foreground transition-transform ${ugandanOpen ? "rotate-180" : ""}`} />
+                          </button>
+                          {ugandanOpen && (
+                            <div className="absolute z-50 mt-1 w-full rounded-2xl border border-border bg-background shadow-lg overflow-hidden">
+                              {([["yes", "Yes, Ugandan"], ["no", "No, non-Ugandan"]] as const).map(([val, label]) => (
+                                <button
+                                  key={val}
+                                  type="button"
+                                  onClick={() => { updateField("isUgandan", val as "" | "yes" | "no"); setUgandanOpen(false); }}
+                                  className={`w-full text-left px-4 py-3 font-body text-sm rounded-full mx-1 my-1 transition-colors ${
+                                    formData.isUgandan === val
+                                      ? "bg-primary/10 text-primary font-medium"
+                                      : "text-foreground hover:bg-muted"
+                                  }`}
+                                  style={{ width: "calc(100% - 8px)" }}
+                                >
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                           {errors.isUgandan && (
                             <p className="text-xs text-destructive mt-2">
                               {errors.isUgandan}
@@ -2509,29 +2691,47 @@ const ApplicationStartPage = () => {
                           </div>
                         ) : null}
 
-                        <div>
+                        <div ref={natlIdRef} className="relative">
                           <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                             Do You Have a National ID or Passport? *
                           </label>
-                          <select
-                            value={formData.hasNationalIdOrPassport}
-                            onChange={(e) => {
-                              const value = e.target.value as "" | "yes" | "no";
-                              updateField("hasNationalIdOrPassport", value);
-                              if (value === "no") {
-                                updateField(
-                                  "birthCertificateOrNationalIdDetails",
-                                  "",
-                                );
-                                updateField("nationalIdOrPassportUrl", "");
-                              }
-                            }}
-                            className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                          <button
+                            type="button"
+                            onClick={() => setNatlIdOpen(!natlIdOpen)}
+                            className="mt-2 w-full flex items-center justify-between border border-border rounded-full px-4 py-3 bg-transparent font-body text-sm cursor-pointer"
                           >
-                            <option value="">Select an option</option>
-                            <option value="yes">Yes</option>
-                            <option value="no">No</option>
-                          </select>
+                            <span className={formData.hasNationalIdOrPassport ? "text-foreground" : "text-muted-foreground"}>
+                              {formData.hasNationalIdOrPassport === "yes" ? "Yes" : formData.hasNationalIdOrPassport === "no" ? "No" : "Select an option"}
+                            </span>
+                            <ChevronDown size={16} className={`text-muted-foreground transition-transform ${natlIdOpen ? "rotate-180" : ""}`} />
+                          </button>
+                          {natlIdOpen && (
+                            <div className="absolute z-50 mt-1 w-full rounded-2xl border border-border bg-background shadow-lg overflow-hidden">
+                              {([["yes", "Yes"], ["no", "No"]] as const).map(([val, label]) => (
+                                <button
+                                  key={val}
+                                  type="button"
+                                  onClick={() => {
+                                    const value = val as "" | "yes" | "no";
+                                    updateField("hasNationalIdOrPassport", value);
+                                    if (value === "no") {
+                                      updateField("birthCertificateOrNationalIdDetails", "");
+                                      updateField("nationalIdOrPassportUrl", "");
+                                    }
+                                    setNatlIdOpen(false);
+                                  }}
+                                  className={`w-full text-left px-4 py-3 font-body text-sm rounded-full mx-1 my-1 transition-colors ${
+                                    formData.hasNationalIdOrPassport === val
+                                      ? "bg-primary/10 text-primary font-medium"
+                                      : "text-foreground hover:bg-muted"
+                                  }`}
+                                  style={{ width: "calc(100% - 8px)" }}
+                                >
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                           {errors.hasNationalIdOrPassport && (
                             <p className="text-xs text-destructive mt-2">
                               {errors.hasNationalIdOrPassport}
@@ -2690,32 +2890,39 @@ const ApplicationStartPage = () => {
                               </p>
                             )}
                           </div>
-                          <div>
+                          <div ref={guardianTypeRef} className="relative">
                             <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                               Parent/Guardian Type *
                             </label>
-                            <select
-                              value={formData.guardianType}
-                              onChange={(e) =>
-                                updateField(
-                                  "guardianType",
-                                  e.target.value as
-                                    | ""
-                                    | "Parent"
-                                    | "Guardian"
-                                    | "Sponsor"
-                                    | "Other",
-                                )
-                              }
-                              className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                            <button
+                              type="button"
+                              onClick={() => setGuardianTypeOpen(!guardianTypeOpen)}
+                              className="mt-2 w-full flex items-center justify-between border border-border rounded-full px-4 py-3 bg-transparent font-body text-sm cursor-pointer"
                             >
-                              <option value="">Select type</option>
-                              {guardianTypeOptions.map((option) => (
-                                <option key={option} value={option}>
-                                  {option}
-                                </option>
-                              ))}
-                            </select>
+                              <span className={formData.guardianType ? "text-foreground" : "text-muted-foreground"}>
+                                {formData.guardianType || "Select type"}
+                              </span>
+                              <ChevronDown size={16} className={`text-muted-foreground transition-transform ${guardianTypeOpen ? "rotate-180" : ""}`} />
+                            </button>
+                            {guardianTypeOpen && (
+                              <div className="absolute z-50 mt-1 w-full rounded-2xl border border-border bg-background shadow-lg overflow-hidden">
+                                {guardianTypeOptions.map((opt) => (
+                                  <button
+                                    key={opt}
+                                    type="button"
+                                    onClick={() => { updateField("guardianType", opt as "" | "Parent" | "Guardian" | "Sponsor" | "Other"); setGuardianTypeOpen(false); }}
+                                    className={`w-full text-left px-4 py-3 font-body text-sm rounded-full mx-1 my-1 transition-colors ${
+                                      formData.guardianType === opt
+                                        ? "bg-primary/10 text-primary font-medium"
+                                        : "text-foreground hover:bg-muted"
+                                    }`}
+                                    style={{ width: "calc(100% - 8px)" }}
+                                  >
+                                    {opt}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                             {errors.guardianType && (
                               <p className="text-xs text-destructive mt-2">
                                 {errors.guardianType}
@@ -2745,27 +2952,39 @@ const ApplicationStartPage = () => {
                           </div>
                         </div>
 
-                        <div>
+                        <div ref={kinRelRef} className="relative">
                           <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                             Relationship to Next of Kin *
                           </label>
-                          <select
-                            value={formData.nextOfKinRelationship}
-                            onChange={(e) =>
-                              updateField(
-                                "nextOfKinRelationship",
-                                e.target.value,
-                              )
-                            }
-                            className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                          <button
+                            type="button"
+                            onClick={() => setKinRelOpen(!kinRelOpen)}
+                            className="mt-2 w-full flex items-center justify-between border border-border rounded-full px-4 py-3 bg-transparent font-body text-sm cursor-pointer"
                           >
-                            <option value="">Select relationship</option>
-                            {relationshipOptions.map((option) => (
-                              <option key={option} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
+                            <span className={formData.nextOfKinRelationship ? "text-foreground" : "text-muted-foreground"}>
+                              {formData.nextOfKinRelationship || "Select relationship"}
+                            </span>
+                            <ChevronDown size={16} className={`text-muted-foreground transition-transform ${kinRelOpen ? "rotate-180" : ""}`} />
+                          </button>
+                          {kinRelOpen && (
+                            <div className="absolute z-50 mt-1 w-full rounded-2xl border border-border bg-background shadow-lg overflow-hidden">
+                              {relationshipOptions.map((opt) => (
+                                <button
+                                  key={opt}
+                                  type="button"
+                                  onClick={() => { updateField("nextOfKinRelationship", opt); setKinRelOpen(false); }}
+                                  className={`w-full text-left px-4 py-3 font-body text-sm rounded-full mx-1 my-1 transition-colors ${
+                                    formData.nextOfKinRelationship === opt
+                                      ? "bg-primary/10 text-primary font-medium"
+                                      : "text-foreground hover:bg-muted"
+                                  }`}
+                                  style={{ width: "calc(100% - 8px)" }}
+                                >
+                                  {opt}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                           <p className="text-xs text-muted-foreground mt-2">
                             Tell us how the applicant is related to the next of
                             kin.
@@ -3141,10 +3360,10 @@ const ApplicationStartPage = () => {
                                 <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                                   {label}
                                 </label>
-                                <SearchableSelect
+                                <GroupedSearchableSelect
                                   value={formData[field]}
                                   onValueChange={(val) => updateField(field, val)}
-                                  options={programmeNames}
+                                  groups={programmeGroups}
                                   placeholder="Type to search programmes..."
                                   className="mt-2"
                                 />
@@ -3169,21 +3388,69 @@ const ApplicationStartPage = () => {
                               className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
                             >
                               <option value="">Select date</option>
-                              <option value={`June ${currentYear}`}>
-                                {`June ${currentYear}`}
-                              </option>
-                              <option value={`September ${currentYear}`}>
-                                {`September ${currentYear}`}
-                              </option>
-                              <option value={`January ${currentYear + 1}`}>
-                                {`January ${currentYear + 1}`}
-                              </option>
+                              {effectiveStartDates.map((d) => (
+                                <option key={d} value={d}>{d}</option>
+                              ))}
                             </select>
                             {errors.startDate && (
                               <p className="text-xs text-destructive mt-2">
                                 {errors.startDate}
                               </p>
                             )}
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                Intake / Academic Year
+                              </label>
+                              <select
+                                value={formData.intakeYear}
+                                onChange={(e) =>
+                                  updateField("intakeYear", e.target.value)
+                                }
+                                className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                              >
+                                <option value="">
+                                  Select academic year
+                                </option>
+                                {intakeYearOptions.map((opt) => (
+                                  <option key={opt} value={opt}>
+                                    {opt}
+                                  </option>
+                                ))}
+                              </select>
+                              {errors.intakeYear && (
+                                <p className="text-xs text-destructive mt-2">
+                                  {errors.intakeYear}
+                                </p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                Study Mode
+                              </label>
+                              <select
+                                value={formData.studyMode}
+                                onChange={(e) =>
+                                  updateField("studyMode", e.target.value)
+                                }
+                                className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                              >
+                                <option value="">Select study mode</option>
+                                {STUDY_MODES.map((mode) => (
+                                  <option key={mode} value={mode}>
+                                    {mode}
+                                  </option>
+                                ))}
+                              </select>
+                              {errors.studyMode && (
+                                <p className="text-xs text-destructive mt-2">
+                                  {errors.studyMode}
+                                </p>
+                              )}
+                            </div>
                           </div>
 
                           <div>
