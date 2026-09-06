@@ -24,10 +24,8 @@ public final class ProgramMapper {
         entity.setDepartment(request.department());
         entity.setProgramCoordinator(request.programCoordinator());
         entity.setCampus(request.campus());
-        entity.setDuration(request.duration());
         entity.setDurationUnit(request.durationUnit());
         entity.setNumberOfYears(request.numberOfYears());
-        entity.setNumberOfSemesters(request.numberOfSemesters());
         entity.setSemestersPerYear(request.semestersPerYear());
         entity.setTotalCreditUnits(request.totalCreditUnits());
         entity.setStudyMode(request.studyMode());
@@ -70,10 +68,8 @@ public final class ProgramMapper {
                 entity.getDepartment(),
                 entity.getProgramCoordinator(),
                 entity.getCampus(),
-                entity.getDuration(),
                 entity.getDurationUnit(),
                 entity.getNumberOfYears(),
-                entity.getNumberOfSemesters(),
                 entity.getSemestersPerYear(),
                 entity.getTotalCreditUnits(),
                 entity.getStudyMode(),
@@ -119,10 +115,8 @@ public final class ProgramMapper {
         if (request.department() != null) entity.setDepartment(request.department());
         if (request.programCoordinator() != null) entity.setProgramCoordinator(request.programCoordinator());
         if (request.campus() != null) entity.setCampus(request.campus());
-        if (request.duration() != null) entity.setDuration(request.duration());
         if (request.durationUnit() != null) entity.setDurationUnit(request.durationUnit());
         if (request.numberOfYears() != null) entity.setNumberOfYears(request.numberOfYears());
-        if (request.numberOfSemesters() != null) entity.setNumberOfSemesters(request.numberOfSemesters());
         if (request.semestersPerYear() != null) entity.setSemestersPerYear(request.semestersPerYear());
         if (request.totalCreditUnits() != null) entity.setTotalCreditUnits(request.totalCreditUnits());
         if (request.studyMode() != null) entity.setStudyMode(request.studyMode());
