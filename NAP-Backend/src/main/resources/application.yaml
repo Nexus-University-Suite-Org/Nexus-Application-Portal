@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
   compression:
     enabled: true
     mime-types: application/json,text/html,text/plain,text/css
@@ -32,7 +32,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
     defer-datasource-initialization: true
     open-in-view: false
     show-sql: false
@@ -58,8 +58,8 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:waluube69alvin@gmail.com}
-    password: ${MAIL_PASSWORD:wljk fgtl ekph tcuo}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -82,7 +82,12 @@ management:
 
 nap:
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5177,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://127.0.0.1:5177}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5177,http://localhost:5178,http://127.0.0.1:3000,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://127.0.0.1:5177,http://127.0.0.1:5178}
+  seed:
+    admin:
+      email: ${NAP_SEED_ADMIN_EMAIL:}
+      password: ${NAP_SEED_ADMIN_PASSWORD:}
+      full-name: ${NAP_SEED_ADMIN_FULL_NAME:System Administrator}
   contact:
     rate-limit:
       max-requests: ${CONTACT_RATE_LIMIT_MAX:10}
@@ -101,7 +106,7 @@ nap:
     api-key: ${GEMINI_API_KEY:}
     model: ${GEMINI_MODEL:gemini-3.6-flash}
   jwt:
-    secret: ${JWT_SECRET:nexus-admin-secret-key-change-in-production-2024-ultra-secure}
+    secret: ${JWT_SECRET:}
     expiration-hours: ${JWT_EXPIRATION_HOURS:24}
   storage:
     upload-dir: ${UPLOAD_DIR:uploads}

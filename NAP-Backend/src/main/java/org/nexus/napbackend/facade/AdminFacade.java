@@ -17,6 +17,7 @@ import org.nexus.napbackend.dto.ApplicationResponse;
 import org.nexus.napbackend.dto.DashboardStatsResponse;
 import org.nexus.napbackend.dto.PaginatedApplicationsResponse;
 import org.nexus.napbackend.dto.ReviewRequest;
+import org.nexus.napbackend.exception.UnauthorizedException;
 import org.nexus.napbackend.mapper.ApplicationMapper;
 import org.nexus.napbackend.model.Admin;
 import org.nexus.napbackend.model.Application;
@@ -50,10 +51,10 @@ public class AdminFacade {
     @Transactional
     public AdminLoginResponse login(AdminLoginRequest request) {
         Admin admin = adminService.findByEmail(request.email())
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+                .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
 
         if (!passwordEncoder.matches(request.password(), admin.getPasswordHash())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new UnauthorizedException("Invalid email or password");
         }
 
         String token = jwtUtil.generateToken(admin.getId(), admin.getEmail());
@@ -63,7 +64,7 @@ public class AdminFacade {
     @Transactional
     public AdminLoginResponse me(Long adminId) {
         Admin admin = adminService.findById(adminId)
-                .orElseThrow(() -> new RuntimeException("Admin not found"));
+                .orElseThrow(() -> new UnauthorizedException("Admin not found"));
         return new AdminLoginResponse(null, admin.getEmail(), admin.getFullName());
     }
 
