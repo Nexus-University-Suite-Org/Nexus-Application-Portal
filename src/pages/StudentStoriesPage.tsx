@@ -182,7 +182,7 @@ const StudentStoriesPage = () => {
           alt="Graduate success"
           className="absolute inset-0 w-full h-full object-cover rounded-none"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/60 to-primary/20 rounded-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20 rounded-none" />
         <div className="relative z-10 px-8 md:px-16 pb-20 pt-40 stories-hero-text max-w-4xl">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-5 opacity-0">
             {heroTagline}

@@ -194,8 +194,8 @@ const GalleryPage = () => {
         ref={heroRef}
         className="relative min-h-[55vh] flex items-end overflow-hidden"
       >
-        <div className="gallery-hero-img absolute inset-0 w-full h-full bg-primary rounded-none" />
-        <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/60 to-primary/20 rounded-none" />
+        <div className="gallery-hero-img absolute inset-0 w-full h-full bg-black rounded-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20 rounded-none" />
         <div className="relative z-10 px-8 md:px-16 pb-20 pt-40 gallery-hero-text max-w-4xl">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-5 opacity-0">
             {heroTagline}
@@ -262,9 +262,9 @@ const GalleryPage = () => {
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
               />
               {/* Hover overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-5">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-5">
                 <div className="translate-y-4 group-hover:translate-y-0 transition-transform duration-500 ease-out">
-                  <p className="font-body text-sm text-primary-foreground/90 leading-snug">
+                  <p className="font-body text-sm text-white/90 leading-snug">
                     {caption}
                   </p>
                 </div>

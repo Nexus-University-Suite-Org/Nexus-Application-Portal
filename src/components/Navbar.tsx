@@ -4,6 +4,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Menu, X, Heart } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useLocation, useNavigate } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -155,6 +156,7 @@ const Navbar = () => {
           ))}
           {/* CTA Buttons */}
           <div className="flex items-center gap-3 pl-4 border-l border-accent/20">
+            <ThemeToggle solid={solidNavbar} />
             <NotificationBell />
             {ctaButtons.map((btn) => (
               <button
@@ -163,7 +165,7 @@ const Navbar = () => {
                 className={`px-5 py-2.5 font-body text-xs tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:scale-105 ${
                   btn.style === "accent"
                     ? "bg-accent text-accent-foreground hover:bg-accent/90"
-                    : `bg-foreground/10 text-white hover:bg-foreground/20`
+                    : `bg-foreground/10 text-foreground hover:bg-foreground/20`
                 }`}
               >
                 {btn.label === "Donate" && <Heart size={12} className="fill-current mr-1 inline" />}
@@ -212,6 +214,9 @@ const Navbar = () => {
                 {item.label}
               </button>
             ))}
+            <div className="mt-2">
+              <ThemeToggle solid />
+            </div>
             {ctaButtons.map((btn) => (
               <button
                 key={btn.label}

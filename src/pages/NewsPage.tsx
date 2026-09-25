@@ -254,7 +254,7 @@ const NewsPage = () => {
             alt="University news"
             className="w-full h-full object-cover rounded-none"
           />
-          <div className="absolute inset-0 bg-primary/65 rounded-none" />
+          <div className="absolute inset-0 bg-black/65 rounded-none" />
         </div>
         <div className="relative z-10 px-8 md:px-16 pb-24 pt-40 news-hero-text max-w-4xl">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6 opacity-0">

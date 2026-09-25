@@ -333,7 +333,7 @@ const ChatBot = () => {
       {isOpen && (
         <div
           ref={chatRef}
-          className="absolute bottom-16 right-0 w-[calc(100vw-2rem)] sm:w-[400px] h-[min(580px,calc(100vh-6rem))] rounded-3xl border border-border/40 bg-white shadow-[0_25px_80px_-12px_rgba(0,0,0,0.25)] flex flex-col overflow-hidden"
+          className="absolute bottom-16 right-0 w-[calc(100vw-2rem)] sm:w-[400px] h-[min(580px,calc(100vh-6rem))] rounded-3xl border border-border/40 bg-card text-card-foreground shadow-[0_25px_80px_-12px_rgba(0,0,0,0.25)] flex flex-col overflow-hidden"
         >
           {/* Header */}
           <div className="relative flex items-center justify-between px-5 py-4 bg-gradient-to-r from-accent to-accent/85">
@@ -381,10 +381,10 @@ const ChatBot = () => {
                 <div className="w-16 h-16 rounded-3xl bg-accent/10 flex items-center justify-center mb-4 border border-accent/20">
                   <Sparkles size={28} className="text-accent" />
                 </div>
-                <h3 className="font-heading text-xl font-semibold text-gray-900 mb-1.5">
+                <h3 className="font-heading text-xl font-semibold text-card-foreground mb-1.5">
                   Hi, I'm Vera! 👋
                 </h3>
-                <p className="text-sm text-gray-500 leading-relaxed mb-5 max-w-[260px]">
+                <p className="text-sm text-muted-foreground leading-relaxed mb-5 max-w-[260px]">
                   Your AI guide to everything {portalName}. What would you like
                   to know?
                 </p>
@@ -393,12 +393,12 @@ const ChatBot = () => {
                     <button
                       key={topic.label}
                       onClick={() => sendMessage(topic.query)}
-                      className="group relative px-3 py-2.5 rounded-2xl border border-gray-200 bg-gray-50 hover:bg-accent/5 hover:border-accent/30 transition-all duration-300 text-left"
+                      className="group relative px-3 py-2.5 rounded-2xl border border-border bg-muted/50 hover:bg-accent/5 hover:border-accent/30 transition-all duration-300 text-left"
                     >
-                      <span className="text-xs font-medium text-gray-800 group-hover:text-accent transition-colors duration-300">
+                      <span className="text-xs font-medium text-card-foreground group-hover:text-accent transition-colors duration-300">
                         {topic.label}
                       </span>
-                      <span className="block text-[10px] text-gray-400 mt-0.5 leading-tight">
+                      <span className="block text-[10px] text-muted-foreground mt-0.5 leading-tight">
                         {topic.query.length > 30
                           ? topic.query.slice(0, 30) + "…"
                           : topic.query}
@@ -426,8 +426,8 @@ const ChatBot = () => {
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed ${
                     msg.role === "user"
-                      ? "bg-accent text-white rounded-br-lg"
-                      : "bg-gray-100 text-gray-800 rounded-bl-lg border border-gray-200"
+                      ? "bg-accent text-accent-foreground rounded-br-lg"
+                      : "bg-muted text-card-foreground rounded-bl-lg border border-border"
                   }`}
                 >
                   {msg.role === "assistant" ? (
@@ -471,8 +471,8 @@ const ChatBot = () => {
           </div>
 
           {/* Input Area */}
-          <div className="px-4 py-3 border-t border-gray-200 bg-white">
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-4 py-1 focus-within:border-accent/40 focus-within:shadow-[0_0_0_3px_hsla(38,52%,45%,0.08)] transition-all duration-300">
+          <div className="px-4 py-3 border-t border-border bg-card">
+            <div className="flex items-center gap-2 bg-background border border-border rounded-2xl px-4 py-1 focus-within:border-accent/40 focus-within:shadow-[0_0_0_3px_hsla(38,52%,45%,0.08)] transition-all duration-300">
               <input
                 ref={inputRef}
                 type="text"
@@ -480,7 +480,7 @@ const ChatBot = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type a message..."
-                className="flex-1 bg-transparent py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
+                className="flex-1 bg-transparent py-2.5 text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none"
                 disabled={isLoading}
               />
               <button
@@ -491,7 +491,7 @@ const ChatBot = () => {
                 <Send size={14} />
               </button>
             </div>
-            <p className="text-[9px] text-gray-400 text-center mt-2 tracking-wide">
+            <p className="text-[9px] text-muted-foreground text-center mt-2 tracking-wide">
               Powered by {portalName} AI · Responses may be approximate
             </p>
           </div>

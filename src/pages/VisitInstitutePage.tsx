@@ -136,7 +136,7 @@ const VisitInstitutePage = () => {
             alt="Campus Visit"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-primary/55" />
+          <div className="absolute inset-0 bg-black/55" />
         </div>
 
         <div

@@ -52,7 +52,7 @@ const AdminDashboardPage = () => {
     { title: "Admitted", value: stats?.admitted || 0, icon: <CheckCircle className="h-5 w-5" />, color: "text-green-500" },
     { title: "Rejected", value: stats?.rejected || 0, icon: <XCircle className="h-5 w-5" />, color: "text-red-500" },
     { title: "Waitlisted", value: stats?.waitlisted || 0, icon: <AlertCircle className="h-5 w-5" />, color: "text-orange-500" },
-    { title: "Drafts", value: stats?.draft || 0, icon: <Inbox className="h-5 w-5" />, color: "text-gray-500" },
+    { title: "Drafts", value: stats?.draft || 0, icon: <Inbox className="h-5 w-5" />, color: "text-muted-foreground" },
   ];
 
   return (

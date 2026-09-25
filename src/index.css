@@ -22,7 +22,7 @@
     --secondary-foreground: 60 5% 11%;
 
     --muted: 60 3% 82%;
-    --muted-foreground: 60 3% 45%;
+    --muted-foreground: 60 3% 34%;
 
     --accent: 38 52% 45%;
     --accent-foreground: 60 7% 95%;
@@ -47,6 +47,52 @@
     --sidebar-accent-foreground: 60 5% 11%;
     --sidebar-border: 60 3% 82%;
     --sidebar-ring: 38 34% 55%;
+  }
+
+  .dark {
+    --background: 60 6% 8%;
+    --foreground: 60 12% 92%;
+
+    --card: 60 6% 11%;
+    --card-foreground: 60 12% 92%;
+
+    --popover: 60 6% 11%;
+    --popover-foreground: 60 12% 92%;
+
+    /* primary/primary-foreground keep the SAME relationship as the light
+       theme on purpose. This design uses `primary-foreground` both as the
+       label on a bg-primary surface AND as light text over dark image
+       scrims (146 call sites), so inverting the pair here would render
+       hero and section text near-black on a near-black scrim.
+       primary is lifted just enough to read as a surface against --background. */
+    --primary: 60 5% 22%;
+    --primary-foreground: 60 8% 95%;
+
+    --secondary: 60 5% 18%;
+    --secondary-foreground: 60 12% 92%;
+
+    --muted: 60 5% 17%;
+    --muted-foreground: 60 6% 62%;
+
+    /* Bronze lifted from 45% to 60% lightness to stay legible on dark. */
+    --accent: 38 55% 60%;
+    --accent-foreground: 60 8% 10%;
+
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 60 8% 96%;
+
+    --border: 60 5% 22%;
+    --input: 60 5% 22%;
+    --ring: 38 55% 60%;
+
+    --sidebar-background: 60 6% 10%;
+    --sidebar-foreground: 60 12% 92%;
+    --sidebar-primary: 60 5% 22%;
+    --sidebar-primary-foreground: 60 8% 95%;
+    --sidebar-accent: 60 5% 18%;
+    --sidebar-accent-foreground: 60 12% 92%;
+    --sidebar-border: 60 5% 22%;
+    --sidebar-ring: 38 55% 60%;
   }
 }
 

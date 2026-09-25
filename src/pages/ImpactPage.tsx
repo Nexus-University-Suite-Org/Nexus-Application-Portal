@@ -153,7 +153,7 @@ const ImpactPage = () => {
       <div className="relative min-h-[60vh] flex items-end">
         <div className="absolute inset-0 overflow-hidden rounded-none">
           <img src={heroImage} alt="Graduate success stories" className="w-full h-full object-cover rounded-none" />
-          <div className="absolute inset-0 bg-primary/70 rounded-none" />
+          <div className="absolute inset-0 bg-black/70 rounded-none" />
         </div>
         <div className="relative z-10 px-8 md:px-16 pb-24 pt-40 impact-hero-text max-w-4xl">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6 opacity-0">{heroTagline}</p>
