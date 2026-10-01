@@ -7,6 +7,31 @@ import Footer from "@/components/Footer";
 import aboutHero from "@/assets/about-hero.jpg";
 import { Heart, ArrowRight } from "lucide-react";
 import { useSpotlightCards, useParallax } from "@/hooks/useScrollReveal";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+
+/** Every CMS key this page reads. Absence is reported in the debug overlay. */
+const ABOUT_SETTING_KEYS = [
+  "about_story_label",
+  "about_story_heading_1",
+  "about_story_heading_2",
+  "about_story_paragraph",
+  "about_founding_label",
+  "about_founding_heading",
+  "about_founding_story",
+  "about_mission_label",
+  "about_mission_text",
+  "about_vision_label",
+  "about_vision_text",
+  "about_values_label",
+  "about_values_heading",
+  "about_programs_btn",
+  "about_cta_label",
+  "about_cta_heading",
+  "about_cta_donate_btn",
+  "about_cta_partner_btn",
+  "about_values",
+  "about_hero_image",
+];
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -53,44 +78,39 @@ const AboutPage = () => {
   useSpotlightCards(valuesRef);
   useParallax(pageRef);
 
+  const { settings } = useSiteSettings({ keys: ABOUT_SETTING_KEYS, scope: "/about" });
+
   useEffect(() => {
-    fetch("/api/v1/content/site-settings")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch");
-        return res.json();
-      })
-      .then((data: Record<string, string>) => {
-        if (data.about_story_label) setStoryLabel(data.about_story_label);
-        if (data.about_story_heading_1) setHeadingLine1(data.about_story_heading_1);
-        if (data.about_story_heading_2) setHeadingLine2(data.about_story_heading_2);
-        if (data.about_story_paragraph) setStoryParagraph(data.about_story_paragraph);
-        if (data.about_founding_label) setFoundingLabel(data.about_founding_label);
-        if (data.about_founding_heading) setFoundingHeading(data.about_founding_heading);
-        if (data.about_founding_story) setFoundingStory(data.about_founding_story);
-        if (data.about_mission_label) setMissionLabel(data.about_mission_label);
-        if (data.about_mission_text) setMissionText(data.about_mission_text);
-        if (data.about_vision_label) setVisionLabel(data.about_vision_label);
-        if (data.about_vision_text) setVisionText(data.about_vision_text);
-        if (data.about_values_label) setValuesLabel(data.about_values_label);
-        if (data.about_values_heading) setValuesHeading(data.about_values_heading);
-        if (data.about_programs_btn) setProgramsBtn(data.about_programs_btn);
-        if (data.about_cta_label) setCtaLabel(data.about_cta_label);
-        if (data.about_cta_heading) setCtaHeading(data.about_cta_heading);
-        if (data.about_cta_donate_btn) setCtaDonateBtn(data.about_cta_donate_btn);
-        if (data.about_cta_partner_btn) setCtaPartnerBtn(data.about_cta_partner_btn);
-        if (data.about_values) {
-          try {
-            const parsed = JSON.parse(data.about_values);
-            if (Array.isArray(parsed) && parsed.length > 0) setValues(parsed);
-          } catch { /* keep fallback */ }
-        }
-        if (data.about_hero_image) {
-          setHeroImage(data.about_hero_image);
-          new Image().src = data.about_hero_image;
-        }
-      })
-      .catch(() => {});
-  }, []);
+    const data = settings;
+    if (data.about_story_label) setStoryLabel(data.about_story_label);
+    if (data.about_story_heading_1) setHeadingLine1(data.about_story_heading_1);
+    if (data.about_story_heading_2) setHeadingLine2(data.about_story_heading_2);
+    if (data.about_story_paragraph) setStoryParagraph(data.about_story_paragraph);
+    if (data.about_founding_label) setFoundingLabel(data.about_founding_label);
+    if (data.about_founding_heading) setFoundingHeading(data.about_founding_heading);
+    if (data.about_founding_story) setFoundingStory(data.about_founding_story);
+    if (data.about_mission_label) setMissionLabel(data.about_mission_label);
+    if (data.about_mission_text) setMissionText(data.about_mission_text);
+    if (data.about_vision_label) setVisionLabel(data.about_vision_label);
+    if (data.about_vision_text) setVisionText(data.about_vision_text);
+    if (data.about_values_label) setValuesLabel(data.about_values_label);
+    if (data.about_values_heading) setValuesHeading(data.about_values_heading);
+    if (data.about_programs_btn) setProgramsBtn(data.about_programs_btn);
+    if (data.about_cta_label) setCtaLabel(data.about_cta_label);
+    if (data.about_cta_heading) setCtaHeading(data.about_cta_heading);
+    if (data.about_cta_donate_btn) setCtaDonateBtn(data.about_cta_donate_btn);
+    if (data.about_cta_partner_btn) setCtaPartnerBtn(data.about_cta_partner_btn);
+    if (data.about_values) {
+      try {
+        const parsed = JSON.parse(data.about_values);
+        if (Array.isArray(parsed) && parsed.length > 0) setValues(parsed);
+      } catch { /* keep fallback */ }
+    }
+    if (data.about_hero_image) {
+      setHeroImage(data.about_hero_image);
+      new Image().src = data.about_hero_image;
+    }
+  }, [settings]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
