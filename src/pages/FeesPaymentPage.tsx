@@ -53,9 +53,12 @@ const FeesPaymentPage = () => {
   const feeBreakdown =
     feeAssignments.length > 0
       ? feeAssignments.map((fa) => ({
-          category: fa.description || fa.program || "Fee",
-          amount: `$${fa.amount.toLocaleString()}`,
-          note: `${fa.college} - ${fa.academicYear}`,
+          id: fa.id,
+          category: fa.itemName || fa.description || fa.program || "Fee",
+          amount: `${fa.currency || "UGX"} ${fa.amount.toLocaleString()}`,
+          note: [fa.college, fa.yearLevel, fa.semester, fa.academicYear]
+            .filter(Boolean)
+            .join(" - "),
         }))
       : [];
 
@@ -190,8 +193,8 @@ const FeesPaymentPage = () => {
             <p className="font-body text-sm text-muted-foreground">No fee information available yet.</p>
           )}
 
-          {feeBreakdown.map((item) => (
-            <div key={item.category} className="fee-item opacity-0">
+        {feeBreakdown.map((item) => (
+          <div key={item.id} className="fee-item opacity-0">
               <div className="card-hover flex items-center justify-between p-6 rounded-[20px] border border-border/40 hover:border-accent/40 bg-background transition-all duration-500">
                 <div className="flex items-center gap-4 flex-1">
                   <DollarSign size={24} className="icon-hover text-accent flex-shrink-0" />
@@ -219,7 +222,8 @@ const FeesPaymentPage = () => {
               Estimated Annual Total
             </p>
             <p className="font-heading text-4xl font-light text-accent">
-              ${totalAmount.toLocaleString()}
+              {feeAssignments[0]?.currency || "UGX"}{" "}
+              {totalAmount.toLocaleString()}
             </p>
           </div>
           <p className="font-body text-sm text-muted-foreground mt-3">

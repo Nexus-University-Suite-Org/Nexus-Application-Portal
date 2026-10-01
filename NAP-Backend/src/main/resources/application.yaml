@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
   compression:
     enabled: true
     mime-types: application/json,text/html,text/plain,text/css
@@ -14,9 +14,9 @@ spring:
       enabled: true
 
   datasource:
-    url: ${DATABASE_URL:jdbc:h2:mem:napdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1}
-    username: ${DATABASE_USER:sa}
-    password: ${DATABASE_PASSWORD:}
+    url: ${JDBC_DATABASE_URL:${DATABASE_URL:jdbc:h2:mem:napdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1}}
+    username: ${JDBC_DATABASE_USER:${DATABASE_USER:sa}}
+    password: ${JDBC_DATABASE_PASSWORD:${DATABASE_PASSWORD:}}
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
@@ -100,6 +100,10 @@ nap:
   gemini:
     api-key: ${GEMINI_API_KEY:}
     model: ${GEMINI_MODEL:gemini-3.6-flash}
+  ml-service:
+    base-url: ${ML_SERVICE_BASE_URL:http://127.0.0.1:8000}
+    connect-timeout-ms: ${ML_SERVICE_CONNECT_TIMEOUT:5000}
+    read-timeout-ms: ${ML_SERVICE_READ_TIMEOUT:120000}
   jwt:
     secret: ${JWT_SECRET:nexus-admin-secret-key-change-in-production-2024-ultra-secure}
     expiration-hours: ${JWT_EXPIRATION_HOURS:24}

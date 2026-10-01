@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || "/api/v1";
+import { apiUrl } from "@/lib/apiUrl";
 
 export type UploadResult = {
   url: string;
@@ -18,7 +18,7 @@ export const uploadFile = async (
 
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}/storage/upload`, {
+    response = await fetch(apiUrl("storage/upload"), {
       method: "POST",
       body: form,
     });
