@@ -11,6 +11,7 @@ import {
   type ApplicationSubmissionInput,
 } from "@/lib/submissions";
 import { fetchRunningSchemes, type AdmissionScheme } from "@/lib/schemes";
+import { apiUrl } from "@/lib/apiUrl";
 
 const currentYear = new Date().getFullYear();
 
@@ -646,9 +647,6 @@ const nationalityOptions = [
 ];
 
 // Email verification moves to the platform API (Spring Boot identity module).
-const OTP_API_BASE =
-  import.meta.env.VITE_API_BASE_URL?.trim() || "/api/v1";
-
 const APPLICATION_DRAFT_STORAGE_KEY = "application_start_draft_v1";
 const APPLICANT_ID_STORAGE_KEY = "nexus_applicant_id";
 
@@ -2000,7 +1998,7 @@ const ApplicationStartPage = () => {
     setOtpVerified(false);
 
     try {
-      const res = await fetch(`${OTP_API_BASE}/auth/otp/send`, {
+      const res = await fetch(apiUrl("auth/otp/send"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -2041,7 +2039,7 @@ const ApplicationStartPage = () => {
     setOtpStatus("");
 
     try {
-      const res = await fetch(`${OTP_API_BASE}/auth/otp/verify`, {
+      const res = await fetch(apiUrl("auth/otp/verify"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp: code }),

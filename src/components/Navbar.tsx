@@ -6,8 +6,11 @@ import { Menu, X, Heart } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 gsap.registerPlugin(ScrollTrigger);
+
+const NAVBAR_SETTING_KEYS = ["portal_name", "nav_links", "cta_buttons"];
 
 const defaultNavItems = [
   { label: "Home", href: "/" },
@@ -59,48 +62,31 @@ const Navbar = () => {
     }
   }, []);
 
+  const { settings } = useSiteSettings({ keys: NAVBAR_SETTING_KEYS, scope: "Navbar" });
+
   useEffect(() => {
-    fetch("/api/v1/content/site-settings")
-      .then((res) => {
-        console.log("[Navbar] site-settings response status:", res.status);
-        if (!res.ok) throw new Error("Failed to fetch");
-        return res.json();
-      })
-      .then((data: Record<string, string>) => {
-        console.log("[Navbar] site-settings raw data:", data);
-        console.log("[Navbar] portal_name from API:", data.portal_name);
-        if (data.portal_name) {
-          console.log("[Navbar] setting portalName to:", data.portal_name);
-          setPortalName(data.portal_name);
-        } else {
-          console.log("[Navbar] portal_name is empty/falsy, keeping default");
+    if (settings.portal_name) setPortalName(settings.portal_name);
+    if (settings.nav_links) {
+      try {
+        const parsed = JSON.parse(settings.nav_links);
+        const visible = parsed.filter((l: { visible?: boolean }) => l.visible !== false);
+        if (visible.length > 0) {
+          const hasAdmissions = visible.some((l: { href?: string }) => l.href === "/admissions/lists");
+          if (!hasAdmissions) {
+            visible.splice(4, 0, { label: "Running Admissions", href: "/admissions/lists", visible: true });
+          }
+          setNavItems(visible);
         }
-        if (data.nav_links) {
-          try {
-            const parsed = JSON.parse(data.nav_links);
-            const visible = parsed.filter((l: { visible?: boolean }) => l.visible !== false);
-            if (visible.length > 0) {
-              const hasAdmissions = visible.some((l: { href?: string }) => l.href === "/admissions/lists");
-              if (!hasAdmissions) {
-                visible.splice(4, 0, { label: "Running Admissions", href: "/admissions/lists", visible: true });
-              }
-              setNavItems(visible);
-            }
-          } catch {}
-        }
-        if (data.cta_buttons) {
-          try {
-            const parsed = JSON.parse(data.cta_buttons);
-            const visible = parsed.filter((b: { visible?: boolean }) => b.visible !== false);
-            if (visible.length > 0) setCtaButtons(visible);
-          } catch {}
-        }
-      })
-      .catch((err) => {
-        console.error("[Navbar] failed to fetch site-settings:", err);
-        // Use defaults if API is down
-      });
-  }, []);
+      } catch {}
+    }
+    if (settings.cta_buttons) {
+      try {
+        const parsed = JSON.parse(settings.cta_buttons);
+        const visible = parsed.filter((b: { visible?: boolean }) => b.visible !== false);
+        if (visible.length > 0) setCtaButtons(visible);
+      } catch {}
+    }
+  }, [settings]);
 
   const handleNavClick = (href: string) => {
     setMobileOpen(false);

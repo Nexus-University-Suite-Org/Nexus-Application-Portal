@@ -61,16 +61,11 @@ public class Program {
     @Column(length = 200)
     private String campus;
 
-    private Integer duration;
-
     @Column(name = "duration_unit", length = 20)
     private String durationUnit;
 
     @Column(name = "number_of_years")
     private Integer numberOfYears;
-
-    @Column(name = "number_of_semesters")
-    private Integer numberOfSemesters;
 
     @Column(name = "semesters_per_year")
     private Integer semestersPerYear;

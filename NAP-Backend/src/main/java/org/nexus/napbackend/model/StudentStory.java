@@ -29,7 +29,7 @@ public class StudentStory {
     @Column(nullable = false, length = 500)
     private String slug;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     private String content;
 
     @Column(name = "student_name", length = 300)

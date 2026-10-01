@@ -35,3 +35,15 @@ target/
 # Uploaded student documents (sensitive PII — never commit)
 uploads/
 NAP-Backend/uploads/
+
+# Python (NAP ML service)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+NAP-ML-Service/.venv/
+
+# Test / audit artifacts
+e2e-audit/
+test-results/
+playwright-report/

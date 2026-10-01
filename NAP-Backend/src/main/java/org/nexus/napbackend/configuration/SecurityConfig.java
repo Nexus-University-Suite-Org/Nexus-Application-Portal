@@ -67,7 +67,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-config.setAllowedOrigins(Arrays.stream(corsProperties.allowedOrigins().split(","))
+        config.setAllowedOrigins(Arrays.stream(corsProperties.allowedOrigins().split(","))
                 .map(String::trim)
                 .filter(origin -> !origin.isEmpty())
                 .toList());

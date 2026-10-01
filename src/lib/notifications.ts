@@ -1,7 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || "/api";
-
-const buildUrl = (path: string) =>
-  `${API_BASE_URL}${API_BASE_URL.endsWith("/") ? "" : "/"}${path}`;
+import { apiUrl } from "@/lib/apiUrl";
 
 export type Notification = {
   id: number;
@@ -43,7 +40,7 @@ export const getNotifications = async (
   if (isRead !== undefined) {
     params.set("isRead", String(isRead));
   }
-  const response = await fetch(buildUrl(`v1/notifications?${params}`));
+  const response = await fetch(apiUrl(`notifications?${params}`));
   if (!response.ok) {
     const detail =
       (await parseErrorDetail(response)) ?? "Failed to fetch notifications";
@@ -55,7 +52,7 @@ export const getNotifications = async (
 export const markNotificationRead = async (
   id: number,
 ): Promise<Notification> => {
-  const response = await fetch(buildUrl(`v1/notifications/${id}`), {
+  const response = await fetch(apiUrl(`notifications/${id}`), {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ read: true }),
@@ -72,7 +69,7 @@ export const markAllNotificationsRead = async (
   userId: number,
 ): Promise<void> => {
   const response = await fetch(
-    buildUrl("v1/notifications/mark-all-read"),
+    apiUrl("notifications/mark-all-read"),
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -87,7 +84,7 @@ export const markAllNotificationsRead = async (
 };
 
 export const deleteNotification = async (id: number): Promise<void> => {
-  const response = await fetch(buildUrl(`v1/notifications/${id}`), {
+  const response = await fetch(apiUrl(`notifications/${id}`), {
     method: "DELETE",
   });
   if (!response.ok) {
@@ -101,7 +98,7 @@ export const getAnnouncements = async (
   courseId?: number,
 ): Promise<Announcement[]> => {
   const params = courseId ? `?courseId=${courseId}` : "";
-  const response = await fetch(buildUrl(`v1/announcements${params}`));
+  const response = await fetch(apiUrl(`announcements${params}`));
   if (!response.ok) {
     const detail =
       (await parseErrorDetail(response)) ?? "Failed to fetch announcements";

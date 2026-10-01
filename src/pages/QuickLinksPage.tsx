@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -14,6 +14,7 @@ import {
   Library,
   Mail,
   Map,
+  Monitor,
   Phone,
   Shield,
   Users,
@@ -22,29 +23,28 @@ import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Keyed by the lucide icon name that the API returns in `icon`.
 const iconMap = {
-  "Course Catalog": BookOpen,
-  "Academic Calendar": Calendar,
-  "Library Portal": Library,
-  "Exam Results": FileText,
-  "Student Portal": GraduationCap,
-  "Student Organizations": Users,
-  "Health & Safety": Shield,
-  "IT Help Desk": HelpCircle,
-  "Contact Us": Mail,
-  Directory: Phone,
-  "Campus Map": Map,
-  "Forms & Documents": FileText,
+  Monitor: Monitor,
+  BookOpen: BookOpen,
+  Library: Library,
+  Calendar: Calendar,
+  FileText: FileText,
+  Phone: Phone,
+  Map: Map,
+  HelpCircle: HelpCircle,
+  Mail: Mail,
+  Users: Users,
+  Shield: Shield,
+  GraduationCap: GraduationCap,
 } as const;
 
 type QuickLinkDoc = {
-  id: string;
+  id: number;
   title: string;
-  slug: string;
-  category: string;
-  description?: string;
+  url: string;
   icon?: string;
-  order?: number;
+  displayOrder?: number;
 };
 
 const QuickLinksPage = () => {
@@ -52,36 +52,33 @@ const QuickLinksPage = () => {
   const { data: quickLinks, isLoading } = useContentCollection<QuickLinkDoc>(
     "quick_links",
     [],
-    { orderBy: { field: "order", direction: "asc" } },
   );
 
-  const grouped = quickLinks.reduce<Record<string, QuickLinkDoc[]>>(
-    (acc, item) => {
-      if (!acc[item.category]) {
-        acc[item.category] = [];
-      }
-      acc[item.category].push(item);
-      return acc;
-    },
-    {},
-  );
-
-  const linkGroups = Object.entries(grouped).map(([title, links]) => ({
-    title,
-    links: links
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  // The API returns a flat list with no category, and the seed data currently
+  // contains the same link three times, so de-duplicate by url and sort by
+  // displayOrder before rendering.
+  const sections = useMemo(() => {
+    const seen = new Set<string>();
+    const links = quickLinks
+      .filter((link) => {
+        const key = link.url || link.title;
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
       .map((link) => {
-        const iconKey = (link.icon || link.title) as keyof typeof iconMap;
+        const iconKey = (link.icon || "") as keyof typeof iconMap;
         return {
-          slug: link.slug,
+          id: String(link.id),
+          href: link.url || `/quick-links/${link.title.toLowerCase().replace(/\s+/g, "-")}`,
           label: link.title,
-          desc: link.description ?? "Visit this resource",
+          desc: "Visit this resource",
           icon: iconMap[iconKey] ?? FileText,
         };
-      }),
-  }));
-
-  const sections = linkGroups.length > 0 ? linkGroups : [];
+      });
+    return links.length > 0 ? [{ title: "", links }] : [];
+  }, [quickLinks]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -149,17 +146,19 @@ const QuickLinksPage = () => {
           </p>
         )}
         {sections.map((group) => (
-          <div key={group.title} className="ql-group opacity-0">
-            <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-10">
-              {group.title}
-            </p>
+          <div key={group.title || "all"} className="ql-group opacity-0">
+            {group.title && (
+              <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-10">
+                {group.title}
+              </p>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {group.links.map((link) => {
                 const Icon = link.icon;
                 return (
                   <Link
-                    key={link.label}
-                    to={`/quick-links/${link.slug}`}
+                    key={link.id}
+                    to={link.href}
                     className="group flex items-start gap-5 p-6 border border-border rounded-[20px] transition-all duration-500 hover:border-accent/40 hover:shadow-[0_15px_50px_-15px_hsl(var(--accent)/0.12)]"
                   >
                     <div className="w-12 h-12 rounded-[12px] bg-secondary flex items-center justify-center shrink-0 group-hover:bg-accent/10 transition-colors duration-500">

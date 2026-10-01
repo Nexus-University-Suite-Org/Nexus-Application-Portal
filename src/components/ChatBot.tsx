@@ -9,6 +9,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import gsap from "gsap";
+import { apiUrl } from "@/lib/apiUrl";
 
 interface Message {
   id: string;
@@ -16,8 +17,8 @@ interface Message {
   content: string;
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL?.trim() || "/api/v1";
-const CHAT_URL = `${API_BASE}${API_BASE.endsWith("/") ? "" : "/"}v1/chat`;
+const CHAT_URL = apiUrl("chat");
+const STORAGE_KEY = "nap.chatbot.history.v1";
 
 const getQuickTopics = (instituteName: string) => [
   { label: "Programs", query: "What vocational programs do you offer?" },

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { logDebug } from "@/lib/debugLogger";
+import { apiUrl } from "@/lib/apiUrl";
 
 type OrderDirection = "asc" | "desc";
 
@@ -21,11 +23,6 @@ export type ContentCollectionResult<T> = {
   error: Error | null;
   isUsingFallback: boolean;
 };
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || "/api";
-
-const buildUrl = (path: string) =>
-  `${API_BASE_URL}${API_BASE_URL.endsWith("/") ? "" : "/"}${path}`;
 
 const collectionApiMap: Record<string, string> = {
   news: "news",
@@ -67,18 +64,35 @@ export const useContentCollection = <T extends Record<string, unknown>>(
 
     const fetchData = async () => {
       try {
-        const url = buildUrl(`v1/content/${apiCollection}`);
+        const url = apiUrl(`content/${apiCollection}`);
+        logDebug("info", `useContentCollection("${collectionName}") → ${url}`);
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Content API returned ${response.status}`);
         }
         const result = await response.json();
+        if (!Array.isArray(result)) {
+          logDebug(
+            "warn",
+            `useContentCollection("${collectionName}") got non-array payload — rendering fallback data`,
+          );
+        } else {
+          logDebug(
+            "info",
+            `useContentCollection("${collectionName}") loaded ${result.length} item(s) from API`,
+          );
+        }
         if (!cancelled && Array.isArray(result)) {
           setData(result as T[]);
           setIsUsingFallback(false);
         }
       } catch (err) {
         if (!cancelled) {
+          const message = err instanceof Error ? err.message : String(err);
+          logDebug(
+            "error",
+            `useContentCollection("${collectionName}") failed — ${message}. Falling back to static data.`,
+          );
           setError(err instanceof Error ? err : new Error(String(err)));
           setIsUsingFallback(true);
         }

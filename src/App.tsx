@@ -9,6 +9,7 @@ import PageTransition from "@/components/PageTransition";
 import useSmoothScroll from "@/hooks/useSmoothScroll";
 import { AdminAuthProvider, useAdminAuth } from "@/contexts/AdminAuthContext";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
+import DebugOverlay from "@/components/DebugOverlay";
 const Index = lazy(() => import("./pages/Index.tsx"));
   const StudyAtPortal = lazy(() => import("./pages/StudyAtPortal.tsx"));
 const StudyItemPage = lazy(() => import("./pages/StudyItemPage.tsx"));
@@ -234,6 +235,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <DebugOverlay />
           <BrowserRouter>
             <AdminAuthProvider>
               <AnimatedRoutes />
