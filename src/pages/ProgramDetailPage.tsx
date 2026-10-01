@@ -163,7 +163,7 @@ const ProgramDetailPage = () => {
       <div className="relative min-h-[50vh] flex items-end">
         <div className="absolute inset-0 overflow-hidden">
           <img src={aboutHero} alt={program.programName} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-primary/70" />
+          <div className="absolute inset-0 bg-black/70" />
         </div>
         <div className="relative z-10 px-8 md:px-16 pb-16 pt-32 detail-hero-content max-w-5xl w-full">
           <button onClick={() => navigate("/programs")} className="flex items-center gap-2 text-xs tracking-[0.2em] uppercase text-primary-foreground/60 hover:text-primary-foreground transition-colors mb-8 cursor-pointer">

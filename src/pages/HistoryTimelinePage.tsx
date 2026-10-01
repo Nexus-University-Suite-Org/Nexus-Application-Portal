@@ -110,7 +110,7 @@ const HistoryTimelinePage = () => {
             alt="Our History"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-primary/60" />
+          <div className="absolute inset-0 bg-black/60" />
         </div>
 
         <div
