@@ -32,7 +32,7 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-  plugins: [react(), mode === "development" && componentTagger()].filter(
+    plugins: [react(), mode === "development" && componentTagger()].filter(
       Boolean,
     ),
     resolve: {

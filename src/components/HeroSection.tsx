@@ -124,7 +124,7 @@ const HeroSection = () => {
       });
 
       gsap.to(overlayRef.current, {
-        opacity: 0.75,
+        opacity: 0.35,
         ease: "none",
         scrollTrigger: {
           trigger: sectionRef.current,
@@ -207,14 +207,14 @@ const HeroSection = () => {
           alt="Students learning practical vocational skills at the institute"
           className="w-full h-[130%] object-cover"
         />
-        <div ref={overlayRef} className="absolute inset-0 bg-foreground/55" />
+        <div ref={overlayRef} className="absolute inset-0 bg-black/50" />
       </div>
       <div
         ref={heroGlowRef}
-        className="absolute left-1/2 top-1/2 z-[1] h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,hsl(var(--accent)/0.25)_0%,transparent_68%)] blur-3xl pointer-events-none"
+        className="absolute left-1/2 top-1/2 z-[1] h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,hsl(var(--accent)/0.12)_0%,transparent_68%)] blur-3xl pointer-events-none"
       />
-      <div className="hero-orb absolute top-24 right-[8%] z-[1] h-28 w-28 rounded-full bg-accent/20 blur-2xl pointer-events-none" />
-      <div className="hero-orb absolute bottom-28 left-[7%] z-[1] h-24 w-24 rounded-full bg-primary-foreground/25 blur-2xl pointer-events-none" />
+      <div className="hero-orb absolute top-24 right-[8%] z-[1] h-28 w-28 rounded-full bg-accent/10 blur-2xl pointer-events-none" />
+      <div className="hero-orb absolute bottom-28 left-[7%] z-[1] h-24 w-24 rounded-full bg-white/15 blur-2xl pointer-events-none" />
 
       {/* Hero Content */}
       <div
