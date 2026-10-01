@@ -6,9 +6,30 @@ import Footer from "@/components/Footer";
 import { ArrowRight, Calendar, X } from "lucide-react";
 import newsHero from "@/assets/news-hero.jpg";
 import { useContentCollection } from "@/hooks/useContentCollection";
-
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 gsap.registerPlugin(ScrollTrigger);
+
+/**
+ * Every CMS key this page reads. None of these currently exist in production,
+ * which is why the page renders its hardcoded copy; absence is now reported
+ * through the debug overlay instead of being silently swallowed.
+ */
+const NEWS_SETTING_KEYS = [
+  "news_hero_tagline",
+  "news_hero_heading_1",
+  "news_hero_heading_2",
+  "news_hero_image",
+  "news_events_tagline",
+  "news_events_heading",
+  "news_read_more",
+  "news_read_more_visible",
+  "news_featured_category",
+  "news_featured_title",
+  "news_featured_excerpt",
+  "news_articles",
+  "news_events",
+];
 
 const currentYear = new Date().getFullYear();
 
@@ -92,29 +113,27 @@ const NewsPage = () => {
     { orderBy: { field: "date", direction: "asc" } },
   );
 
+  const { settings } = useSiteSettings({ keys: NEWS_SETTING_KEYS, scope: "/news" });
+
   useEffect(() => {
-    fetch("/api/v1/content/site-settings")
-      .then((r) => r.json())
-      .then((data: Record<string, string>) => {
-        if (data.news_hero_tagline) setHeroTagline(data.news_hero_tagline);
-        if (data.news_hero_heading_1) setHeroHeading1(data.news_hero_heading_1);
-        if (data.news_hero_heading_2) setHeroHeading2(data.news_hero_heading_2);
-        if (data.news_events_tagline) setEventsTagline(data.news_events_tagline);
-        if (data.news_events_heading) setEventsHeading(data.news_events_heading);
-        if (data.news_read_more) setReadMoreText(data.news_read_more);
-        if (data.news_read_more_visible !== undefined) setReadMoreVisible(data.news_read_more_visible !== 'false');
-        if (data.news_featured_category) setFeaturedCategoryOverride(data.news_featured_category);
-        if (data.news_featured_title) setFeaturedTitleOverride(data.news_featured_title);
-        if (data.news_featured_excerpt) setFeaturedExcerptOverride(data.news_featured_excerpt);
-        try { if (data.news_articles) setSettingNewsArticles(JSON.parse(data.news_articles)); } catch {}
-        try { if (data.news_events) setSettingEvents(JSON.parse(data.news_events)); } catch {}
-        if (data.news_hero_image) {
-          setHeroImage(data.news_hero_image);
-          new Image().src = data.news_hero_image;
-        }
-      })
-      .catch(() => {});
-  }, []);
+    const data = settings;
+    if (data.news_hero_tagline) setHeroTagline(data.news_hero_tagline);
+    if (data.news_hero_heading_1) setHeroHeading1(data.news_hero_heading_1);
+    if (data.news_hero_heading_2) setHeroHeading2(data.news_hero_heading_2);
+    if (data.news_events_tagline) setEventsTagline(data.news_events_tagline);
+    if (data.news_events_heading) setEventsHeading(data.news_events_heading);
+    if (data.news_read_more) setReadMoreText(data.news_read_more);
+    if (data.news_read_more_visible !== undefined) setReadMoreVisible(data.news_read_more_visible !== 'false');
+    if (data.news_featured_category) setFeaturedCategoryOverride(data.news_featured_category);
+    if (data.news_featured_title) setFeaturedTitleOverride(data.news_featured_title);
+    if (data.news_featured_excerpt) setFeaturedExcerptOverride(data.news_featured_excerpt);
+    try { if (data.news_articles) setSettingNewsArticles(JSON.parse(data.news_articles)); } catch {}
+    try { if (data.news_events) setSettingEvents(JSON.parse(data.news_events)); } catch {}
+    if (data.news_hero_image) {
+      setHeroImage(data.news_hero_image);
+      new Image().src = data.news_hero_image;
+    }
+  }, [settings]);
 
   const newsData: NewsItem[] =
     rawNewsData.length > 0
@@ -209,9 +228,16 @@ const NewsPage = () => {
           },
         );
       }
-      if (newsRef.current) {
+    });
+    return () => ctx.revert();
+  }, []);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const cards = newsRef.current?.querySelectorAll(".news-card");
+      if (cards?.length) {
         gsap.fromTo(
-          newsRef.current.querySelectorAll(".news-card"),
+          cards,
           { y: 50, opacity: 0 },
           {
             y: 0,
@@ -219,13 +245,16 @@ const NewsPage = () => {
             duration: 0.8,
             stagger: 0.08,
             ease: "power2.out",
-            scrollTrigger: { trigger: newsRef.current, start: "top 80%" },
+            scrollTrigger: newsRef.current
+              ? { trigger: newsRef.current, start: "top 80%" }
+              : undefined,
           },
         );
       }
-      if (eventsRef.current) {
+      const eventItems = eventsRef.current?.querySelectorAll(".event-item");
+      if (eventItems?.length) {
         gsap.fromTo(
-          eventsRef.current.querySelectorAll(".event-item"),
+          eventItems,
           { x: 40, opacity: 0 },
           {
             x: 0,
@@ -233,13 +262,15 @@ const NewsPage = () => {
             duration: 0.7,
             stagger: 0.1,
             ease: "power2.out",
-            scrollTrigger: { trigger: eventsRef.current, start: "top 80%" },
+            scrollTrigger: eventsRef.current
+              ? { trigger: eventsRef.current, start: "top 80%" }
+              : undefined,
           },
         );
       }
     });
     return () => ctx.revert();
-  }, []);
+  }, [newsItems.length, events.length]);
 
   return (
     <div className="min-h-screen bg-background">
