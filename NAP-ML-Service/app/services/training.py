@@ -24,10 +24,17 @@ STATE_FILE = INDEX_DIR / "training_state.json"
 def train() -> dict:
     with _LOCK:
         chunks = extract_all_chunks()
-        if chunks:
-            _CORPUS_FILE.write_text(
-                json.dumps(chunks, ensure_ascii=False), encoding="utf-8"
+        if not chunks:
+            # Rebuilding with an empty list would wipe a working index and then
+            # stamp a fresh trained_at on it, so the assistant would look
+            # trained while answering nothing. Refuse and let the caller retry.
+            raise RuntimeError(
+                "no content retrieved from the NAP API; refusing to overwrite "
+                "the existing index"
             )
+        _CORPUS_FILE.write_text(
+            json.dumps(chunks, ensure_ascii=False), encoding="utf-8"
+        )
         stats = kb.rebuild(chunks)
         state = {
             "last_training_at": kb.trained_at,

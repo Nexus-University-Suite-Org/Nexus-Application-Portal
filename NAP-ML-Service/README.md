@@ -44,6 +44,31 @@ embedding model, `pip install sentence-transformers faiss-cpu` (see the `Run` to
 2. **Chat** (`POST /api/chat`) → embeds the user's last message, retrieves top-k
    relevant chunks, and streams a template-generated answer with source citations.
 
+At startup the service loads the index from `ML_DATA_DIR`. If none exists it trains
+in the background with retries (`AUTO_TRAIN_ON_STARTUP`), so a fresh deploy becomes
+usable without anyone clicking a button. A failed fetch never overwrites a working
+index — `train()` raises rather than rebuilding from an empty chunk list.
+
+### Persisting the index
+
+The built index lives under `ML_DATA_DIR` (default `./data`) and `.gitignore`d, so it
+is not committed. **Mount a volume and point `ML_DATA_DIR` at it**, or every deploy
+starts empty and rebuilds from scratch:
+
+```bash
+railway volume add --mount-path /data
+railway variable set ML_DATA_DIR=/data
+```
+
+### Admin authentication
+
+`POST /api/train` and `GET /api/sources` require `Authorization: Bearer $ML_ADMIN_TOKEN`.
+The endpoints fail closed with `503` when `ML_ADMIN_TOKEN` is unset, so a forgotten
+variable cannot silently expose an open retrain endpoint. The token must match
+`ML_SERVICE_ADMIN_TOKEN` on the NAP-Backend service, which forwards it and requires
+`ROLE_ADMIN` on `/api/v1/chat/status|sources|train`. `GET /api/status` and
+`GET /api/health` stay public for monitoring and are read-only.
+
 ## Wiring into NAP
 
 The Java backend (`ChatController` → `ChatService` → `NapMlClient`) no longer calls
