@@ -20,6 +20,23 @@ ANSWER_CHUNK_LIMIT = int(os.getenv("ANSWER_CHUNK_LIMIT", "1200"))
 
 DEFAULT_PORT = int(os.getenv("DEFAULT_PORT", "8000"))
 
+# Shared secret required by the admin endpoints (train/sources). Left unset by
+# default so a deployment that forgets to configure it fails closed with 503
+# rather than exposing an unauthenticated retrain to the public internet.
+ML_ADMIN_TOKEN = os.getenv("ML_ADMIN_TOKEN", "").strip()
+
+# Build the index at boot when none is present. The container filesystem is
+# ephemeral, so without this every redeploy brings up an empty knowledge base
+# and the assistant replies that it has not been trained.
+AUTO_TRAIN_ON_STARTUP = os.getenv("AUTO_TRAIN_ON_STARTUP", "true").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+AUTO_TRAIN_ATTEMPTS = int(os.getenv("AUTO_TRAIN_ATTEMPTS", "3"))
+AUTO_TRAIN_BACKOFF_SECONDS = int(os.getenv("AUTO_TRAIN_BACKOFF_SECONDS", "10"))
+
 CONTENT_COLLECTIONS = [
     "news",
     "events",

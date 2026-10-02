@@ -109,6 +109,7 @@ nap:
     base-url: ${ML_SERVICE_BASE_URL:http://127.0.0.1:8000}
     connect-timeout-ms: ${ML_SERVICE_CONNECT_TIMEOUT:5000}
     read-timeout-ms: ${ML_SERVICE_READ_TIMEOUT:120000}
+    admin-token: ${ML_SERVICE_ADMIN_TOKEN:}
   jwt:
     secret: ${JWT_SECRET:}
     expiration-hours: ${JWT_EXPIRATION_HOURS:24}
