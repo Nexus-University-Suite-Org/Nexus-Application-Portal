@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -46,11 +47,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/health/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/api/v1/programs/**").permitAll()
-                        .requestMatchers("/api/v1/schemes/**").permitAll()
-                        .requestMatchers("/api/v1/admin/programs/**").permitAll()
-                        .requestMatchers("/api/v1/admin/schemes/**").permitAll()
-                        .requestMatchers("/api/v1/admin/program-categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/programs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/schemes/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().permitAll()
                 )
