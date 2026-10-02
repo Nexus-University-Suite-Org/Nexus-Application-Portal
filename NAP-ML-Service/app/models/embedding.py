@@ -86,6 +86,47 @@ class EmbeddingModel:
         if self.backend == "tfidf":
             self._tfidf.fit(texts)
 
+    def fitted_state(self) -> dict:
+        """Export the fitted state needed to embed queries against this index.
+
+        The sentence-transformers backend is stateless (the same model is
+        reloaded), but the TF-IDF vocabulary and idf weights are derived from
+        the corpus, so they must be persisted alongside the vectors. Without
+        them a restarted service scores every query as zero.
+        """
+        self.ensure_initialized()
+        if self.backend != "tfidf" or not self._tfidf.fitted:
+            return {"backend": self.backend}
+        return {
+            "backend": "tfidf",
+            "vocab": self._tfidf.vocab,
+            "idf": self._tfidf.idf.tolist(),
+        }
+
+    def restore_fitted_state(self, state: dict | None) -> int:
+        """Restore TF-IDF state saved by `fitted_state`.
+
+        Returns the vocabulary size, or 0 when there is nothing to restore.
+        """
+        self.ensure_initialized()
+        if not state or state.get("backend") != "tfidf":
+            return 0
+        vocab = state.get("vocab") or {}
+        idf = state.get("idf") or []
+        if not vocab or len(vocab) != len(idf):
+            return 0
+        self._tfidf.vocab = dict(vocab)
+        self._tfidf.idf = np.asarray(idf, dtype="float32")
+        self._tfidf.fitted = True
+        return len(self._tfidf.vocab)
+
+    def is_query_ready(self, dimensions: int) -> bool:
+        """Whether a query can be embedded into a vector of this width."""
+        self.ensure_initialized()
+        if self.backend != "tfidf":
+            return True
+        return self._tfidf.fitted and len(self._tfidf.vocab) == dimensions
+
     def encode(self, texts, batch_size: int = 64) -> np.ndarray:
         self.ensure_initialized()
         if self.backend == "tfidf":

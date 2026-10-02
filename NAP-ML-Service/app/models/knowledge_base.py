@@ -1,4 +1,5 @@
 import json
+import logging
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
@@ -9,6 +10,8 @@ import numpy as np
 from app.config import INDEX_DIR
 from app.models.embedding import EmbeddingModel
 from app.models.vector_store import VectorStore
+
+log = logging.getLogger(__name__)
 
 _CHUNKS_FILE = INDEX_DIR / "chunks.json"
 _VECTORS_FILE = INDEX_DIR / "vectors.npy"
@@ -80,6 +83,7 @@ class KnowledgeBase:
                 "count": len(self.chunks),
                 "shape": list(self._store.vectors.shape) if self._store else None,
                 "dtype": str(self._store.vectors.dtype) if self._store else "",
+                "embedding_state": self.embedding.fitted_state(),
             }
             _STATE_FILE.write_text(json.dumps(state, ensure_ascii=False), encoding="utf-8")
 
@@ -92,12 +96,28 @@ class KnowledgeBase:
                 shape = tuple(shape_state.get("shape") or (0, 1))
                 raw = np.frombuffer(_VECTORS_FILE.read_bytes(), dtype=np.float32)
                 vectors = raw.reshape(shape)
+                # The TF-IDF vocabulary is derived from the corpus, so it has to come back with
+                # the vectors. Without it transform() emits a zero vector, every
+                # similarity scores 0 and the assistant answers from arbitrary
+                # chunks while reporting itself trained. Prefer a rebuild.
+                self.embedding.restore_fitted_state(
+                    shape_state.get("embedding_state")
+                )
+                if not self.embedding.is_query_ready(int(vectors.shape[1])):
+                    log.warning(
+                        "stored index has no usable %s vocabulary for %s dimensions;"
+                        " rebuilding",
+                        self.embedding.backend,
+                        vectors.shape[1],
+                    )
+                    return False
                 self.chunks = json.loads(_CHUNKS_FILE.read_text(encoding="utf-8"))
                 self._store = VectorStore(vectors)
                 self.trained_at = shape_state.get("trained_at")
                 self.stats = shape_state.get("stats", {})
                 return True
             except Exception:
+                log.exception("failed to load the stored index; it will be rebuilt")
                 return False
 
 
