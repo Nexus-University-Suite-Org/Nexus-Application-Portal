@@ -9,9 +9,60 @@ from app.config import EMBEDDING_MODEL_NAME
 
 _TOKEN_RE = re.compile(r"[a-zA-Z0-9]+")
 
+# Question scaffolding and filler. Without this, "what is the weather in Kampala"
+# scored 0.40 against an FAQ simply because the FAQ also began with "What...".
+_STOPWORDS = frozenset(
+    """
+    a an the and or but if then than that this these those there here
+    is are was were be been being am do does did done doing have has had
+    having i me my we our you your he him his she her it its they them their
+    what which who whom whose when where why how
+    can could should would may might must shall will just about into over
+    for from with without within please tell give show find get know need
+    want like any some all more most other such only own same too very
+    offer offers provide provides include includes available currently
+    nexus university universities
+    s t don now
+    """.split()
+)
+
+_MIN_STEM_LEN = 4
+
+
+def _stem(token: str) -> str:
+    """Collapse the endings that stop a question matching its own answer.
+
+    "scholarships" has to reach the scholarship records, which are titled in the
+    singular; without this the assistant claimed to know nothing about
+    scholarships while three records sat in the index.
+    """
+    if len(token) > _MIN_STEM_LEN and token.endswith("ies"):
+        return token[:-3] + "y"
+    if len(token) > _MIN_STEM_LEN and token.endswith("sses"):
+        return token[:-2]
+    if len(token) > 3 and token.endswith("s") and not token.endswith("ss"):
+        return token[:-1]
+    if len(token) > 5 and token.endswith("ing"):
+        return token[:-3]
+    if len(token) > 4 and token.endswith("ed"):
+        return token[:-2]
+    return token
+
 
 def _tokenize(text: str) -> List[str]:
-    return _TOKEN_RE.findall(text.lower())
+    tokens = [t for t in _TOKEN_RE.findall(text.lower()) if t not in _STOPWORDS]
+    stemmed = [_stem(t) for t in tokens]
+    return [t for t in stemmed if t]
+
+
+def content_terms(text: str) -> set:
+    """The meaningful words of a text, as a set, for coverage comparisons.
+
+    Exposed so retrieval can ask "does this record actually mention nursing?"
+    instead of trusting a raw cosine magnitude, which is small for any short,
+    specific question because the query vector has few terms to match.
+    """
+    return set(_tokenize(text or ""))
 
 
 class TfidfEmbedder:
@@ -85,6 +136,47 @@ class EmbeddingModel:
     def fit(self, texts) -> None:
         if self.backend == "tfidf":
             self._tfidf.fit(texts)
+
+    def fitted_state(self) -> dict:
+        """Export the fitted state needed to embed queries against this index.
+
+        The sentence-transformers backend is stateless (the same model is
+        reloaded), but the TF-IDF vocabulary and idf weights are derived from
+        the corpus, so they must be persisted alongside the vectors. Without
+        them a restarted service scores every query as zero.
+        """
+        self.ensure_initialized()
+        if self.backend != "tfidf" or not self._tfidf.fitted:
+            return {"backend": self.backend}
+        return {
+            "backend": "tfidf",
+            "vocab": self._tfidf.vocab,
+            "idf": self._tfidf.idf.tolist(),
+        }
+
+    def restore_fitted_state(self, state: dict | None) -> int:
+        """Restore TF-IDF state saved by `fitted_state`.
+
+        Returns the vocabulary size, or 0 when there is nothing to restore.
+        """
+        self.ensure_initialized()
+        if not state or state.get("backend") != "tfidf":
+            return 0
+        vocab = state.get("vocab") or {}
+        idf = state.get("idf") or []
+        if not vocab or len(vocab) != len(idf):
+            return 0
+        self._tfidf.vocab = dict(vocab)
+        self._tfidf.idf = np.asarray(idf, dtype="float32")
+        self._tfidf.fitted = True
+        return len(self._tfidf.vocab)
+
+    def is_query_ready(self, dimensions: int) -> bool:
+        """Whether a query can be embedded into a vector of this width."""
+        self.ensure_initialized()
+        if self.backend != "tfidf":
+            return True
+        return self._tfidf.fitted and len(self._tfidf.vocab) == dimensions
 
     def encode(self, texts, batch_size: int = 64) -> np.ndarray:
         self.ensure_initialized()

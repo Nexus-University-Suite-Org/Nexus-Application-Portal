@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.config import PORTAL_NAME
-from app.models.generator import build_answer, extract_sources
+from app.models.generator import build_answer, quoted_sources
 from app.models.knowledge_base import kb
 from app.services.retrieval import retrieve
 
@@ -43,8 +43,11 @@ def _stream_answer(query: str, hits):
     if paragraph:
         yield _sse_chunk(paragraph)
 
-    if hits:
-        yield _sse_sources(extract_sources(hits))
+    # Only the records the reply actually quoted, so the panel under the answer
+    # cannot list a source that was filtered out as irrelevant.
+    sources = quoted_sources(query, hits)
+    if sources:
+        yield _sse_sources(sources)
     yield "data: [DONE]\n\n"
 
 

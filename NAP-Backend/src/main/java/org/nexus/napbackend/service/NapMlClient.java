@@ -25,11 +25,29 @@ public class NapMlClient {
     }
 
     public String call(String method, String path) throws IOException {
+        return call(method, path, false);
+    }
+
+    /**
+     * Calls the ML service. Admin paths ({@code /api/train}, {@code /api/sources})
+     * are guarded by a shared token because they trigger a full index rebuild;
+     * without forwarding it the ML service answers 401/403.
+     */
+    public String call(String method, String path, boolean admin) throws IOException {
         String baseUrl = mlProperties.resolvedBaseUrl();
         HttpURLConnection conn = (HttpURLConnection) URI.create(baseUrl + path).toURL().openConnection();
         conn.setRequestMethod(method);
         conn.setConnectTimeout(5_000);
         conn.setReadTimeout(60_000);
+
+        if (admin) {
+            String token = mlProperties.resolvedAdminToken();
+            if (token.isEmpty()) {
+                throw new IOException(
+                        "ML admin token is not configured (ML_SERVICE_ADMIN_TOKEN)");
+            }
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+        }
 
         if ("POST".equalsIgnoreCase(method)) {
             conn.setDoOutput(true);

@@ -1,10 +1,10 @@
+import re
 from typing import Dict, List
 
 from app.config import (
     CHUNK_OVERLAP,
     CHUNK_SIZE,
     CONTENT_COLLECTIONS,
-    PORTAL_NAME,
 )
 from app.utils import chunking
 from app.utils import nap_client
@@ -21,6 +21,24 @@ def _records_from_payload(payload):
     if isinstance(payload, list):
         return payload
     return []
+
+
+# Interface configuration rather than information. "cta_buttons: Apply Now
+# (/admissions/how-to-apply)" outranked the admissions FAQ for "How do I apply?",
+# because navigation is dense with the same words a question uses.
+_UI_SETTING_RE = re.compile(
+    r"(nav|cta|footer|social|menu|breadcrumb|cookie|consent|analytics|seo|meta_|"
+    r"logo|favicon|icon|banner|pill|badge|social_link|quick_action)",
+    re.IGNORECASE,
+)
+
+# Contact details live under footer_* keys, which the interface filter above
+# would otherwise drop, and they are the only thing that answers "where are
+# you" or "how do I reach you". Kept deliberately.
+_CONTACT_SETTING_RE = re.compile(
+    r"(e?mail|phone|mobile|tel\b|telephone|whatsapp|address|contact)",
+    re.IGNORECASE,
+)
 
 
 def _site_settings_chunks(settings: Dict) -> List[Dict]:
@@ -46,8 +64,22 @@ def _site_settings_chunks(settings: Dict) -> List[Dict]:
         pairs = []
 
     chunks = []
+    seen = set()
     for idx, pair in enumerate(pairs):
-        text = f"Site setting {pair['settingKey']}: {pair['settingValue']}"
+        key = pair["settingKey"]
+        if _UI_SETTING_RE.search(str(key)) and not _CONTACT_SETTING_RE.search(str(key)):
+            continue
+        value = chunking._render_value(pair["settingValue"])
+        if not value:
+            continue
+        # The same setting is served by two endpoints and can arrive twice; keep
+        # one copy so a reply never quotes it back to back.
+        fingerprint = value.strip().lower()
+        if fingerprint in seen:
+            continue
+        seen.add(fingerprint)
+        label = chunking._label(key)
+        text = f"{label}: {value}"
         chunked = chunking.chunk_text(text, CHUNK_SIZE, CHUNK_OVERLAP)
         for sub_idx, piece in enumerate(chunked):
             chunks.append(
@@ -56,8 +88,9 @@ def _site_settings_chunks(settings: Dict) -> List[Dict]:
                     "text": piece,
                     "metadata": {
                         "collection": "site_settings",
-                        "title": f"{PORTAL_NAME} – {pair['settingKey'].replace('_', ' ')}",
-                        "entity_id": pair["settingKey"],
+                        "title": label,
+                        "entity_id": key,
+                        "body": text,
                     },
                 }
             )
@@ -74,14 +107,19 @@ def _program_chunks(program: Dict, index: int, source: str) -> List[Dict]:
     record = dict(program)
     record["programName"] = title
 
-    fields = list(chunking._iter_fields(record))
-    if not fields:
+    full = chunking._record_text(record, source)
+    if not full:
         return []
 
-    full = " / ".join(f"{chunking._label(k)}: {v}" for k, v in fields)
+    # The programme name is searched over but kept out of the quoted body, the
+    # same split used for every other collection, so a reply reads
+    # "**BSc Nursing Science** / Four-year degree..." rather than repeating the
+    # name inside the sentence.
+    searchable = f"{title}. {full}"
+
     chunks = []
     for sub_idx, piece in enumerate(
-        chunking.chunk_text(full, CHUNK_SIZE, CHUNK_OVERLAP)
+        chunking.chunk_text(searchable, CHUNK_SIZE, CHUNK_OVERLAP)
     ):
         chunks.append(
             {
@@ -91,6 +129,7 @@ def _program_chunks(program: Dict, index: int, source: str) -> List[Dict]:
                     "collection": source,
                     "title": str(title),
                     "entity_id": program.get("id"),
+                    "body": full,
                 },
             }
         )

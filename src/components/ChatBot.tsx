@@ -121,71 +121,163 @@ async function streamChat({
   }
 }
 
-// Enhanced markdown rendering with lists and inline code
+// Markdown rendering without a parser dependency, so nothing is ever injected as
+// HTML: every branch returns React elements and plain text spans.
+const INLINE_SPLIT_RE = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)\s]+\))/;
+const LINK_RE = /^\[([^\]]+)\]\(([^)\s]+)\)$/;
+const EMPHASIS_SPLIT_RE = /(\*[^*\n]+\*|_[^_\n]+_)/;
+const UNORDERED_RE = /^[-*•]\s+(.*)$/;
+const ORDERED_RE = /^\d+[.)]\s+(.*)$/;
+const HEADING_RE = /^(#{1,4})\s+(.*)$/;
+
+const renderInline = (str: string, keyBase: string): React.ReactNode[] => {
+  const out: React.ReactNode[] = [];
+
+  str.split(INLINE_SPLIT_RE).forEach((part, i) => {
+    if (!part) return;
+    const key = `${keyBase}-${i}`;
+
+    if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+      out.push(
+        <strong key={key} className="font-semibold text-foreground">
+          {part.slice(2, -2)}
+        </strong>,
+      );
+      return;
+    }
+
+    if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
+      out.push(
+        <code
+          key={key}
+          className="text-[11px] bg-muted px-1 py-0.5 rounded font-mono break-all"
+        >
+          {part.slice(1, -1)}
+        </code>,
+      );
+      return;
+    }
+
+    const link = LINK_RE.exec(part);
+    if (link) {
+      const [, label, href] = link;
+      const external = /^https?:/i.test(href);
+      out.push(
+        <a
+          key={key}
+          href={href}
+          target={external ? "_blank" : undefined}
+          rel={external ? "noopener noreferrer" : undefined}
+          className="text-accent underline underline-offset-2 hover:opacity-80 break-all"
+        >
+          {label}
+        </a>,
+      );
+      return;
+    }
+
+    // Emphasis is resolved last so it cannot chew into **bold** spans, which
+    // are already broken out above.
+    part.split(EMPHASIS_SPLIT_RE).forEach((fragment, j) => {
+      if (!fragment) return;
+      const fragmentKey = `${key}-${j}`;
+      const emphasised =
+        (fragment.startsWith("*") && fragment.endsWith("*")) ||
+        (fragment.startsWith("_") && fragment.endsWith("_"));
+      if (emphasised && fragment.length > 2) {
+        out.push(
+          <em key={fragmentKey} className="italic">
+            {fragment.slice(1, -1)}
+          </em>,
+        );
+        return;
+      }
+      out.push(<span key={fragmentKey}>{fragment}</span>);
+    });
+  });
+
+  return out;
+};
+
 const renderMarkdown = (text: string) => {
   const lines = text.split("\n");
-  const elements: React.ReactNode[] = [];
-  let listItems: string[] = [];
+  const blocks: React.ReactNode[] = [];
+  let list: { ordered: boolean; items: string[] } | null = null;
 
   const flushList = () => {
-    if (listItems.length > 0) {
-      elements.push(
-        <ul key={`list-${elements.length}`} className="ml-4 space-y-0.5 my-1">
-          {listItems.map((item, idx) => (
-            <li key={idx} className="flex gap-1.5 items-start">
-              <span className="text-accent mt-1 text-[8px]">●</span>
-              <span>{renderInline(item)}</span>
-            </li>
-          ))}
-        </ul>,
-      );
-      listItems = [];
-    }
-  };
-
-  const renderInline = (str: string): React.ReactNode[] => {
-    return str.split(/(\*\*.*?\*\*|`.*?`)/).map((part, j) => {
-      if (part.startsWith("**") && part.endsWith("**")) {
-        return (
-          <strong key={j} className="font-semibold text-foreground">
-            {part.slice(2, -2)}
-          </strong>
-        );
-      }
-      if (part.startsWith("`") && part.endsWith("`")) {
-        return (
-          <code
-            key={j}
-            className="text-[11px] bg-muted px-1 py-0.5 rounded font-mono"
-          >
-            {part.slice(1, -1)}
-          </code>
-        );
-      }
-      return part;
-    });
+    if (!list) return;
+    const items = list.items;
+    const Tag = list.ordered ? "ol" : "ul";
+    blocks.push(
+      <Tag
+        key={`list-${blocks.length}`}
+        className={`my-1 space-y-1 ${list.ordered ? "ml-4 list-decimal" : "ml-1"}`}
+      >
+        {items.map((item, idx) => (
+          <li key={idx} className="flex gap-2 items-start break-words">
+            {list!.ordered ? (
+              <span className="text-accent font-semibold text-[11px] leading-[1.45] shrink-0">
+                {idx + 1}.
+              </span>
+            ) : (
+              <span className="text-accent text-[6px] leading-[1.7] shrink-0">●</span>
+            )}
+            <span className="min-w-0">{renderInline(item, `li-${blocks.length}-${idx}`)}</span>
+          </li>
+        ))}
+      </Tag>,
+    );
+    list = null;
   };
 
   lines.forEach((line, i) => {
     const trimmed = line.trim();
-    if (trimmed.startsWith("- ") || trimmed.startsWith("• ")) {
-      listItems.push(trimmed.slice(2));
-    } else {
-      flushList();
-      if (trimmed === "") {
-        elements.push(<div key={`br-${i}`} className="h-1.5" />);
-      } else {
-        elements.push(
-          <p key={`p-${i}`} className="my-0">
-            {renderInline(trimmed)}
-          </p>,
-        );
+
+    const unordered = UNORDERED_RE.exec(trimmed);
+    const ordered = ORDERED_RE.exec(trimmed);
+    if (unordered || ordered) {
+      const isOrdered = Boolean(ordered);
+      if (!list || list.ordered !== isOrdered) {
+        flushList();
+        list = { ordered: isOrdered, items: [] };
       }
+      list.items.push((unordered ? unordered[1] : ordered![1]).trim());
+      return;
     }
+
+    flushList();
+
+    if (trimmed === "") {
+      blocks.push(<div key={`br-${i}`} className="h-1.5" />);
+      return;
+    }
+
+    const heading = HEADING_RE.exec(trimmed);
+    if (heading) {
+      const level = heading[1].length;
+      blocks.push(
+        <p
+          key={`h-${i}`}
+          className={`font-semibold text-foreground mt-1 first:mt-0 ${
+            level <= 2 ? "text-[13px]" : "text-[12px]"
+          }`}
+        >
+          {renderInline(heading[2], `h-${i}`)}
+        </p>,
+      );
+      return;
+    }
+
+    blocks.push(
+      <p key={`p-${i}`} className="my-0 break-words">
+        {renderInline(trimmed, `p-${i}`)}
+      </p>,
+    );
   });
+
   flushList();
 
-  return elements;
+  return blocks;
 };
 
 const ChatBot = () => {
@@ -425,7 +517,7 @@ const ChatBot = () => {
                   </div>
                 )}
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed ${
+                  className={`min-w-0 max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed break-words overflow-wrap-anywhere ${
                     msg.role === "user"
                       ? "bg-accent text-accent-foreground rounded-br-lg"
                       : "bg-muted text-card-foreground rounded-bl-lg border border-border"
@@ -454,15 +546,12 @@ const ChatBot = () => {
                   <div className="w-7 h-7 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0 border border-accent/15">
                     <Bot size={13} className="text-accent" />
                   </div>
-                  <div className="bg-secondary/60 rounded-2xl rounded-bl-lg px-4 py-3.5 flex gap-1 border border-border/30">
+                  <div className="bg-secondary/60 rounded-2xl rounded-bl-lg px-4 py-3.5 flex gap-1.5 border border-border/30">
                     {[0, 1, 2].map((i) => (
                       <span
                         key={i}
-                        className="w-1.5 h-1.5 rounded-full bg-accent/50"
-                        style={{
-                          animation: "bounce 1.2s infinite",
-                          animationDelay: `${i * 0.15}s`,
-                        }}
+                        className="w-1.5 h-1.5 rounded-full bg-accent/50 animate-bounce"
+                        style={{ animationDelay: `${i * 0.15}s` }}
                       />
                     ))}
                   </div>
