@@ -7,7 +7,7 @@ from collections import Counter
 
 import numpy as np
 
-from app.config import INDEX_DIR
+from app.config import INDEX_DIR, INDEX_SCHEMA_VERSION
 from app.models.embedding import EmbeddingModel
 from app.models.vector_store import VectorStore
 
@@ -84,6 +84,7 @@ class KnowledgeBase:
                 "shape": list(self._store.vectors.shape) if self._store else None,
                 "dtype": str(self._store.vectors.dtype) if self._store else "",
                 "embedding_state": self.embedding.fitted_state(),
+                "schema_version": INDEX_SCHEMA_VERSION,
             }
             _STATE_FILE.write_text(json.dumps(state, ensure_ascii=False), encoding="utf-8")
 
@@ -93,6 +94,14 @@ class KnowledgeBase:
                 return False
             try:
                 shape_state = json.loads(_STATE_FILE.read_text(encoding="utf-8"))
+                if shape_state.get("schema_version") != INDEX_SCHEMA_VERSION:
+                    log.info(
+                        "stored index was built with schema %s, this build uses %s;"
+                        " rebuilding",
+                        shape_state.get("schema_version"),
+                        INDEX_SCHEMA_VERSION,
+                    )
+                    return False
                 shape = tuple(shape_state.get("shape") or (0, 1))
                 raw = np.frombuffer(_VECTORS_FILE.read_bytes(), dtype=np.float32)
                 vectors = raw.reshape(shape)
