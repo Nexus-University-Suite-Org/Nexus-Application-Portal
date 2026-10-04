@@ -1751,18 +1751,21 @@ const ApplicationStartPage = () => {
       return;
     }
 
-    if (!validateStep(activeStep)) {
-      console.log("[NEXT] step", activeStep, "validation FAILED — errors:", Object.entries(errors).map(([k, v]) => `${k}: ${v}`));
+    // Validate once and keep the result. Reading `errors` after calling
+    // validateStep() would log the previous render's value, because
+    // setErrors() has not been applied to this closure yet.
+    const stepErrors = validateStepFields(activeStep);
+    setErrors(stepErrors);
+    const stepIsValid = Object.keys(stepErrors).length === 0;
+
+    if (!stepIsValid) {
+      console.log("[NEXT] step", activeStep, "validation FAILED — errors:", Object.entries(stepErrors).map(([k, v]) => `${k}: ${v}`));
       if (activeStep === 2) {
-        const stepErrors = validateStepFields(activeStep);
         console.log("[NEXT] jumping to failing academic sub-step:", findFirstFailingSubStep(stepErrors));
-        setErrors((prev) => ({ ...prev, ...stepErrors }));
         setAcademicSubStep(findFirstFailingSubStep(stepErrors));
       }
       if (activeStep === 3) {
-        const stepErrors = validateStepFields(activeStep);
         console.log("[NEXT] jumping to failing document sub-step:", findFirstFailingDocumentSubStep(stepErrors));
-        setErrors((prev) => ({ ...prev, ...stepErrors }));
         setDocumentSubStep(findFirstFailingDocumentSubStep(stepErrors));
       }
       return;
@@ -1820,8 +1823,9 @@ const ApplicationStartPage = () => {
     ? "UGX 50,000 + bank/service charges (typically UGX 2,750-5,000)."
     : "USD 75 (or equivalent, e.g. UGX 281,250 in some schemes).";
   const handleSubmit = async () => {
-    const valid = validateStep(5);
-    console.log("[SUBMIT] validateStep(5) =", valid, "errors:", errors);
+    const submitErrors = validateStepFields(5);
+    const valid = Object.keys(submitErrors).length === 0;
+    console.log("[SUBMIT] validateStep(5) =", valid, "errors:", Object.entries(submitErrors).map(([k, v]) => `${k}: ${v}`));
     if (!valid) return;
     setSubmittingApplication(true);
     setSubmissionStatus("");
@@ -2005,18 +2009,29 @@ const ApplicationStartPage = () => {
       });
       const payload = (await res.json()) as {
         ok?: boolean;
+        emailSent?: boolean;
         message?: string;
         error?: string;
       };
 
+      setResendCooldown(60);
+
       if (!res.ok || !payload.ok) {
-        setOtpStatus(payload.error ?? "Failed to send OTP.");
+        setOtpStatus(payload.message ?? payload.error ?? "Failed to send OTP.");
+        return;
+      }
+
+      if (payload.emailSent === false) {
+        // The code was generated but the mail provider did not deliver it.
+        // Leave the input disabled so the applicant retries cleanly instead of
+        // waiting on an email that will never arrive.
+        setOtpSent(false);
+        setOtpStatus(payload.message ?? "We could not send the code. Please try again.");
         return;
       }
 
       setOtpSent(true);
       setOtpStatus(payload.message ?? "OTP sent. Check your email.");
-      setResendCooldown(60);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to send OTP.";
@@ -2053,7 +2068,7 @@ const ApplicationStartPage = () => {
 
       if (!res.ok || !payload.ok || !payload.verified) {
         setOtpVerified(false);
-        setOtpStatus(payload.error ?? "Invalid OTP.");
+        setOtpStatus(payload.message ?? payload.error ?? "Invalid OTP.");
         return;
       }
 
