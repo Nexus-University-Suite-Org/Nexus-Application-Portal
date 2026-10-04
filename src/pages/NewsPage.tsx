@@ -302,17 +302,17 @@ const NewsPage = () => {
       {/* Featured */}
       {featuredNews && (
       <div className="px-8 md:px-16 py-24 border-b border-border">
-        <div className="max-w-4xl">
+        <div className="mx-auto max-w-5xl text-center">
           <span className="inline-block font-body text-[10px] tracking-[0.3em] uppercase text-accent border border-accent/30 px-3 py-1 rounded-full mb-6">
             {featuredCategoryOverride || featuredNews.category}
           </span>
-          <h2 className="font-heading text-3xl md:text-5xl font-light text-foreground leading-tight mb-6">
+          <h2 className="font-heading text-3xl md:text-5xl font-light text-foreground leading-tight mb-6 mx-auto max-w-4xl">
             {featuredTitleOverride || featuredNews.title}
           </h2>
-          <p className="font-body text-base text-muted-foreground leading-relaxed mb-6 max-w-2xl">
+          <p className="font-body text-base text-muted-foreground leading-relaxed mb-6 max-w-3xl mx-auto">
             {featuredExcerptOverride || featuredNews.excerpt}
           </p>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center justify-center gap-6 flex-wrap">
             <span className="font-body text-xs text-muted-foreground">
               {formatDate(featuredNews.date, featuredNews.date)}
             </span>
@@ -381,12 +381,12 @@ const NewsPage = () => {
             {eventsHeading}
           </h2>
         </div>
-        <div className="space-y-0">
+        <div className="space-y-4">
           {events.map((e) => (
             <button
               key={e.id}
               onClick={() => setModalItem({ kind: "event", title: e.title, subtitle: e.type, body: `Date: ${e.date}`, category: e.type, date: e.date })}
-              className="event-item group flex items-center justify-between py-8 border-t border-primary-foreground/10 last:border-b w-full text-left cursor-pointer"
+              className="event-item group flex items-center justify-between rounded-[20px] border border-primary-foreground/10 bg-primary-foreground/[0.03] px-6 py-8 w-full text-left cursor-pointer transition-all duration-500 hover:border-accent/40 hover:bg-primary-foreground/[0.05]"
             >
               <div className="flex items-center gap-6">
                 <Calendar size={18} className="text-accent shrink-0" />
