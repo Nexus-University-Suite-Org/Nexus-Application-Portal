@@ -148,10 +148,10 @@ const Navbar = () => {
               <button
                 key={btn.label}
                 onClick={() => navigate(btn.href)}
-                className={`px-5 py-2.5 font-body text-xs tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:scale-105 ${
+                className={`px-5 py-2.5 font-body text-xs tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:scale-105 border ${
                   btn.style === "accent"
-                    ? "bg-accent text-accent-foreground hover:bg-accent/90"
-                    : `bg-foreground/10 text-foreground hover:bg-foreground/20`
+                    ? "bg-accent text-accent-foreground border-accent hover:bg-accent/90"
+                    : "bg-background/60 text-foreground border-border hover:bg-muted/80 dark:bg-background/10 dark:text-primary-foreground dark:hover:bg-primary-foreground/10"
                 }`}
               >
                 {btn.label === "Donate" && <Heart size={12} className="fill-current mr-1 inline" />}

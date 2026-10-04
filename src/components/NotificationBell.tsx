@@ -70,7 +70,7 @@ const NotificationBell = () => {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-lg hover:bg-muted transition"
+        className="relative p-2.5 rounded-full border border-border/80 bg-background/80 text-foreground shadow-sm transition-all duration-300 hover:bg-muted/80 hover:border-accent/50 backdrop-blur-sm dark:border-white/10 dark:bg-background/20 dark:text-primary-foreground dark:hover:bg-white/10"
         title="Notifications"
       >
         <Bell className="w-5 h-5" />

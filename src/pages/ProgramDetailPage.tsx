@@ -298,9 +298,9 @@ const ProgramDetailPage = () => {
               ))}
 
               {feeInfo.total > 0 && (
-                <div className="flex justify-between items-center p-6 rounded-2xl bg-primary/5 border border-primary/20">
-                  <span className="text-sm font-medium">Total Program Fees</span>
-                  <span className="text-2xl font-heading font-light text-primary">{feeInfo.currency} {feeInfo.total.toLocaleString()}</span>
+                <div className="flex justify-between items-center gap-4 p-6 rounded-2xl border border-accent/40 bg-accent/10 shadow-[0_10px_30px_-20px_hsl(var(--accent)/0.5)]">
+                  <span className="text-sm font-semibold tracking-[0.12em] uppercase text-foreground">Total Program Fees</span>
+                  <span className="text-2xl md:text-3xl font-heading font-light text-accent">{feeInfo.currency} {feeInfo.total.toLocaleString()}</span>
                 </div>
               )}
             </div>
@@ -370,9 +370,21 @@ const ProgramDetailPage = () => {
                   <div className="space-y-4">
                     {intakes.map((ink, i) => (
                       <div key={i} className="border border-border rounded-2xl p-6 space-y-4">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-3">
                           <h4 className="text-base font-semibold">{ink.name || "Intake"}</h4>
-                          <span className={`text-[10px] px-3 py-1 rounded-full font-medium ${ink.status === "Open" ? "bg-emerald-100 text-emerald-700" : ink.status === "Upcoming" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>{ink.status}</span>
+                          {ink.status === "Open" ? (
+                            <button
+                              type="button"
+                              onClick={() => navigate("/admissions/application/start")}
+                              className="inline-flex items-center justify-center min-h-[32px] min-w-[80px] rounded-full border border-emerald-400 bg-emerald-100 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700 shadow-sm transition-all duration-300 hover:bg-emerald-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+                            >
+                              Open
+                            </button>
+                          ) : (
+                            <span className={`inline-flex min-h-[32px] items-center justify-center rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] ${ink.status === "Upcoming" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
+                              {ink.status}
+                            </span>
+                          )}
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs text-muted-foreground">
                           {ink.month && <div className="flex items-center gap-1.5"><Calendar size={12} className="text-accent" /> {ink.month}</div>}

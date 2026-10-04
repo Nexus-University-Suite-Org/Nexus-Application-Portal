@@ -133,7 +133,7 @@ const HowToApplyPage = () => {
 
       {/* Application Steps */}
       <div ref={stepsRef} className="px-8 md:px-16 py-24 bg-background">
-        <div className="mb-16">
+        <div className="mx-auto mb-16 max-w-4xl text-center">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent font-semibold mb-6">
             Process
           </p>
@@ -142,7 +142,7 @@ const HowToApplyPage = () => {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl">
+        <div className="mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl">
           {isLoading ? (
             <div className="col-span-full text-center py-12">
               <p className="font-body text-muted-foreground">Loading steps...</p>
@@ -187,8 +187,8 @@ const HowToApplyPage = () => {
         </div>
 
         {/* Timeline visualization */}
-        <div className="mt-16 p-8 rounded-[24px] border border-accent/30 bg-accent/5">
-          <p className="font-body text-xs tracking-[0.15em] uppercase text-accent font-semibold mb-6">
+        <div className="mx-auto mt-16 max-w-5xl p-8 rounded-[24px] border border-accent/30 bg-accent/5">
+          <p className="font-body text-xs tracking-[0.15em] uppercase text-accent font-semibold mb-6 text-center">
             Timeline
           </p>
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
