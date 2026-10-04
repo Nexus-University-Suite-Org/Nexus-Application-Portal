@@ -327,7 +327,7 @@ const PartnersPage = () => {
           className="absolute inset-0 w-full h-full object-cover rounded-none"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20 rounded-none" />
-        <div className="relative z-10 px-8 md:px-16 pb-20 pt-40 partners-hero-text max-w-4xl">
+        <div className="relative z-10 px-8 md:px-16 pb-20 pt-40 partners-hero-text max-w-5xl mx-auto text-center">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-5 opacity-0">
             {content.heroTagline}
           </p>
@@ -336,7 +336,7 @@ const PartnersPage = () => {
             <br />
             <em className="text-accent">{content.heroHeading2}</em>
           </h1>
-          <p className="font-body text-base text-primary-foreground/70 max-w-xl leading-relaxed opacity-0">
+          <p className="font-body text-base text-primary-foreground/70 max-w-2xl mx-auto leading-relaxed opacity-0">
             {content.heroDescription}
           </p>
         </div>
@@ -363,7 +363,7 @@ const PartnersPage = () => {
 
       {/* How to Partner */}
       <section className="py-24 md:py-32 px-8 md:px-16">
-        <div className="max-w-2xl mb-16">
+        <div className="mx-auto mb-16 max-w-5xl text-center">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">
             {content.typesTagline}
           </p>
@@ -373,7 +373,7 @@ const PartnersPage = () => {
             {content.typesHeading2}
           </h2>
         </div>
-        <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div ref={cardsRef} className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6">
           {renderPartnerTypes.map(({ title, description, benefits }) => {
             const Icon = iconMap[title] || Building2;
             return (
@@ -421,20 +421,20 @@ const PartnersPage = () => {
 
       {/* Current Partners */}
       <section className="py-24 md:py-32 px-8 md:px-16">
-        <div className="max-w-2xl mb-16">
+        <div className="mx-auto mb-16 max-w-4xl text-center">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">
             {content.statsTagline}
           </p>
           <h2 className="section-heading font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">
             {content.statsHeading}
           </h2>
-          <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6 max-w-lg">
+          <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6 max-w-2xl mx-auto">
             {content.statsDescription}
           </p>
         </div>
         <div
           ref={partnersGridRef}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+          className="mx-auto max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
         >
           {isLoading ? (
             <p className="col-span-full text-center font-body text-sm text-muted-foreground py-12">
