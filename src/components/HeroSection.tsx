@@ -200,14 +200,16 @@ const HeroSection = () => {
       ref={sectionRef}
       className="relative min-h-screen overflow-hidden flex flex-col bg-[#090907]"
     >
-      <div ref={imageRef} className="absolute inset-0 -top-10">
-        <img
-          src={heroImage}
-          alt="Students learning practical vocational skills at the institute"
-          className="w-full h-[130%] object-cover brightness-[0.8] contrast-[1.05]"
+      <div ref={imageRef} className="absolute inset-0 -top-10 z-0 pointer-events-none">
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${heroImage})`,
+            filter: "brightness(0.92) contrast(1.04)",
+          }}
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,7,0.72)_0%,rgba(8,8,7,0.56)_35%,rgba(8,8,7,0.24)_72%,rgba(8,8,7,0.64)_100%)]" />
-        <div ref={overlayRef} className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,7,0.55)_0%,rgba(8,8,7,0.45)_30%,rgba(8,8,7,0.2)_68%,rgba(8,8,7,0.58)_100%)]" />
+        <div ref={overlayRef} className="absolute inset-0 bg-black/10" />
       </div>
       <div
         ref={heroGlowRef}

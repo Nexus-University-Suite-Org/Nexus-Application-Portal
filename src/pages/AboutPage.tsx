@@ -47,7 +47,7 @@ const AboutPage = () => {
   const [headingLine1, setHeadingLine1] = useState("Built on Hope,");
   const [headingLine2, setHeadingLine2] = useState("Powered by Purpose");
   const [storyParagraph, setStoryParagraph] = useState(
-    "We started with one belief: that every person — regardless of circumstance — deserves the chance to build a dignified life through skills and hard work."
+    "We started with one belief: that every person  regardless of circumstance  deserves the chance to build a dignified life through skills and hard work."
   );
   const [foundingLabel, setFoundingLabel] = useState("Our Founding Story");
   const [foundingHeading, setFoundingHeading] = useState("Why We Started");
