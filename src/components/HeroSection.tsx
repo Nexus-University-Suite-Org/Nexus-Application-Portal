@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Heart, Users, ArrowRight } from "lucide-react";
-import heroCampus from "@/assets/hero-campus.jpg";
+import campusLifeHero from "@/assets/campus-life.jpg";
 import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -46,13 +46,20 @@ const HeroSection = () => {
   const [heroCtaLearnMore, setHeroCtaLearnMore] = useState("Learn More");
   const [heroCtaLearnMoreVisible, setHeroCtaLearnMoreVisible] = useState(true);
   const [heroStats, setHeroStats] = useState(fallbackStats);
-  const [heroImage, setHeroImage] = useState<string>(heroCampus);
+  const [heroImage, setHeroImage] = useState<string>(campusLifeHero);
   const { data: sections } = useContentCollection<PageSection>("page_sections", []);
   const homeSections = sections.filter((s) => s.page_key === "home");
   const statsSection = homeSections.find((s) => s.section_key === "impact-stats");
   const impactStats = statsSection?.body
     ? (() => { try { return JSON.parse(statsSection.body); } catch { return fallbackStats; } })()
     : fallbackStats;
+
+  const isUsableHeroImage = (value: string) => {
+    const candidate = value?.trim();
+    if (!candidate) return false;
+    if (candidate.startsWith("data:image/")) return true;
+    return /^(\/|https?:\/\/|blob:)/i.test(candidate) || /\.(png|jpe?g|webp|avif|gif|svg)(\?.*)?$/i.test(candidate);
+  };
 
   useEffect(() => {
     fetch("/api/v1/content/site-settings")
@@ -78,7 +85,7 @@ const HeroSection = () => {
             if (Array.isArray(parsed) && parsed.length > 0) setHeroStats(parsed);
           } catch {}
         }
-        if (data.home_hero_image) {
+        if (data.home_hero_image && isUsableHeroImage(data.home_hero_image)) {
           setHeroImage(data.home_hero_image);
           new Image().src = data.home_hero_image;
         }
@@ -124,7 +131,7 @@ const HeroSection = () => {
       });
 
       gsap.to(overlayRef.current, {
-        opacity: 0.35,
+        opacity: 0,
         ease: "none",
         scrollTrigger: {
           trigger: sectionRef.current,
@@ -205,18 +212,17 @@ const HeroSection = () => {
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: `url(${heroImage})`,
-            filter: "brightness(0.92) contrast(1.04)",
+            filter: "brightness(1) contrast(1.04) saturate(1.1)",
           }}
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,7,0.55)_0%,rgba(8,8,7,0.45)_30%,rgba(8,8,7,0.2)_68%,rgba(8,8,7,0.58)_100%)]" />
-        <div ref={overlayRef} className="absolute inset-0 bg-black/10" />
+        <div ref={overlayRef} className="absolute inset-0 bg-black/0" />
       </div>
       <div
         ref={heroGlowRef}
-        className="absolute left-1/2 top-1/2 z-[1] h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,hsl(var(--accent)/0.2)_0%,transparent_62%)] blur-3xl pointer-events-none"
+        className="absolute left-1/2 top-1/2 z-[1] h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.1)_0%,transparent_62%)] blur-3xl pointer-events-none"
       />
-      <div className="hero-orb absolute top-24 right-[8%] z-[1] h-28 w-28 rounded-full bg-accent/15 blur-3xl pointer-events-none" />
-      <div className="hero-orb absolute bottom-28 left-[7%] z-[1] h-24 w-24 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+      <div className="hero-orb absolute top-24 right-[8%] z-[1] h-28 w-28 rounded-full bg-white/5 blur-3xl pointer-events-none" />
+      <div className="hero-orb absolute bottom-28 left-[7%] z-[1] h-24 w-24 rounded-full bg-white/5 blur-3xl pointer-events-none" />
 
       <div
         ref={heroContentRef}
