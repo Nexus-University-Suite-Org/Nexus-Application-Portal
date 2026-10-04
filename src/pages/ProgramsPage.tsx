@@ -165,10 +165,10 @@ const ProgramsPage = () => {
 
       {/* Programs */}
       <div ref={cardsRef} className="px-8 md:px-16 py-24 md:py-32">
-        <div className="max-w-2xl mb-16">
+        <div className="mx-auto mb-16 max-w-4xl text-center">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">{sectionTagline}</p>
           <h2 className="font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">{sectionHeading}</h2>
-          <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6 max-w-lg">{sectionDescription}</p>
+          <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6 max-w-2xl mx-auto">{sectionDescription}</p>
         </div>
 
         {isLoading && <p className="font-body text-sm text-muted-foreground">Loading programs...</p>}

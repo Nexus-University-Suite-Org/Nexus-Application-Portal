@@ -35,7 +35,7 @@ const ImpactPage = () => {
   const [heroTagline, setHeroTagline] = useState("Real Transformation");
   const [heroHeading1, setHeroHeading1] = useState("Lives Changed.");
   const [heroHeading2, setHeroHeading2] = useState("Communities Transformed.");
-  const [heroDescription, setHeroDescription] = useState("Our graduates are proof that practical skills — combined with determination — can break the cycle of poverty in a single generation.");
+  const [heroDescription, setHeroDescription] = useState("Our graduates are proof that practical skills  combined with determination  can break the cycle of poverty in a single generation.");
   const [statsTagline, setStatsTagline] = useState("By The Numbers");
   const [statsHeading, setStatsHeading] = useState("Our Impact In Numbers");
   const [storiesTagline, setStoriesTagline] = useState("Graduate Stories");
@@ -168,11 +168,11 @@ const ImpactPage = () => {
 
       {/* Impact Stats */}
       <div ref={statsRef} className="px-8 md:px-16 py-24 md:py-32 bg-secondary/20">
-        <div className="max-w-2xl mb-16">
+        <div className="mx-auto mb-16 max-w-4xl text-center">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">{statsTagline}</p>
           <h2 className="font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">{statsHeading}</h2>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <div className="mx-auto max-w-6xl grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {impactStats.map(({ value, suffix, label }, i) => (
             <div key={`${label}-${i}`} className="stat-card opacity-0 p-8 bg-background border border-border rounded-[20px] text-center stat-glow">
               <p className="stat-value font-heading text-4xl font-light text-accent mb-2">
@@ -186,14 +186,14 @@ const ImpactPage = () => {
 
       {/* Success Stories */}
       <div ref={storiesRef} className="px-8 md:px-16 py-24 md:py-32">
-        <div className="max-w-2xl mb-16">
+        <div className="mx-auto mb-16 max-w-4xl text-center">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">{storiesTagline}</p>
           <h2 className="font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">{storiesHeading}</h2>
-          <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6 max-w-lg">
+          <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6 max-w-2xl mx-auto">
             {storiesDescription}
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {isLoading ? (
             <p className="font-body text-muted-foreground text-center col-span-full py-12">Loading impact stories...</p>
           ) : successStories.length === 0 ? (
