@@ -4,6 +4,8 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import org.nexus.napbackend.configuration.JwtUtil;
 import org.nexus.napbackend.dto.StudentLoginResponse;
+import org.nexus.napbackend.exception.NotAdmittedException;
+import org.nexus.napbackend.exception.UnauthorizedException;
 import org.nexus.napbackend.model.Application;
 import org.nexus.napbackend.model.Program;
 import org.nexus.napbackend.repository.ApplicationRepository;
@@ -12,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Facade
 public class StudentAuthFacade {
+
+    private static final String ADMITTED = "ADMITTED";
 
     private final ApplicationRepository applicationRepository;
     private final ProgramRepository programRepository;
@@ -32,14 +36,32 @@ public class StudentAuthFacade {
     public StudentLoginResponse login(String email, String password) {
         Application application = findApplicantByEmail(email);
         if (application.getPasswordHash() == null) {
-            throw new RuntimeException("No password set for this account. Please use forgot password.");
+            throw new UnauthorizedException("No password set for this account. Please use forgot password.");
         }
         if (!passwordEncoder.matches(password, application.getPasswordHash())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new UnauthorizedException("Invalid email or password");
         }
+
+        requireAdmitted(application);
 
         String token = jwtUtil.generateToken(application.getId(), application.getEmail(), "STUDENT");
         return new StudentLoginResponse(token, toUser(application), toProfile(application));
+    }
+
+    private void requireAdmitted(Application application) {
+        if (ADMITTED.equals(application.getStatus())) {
+            return;
+        }
+        String status = application.getStatus();
+        String reason = switch (status == null ? "" : status) {
+            case "REJECTED" -> "your application was not successful";
+            case "WAITLISTED" -> "you are on the waiting list";
+            case "DRAFT" -> "your application has not been submitted yet";
+            default -> "your application is still being reviewed";
+        };
+        throw new NotAdmittedException(
+                "The student portal opens once your admission is confirmed, but " + reason
+                        + ". Current application status: " + status + ".");
     }
 
     @Transactional
@@ -56,7 +78,7 @@ public class StudentAuthFacade {
     private Application findApplicantByEmail(String email) {
         List<Application> applications = applicationRepository.findByEmailOrderByCreatedAtDesc(email);
         if (applications.isEmpty()) {
-            throw new RuntimeException("No application found for this email");
+            throw new UnauthorizedException("No application found for this email");
         }
         return applications.get(0);
     }
@@ -81,6 +103,8 @@ public class StudentAuthFacade {
         return new StudentLoginResponse.StudentProfile(
                 a.getId(),
                 a.getPrn(),
+                a.getStudentNumber(),
+                a.getRegistrationNumber(),
                 fullName(a),
                 a.getEmail(),
                 a.getPhoneNumber(),
