@@ -269,12 +269,12 @@ const Index = () => {
           <section className="relative py-24 md:py-32 px-8 md:px-16 bg-background overflow-hidden">
             <div className="parallax-el pointer-events-none absolute -top-24 -left-28 h-72 w-72 rounded-full bg-accent/10 blur-3xl" data-speed="0.3" />
             <div className="parallax-el pointer-events-none absolute -bottom-32 right-0 h-80 w-80 rounded-full bg-primary/10 blur-3xl" data-speed="0.5" />
-            <div className="max-w-2xl mb-16">
+            <div className="mx-auto mb-16 max-w-3xl text-center">
               <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">{whatWeTeachTagline}</p>
-              <h2 className="section-heading font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">
+              <h2 className="section-heading font-heading text-4xl md:text-6xl font-light text-foreground leading-tight mx-auto max-w-3xl">
                 {whatWeTeachHeading1}<br />{whatWeTeachHeading2}
               </h2>
-              <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6 max-w-lg">
+              <p className="font-body text-sm text-muted-foreground leading-relaxed mt-6 max-w-2xl mx-auto">
                 {whatWeTeachSubtitle}
               </p>
             </div>

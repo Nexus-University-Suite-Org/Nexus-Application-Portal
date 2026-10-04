@@ -204,10 +204,10 @@ const HeroSection = () => {
         <img
           src={heroImage}
           alt="Students learning practical vocational skills at the institute"
-          className="w-full h-[130%] object-cover brightness-[0.62] contrast-[1.08]"
+          className="w-full h-[130%] object-cover brightness-[0.8] contrast-[1.05]"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,7,0.84)_0%,rgba(8,8,7,0.74)_32%,rgba(8,8,7,0.3)_68%,rgba(8,8,7,0.7)_100%)]" />
-        <div ref={overlayRef} className="absolute inset-0 bg-black/45" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,7,0.72)_0%,rgba(8,8,7,0.56)_35%,rgba(8,8,7,0.24)_72%,rgba(8,8,7,0.64)_100%)]" />
+        <div ref={overlayRef} className="absolute inset-0 bg-black/20" />
       </div>
       <div
         ref={heroGlowRef}
@@ -229,7 +229,7 @@ const HeroSection = () => {
 
             <h1
               ref={titleRef}
-              className="font-heading text-[3.5rem] sm:text-[5rem] md:text-[6.5rem] lg:text-[8rem] leading-[0.86] tracking-[-0.04em] text-primary-foreground max-w-4xl opacity-0 mx-auto lg:mx-0"
+              className="font-heading text-[3rem] sm:text-[4.2rem] md:text-[5.6rem] lg:text-[7rem] leading-[0.86] tracking-[-0.04em] text-primary-foreground max-w-4xl opacity-0 mx-auto lg:mx-0"
             >
               {heroHeading1}
               <br />

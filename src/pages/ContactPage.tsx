@@ -17,7 +17,7 @@ import {
   Globe,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import heroCampus from "@/assets/hero-campus.jpg";
+import studentsHero from "@/assets/students-hero.jpg";
 import { useSpotlightCards } from "@/hooks/useScrollReveal";
 import { useContentCollection } from "@/hooks/useContentCollection";
 import { submitContactSubmission } from "@/lib/submissions";
@@ -66,7 +66,8 @@ const ContactPage = () => {
   const [organizationAddress, setOrganizationAddress] = useState(
     "Plot 7, Nakawa Road, Kampala, Uganda",
   );
-  const [heroImage, setHeroImage] = useState<string>(heroCampus);
+  const defaultHeroImage = studentsHero;
+  const [heroImage, setHeroImage] = useState<string>(defaultHeroImage);
   const [contactHeroTagline, setContactHeroTagline] = useState("Get In Touch");
   const [contactHeroHeading, setContactHeroHeading] = useState("Contact & Partnerships");
   const [contactHeroDescription, setContactHeroDescription] = useState(
@@ -90,8 +91,11 @@ const ContactPage = () => {
       .then((res) => (res.ok ? res.json() : null))
       .then((data: Record<string, string> | null) => {
         if (data?.contact_hero_image) {
-          setHeroImage(data.contact_hero_image);
-          new Image().src = data.contact_hero_image;
+          const nextImage = data.contact_hero_image;
+          const testImage = new Image();
+          testImage.onload = () => setHeroImage(nextImage);
+          testImage.onerror = () => setHeroImage(defaultHeroImage);
+          testImage.src = nextImage;
         }
         if (data?.footer_email) setOrganizationEmail(data.footer_email);
         if (data?.footer_phone) setOrganizationPhone(data.footer_phone);
@@ -245,12 +249,15 @@ const ContactPage = () => {
 
       {/* Hero */}
       <div className="relative min-h-[50vh] flex items-center justify-center text-center">
-        <div className="absolute inset-0 overflow-hidden rounded-none">
-          <img
-            src={heroImage}
-            alt="Contact us"
-            className="w-full h-full object-cover rounded-none"
-          />
+        <div
+          className="absolute inset-0 overflow-hidden rounded-none"
+          style={{
+            backgroundImage: `url(${heroImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        >
           <div className="absolute inset-0 bg-black/70 rounded-none" />
         </div>
         <div className="relative z-10 px-8 md:px-16 py-24 contact-hero-text max-w-4xl mx-auto text-center">
