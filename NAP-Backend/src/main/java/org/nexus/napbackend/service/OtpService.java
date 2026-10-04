@@ -2,7 +2,7 @@ package org.nexus.napbackend.service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.Random;
+import java.security.SecureRandom;
 import org.nexus.napbackend.model.OtpCode;
 import org.nexus.napbackend.repository.OtpRepository;
 import org.slf4j.Logger;
@@ -21,7 +21,7 @@ public class OtpService {
     private static final int EXPIRY_MINUTES = 10;
 
     private final OtpRepository repository;
-    private final Random random = new Random();
+    private final SecureRandom random = new SecureRandom();
 
     public OtpService(OtpRepository repository) {
         this.repository = repository;
@@ -37,7 +37,7 @@ public class OtpService {
         }
 
         String code = String.format("%0" + OTP_LENGTH + "d", random.nextInt(10000));
-        log.info("Generated OTP={} for email={}", code, email);
+        log.info("Generated OTP for email={} purpose={}", email, purpose);
 
         OtpCode otp = new OtpCode();
         otp.setTenantId(DEMO_TENANT_ID);
