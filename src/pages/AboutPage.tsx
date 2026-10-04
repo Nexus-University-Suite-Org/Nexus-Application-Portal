@@ -266,8 +266,8 @@ const AboutPage = () => {
       </div>
 
       {/* Call to Action */}
-      <div ref={ctaRef} className="px-0 md:px-0 py-28">
-        <div className="relative mx-auto h-[440px] w-full max-w-[1800px] overflow-hidden border border-white/10 bg-black/90 shadow-[0_25px_80px_rgba(0,0,0,0.35)]">
+      <div ref={ctaRef} className="py-28">
+        <div className="relative mx-auto h-[440px] w-[calc(100%-0px)] overflow-hidden border border-white/10 bg-black/90 shadow-[0_25px_80px_rgba(0,0,0,0.35)]">
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
