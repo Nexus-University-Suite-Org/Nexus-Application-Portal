@@ -5,6 +5,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import aboutHero from "@/assets/about-hero.jpg";
+import studentsHero from "@/assets/students-hero.jpg";
 import { Heart, ArrowRight } from "lucide-react";
 import { useSpotlightCards, useParallax } from "@/hooks/useScrollReveal";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
@@ -244,7 +245,7 @@ const AboutPage = () => {
 
       {/* Values */}
       <div ref={valuesRef} className="px-8 md:px-16 py-32 bg-secondary/30">
-        <div className="max-w-2xl mb-20">
+        <div className="mx-auto mb-20 max-w-3xl text-center">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">{valuesLabel}</p>
           <h2 className="font-heading text-4xl md:text-6xl font-light text-foreground leading-tight">{valuesHeading}</h2>
         </div>
@@ -265,17 +266,32 @@ const AboutPage = () => {
       </div>
 
       {/* Call to Action */}
-      <div ref={ctaRef} className="px-8 md:px-16 py-32 text-center">
-        <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6">{ctaLabel}</p>
-        <h2 className="font-heading text-4xl md:text-6xl font-light text-foreground leading-tight mb-10 max-w-2xl mx-auto">{ctaHeading}</h2>
-        <div className="flex flex-wrap justify-center gap-4">
-          <button onClick={() => navigate("/donate")} className="group flex items-center gap-2 px-10 py-4 bg-accent text-accent-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 btn-lift">
-            <Heart size={16} className="fill-current" />{ctaDonateBtn}
-          </button>
-          <button onClick={() => navigate("/contact")} className="group flex items-center gap-2 px-10 py-4 border border-foreground/30 text-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent btn-lift">
-            {ctaPartnerBtn}
-            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
-          </button>
+      <div ref={ctaRef} className="px-0 md:px-0 py-28">
+        <div className="relative mx-auto h-[440px] w-full max-w-[1800px] overflow-hidden border border-white/10 bg-black/90 shadow-[0_25px_80px_rgba(0,0,0,0.35)]">
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url(${studentsHero})`,
+              filter: "brightness(0.7) contrast(1.08)",
+              transform: "scale(1.08)",
+            }}
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,7,0.75)_0%,rgba(8,8,7,0.58)_35%,rgba(8,8,7,0.6)_100%)]" />
+          <div className="relative z-10 flex h-full items-center justify-center px-6 md:px-12">
+            <div className="mx-auto max-w-5xl text-center">
+              <p className="font-body text-xs tracking-[0.4em] uppercase text-accent mb-6">{ctaLabel}</p>
+              <h2 className="font-heading text-4xl md:text-7xl font-light text-primary-foreground leading-[0.95] mb-10 italic tracking-[-0.04em]">{ctaHeading}</h2>
+              <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-center gap-4 md:gap-6">
+                <button onClick={() => navigate("/donate")} className="group flex items-center gap-2 rounded-full bg-[hsl(var(--accent))] px-7 py-4 text-sm font-medium tracking-[0.2em] text-accent-foreground uppercase shadow-[0_10px_30px_rgba(182,136,65,0.3)] transition-all duration-500 hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(182,136,65,0.42)]">
+                  <Heart size={16} className="fill-current" />{ctaDonateBtn}
+                </button>
+                <button onClick={() => navigate("/contact")} className="group flex items-center gap-2 rounded-full border border-white/25 bg-white/5 px-7 py-4 text-sm font-medium tracking-[0.2em] text-primary-foreground uppercase backdrop-blur-sm transition-all duration-500 hover:-translate-y-0.5 hover:border-accent hover:text-accent">
+                  {ctaPartnerBtn}
+                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
