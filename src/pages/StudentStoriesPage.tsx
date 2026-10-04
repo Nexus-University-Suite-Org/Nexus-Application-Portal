@@ -6,6 +6,9 @@ import { Quote, ArrowRight, Heart, ChevronDown } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import storiesHero from "@/assets/stories-hero.jpg";
+import storyEsther from "@/assets/story-esther.jpg";
+import storyGrace from "@/assets/story-grace.jpg";
+import storySamuel from "@/assets/story-samuel.jpg";
 import { useContentCollection } from "@/hooks/useContentCollection";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -55,6 +58,7 @@ const StudentStoriesPage = () => {
   const [ctaBtn2Text, setCtaBtn2Text] = useState("View Programs");
   const [ctaBtn2Visible, setCtaBtn2Visible] = useState(true);
   const [heroImage, setHeroImage] = useState<string>(storiesHero);
+  const storyFallbacks = [storyEsther, storyGrace, storySamuel];
   const { data: storyDocs, isLoading } = useContentCollection<StudentStoryDoc>(
     "student_stories",
     [],
@@ -67,6 +71,7 @@ const StudentStoriesPage = () => {
           const content = (
             doc.content || "Story details will be published soon."
           ).replace(/University Application Portal/g, portalName);
+          const fallbackImage = storyFallbacks[index % storyFallbacks.length] ?? storyEsther;
           return {
             name: doc.studentName || doc.title,
             age: 0,
@@ -74,7 +79,7 @@ const StudentStoriesPage = () => {
             graduated: doc.graduationYear
               ? String(doc.graduationYear)
               : "Recent",
-            image: doc.imageUrl || "",
+            image: doc.imageUrl || fallbackImage,
             tag: "Featured Story",
             quote: doc.title,
             before: "Learner preparing for better livelihood opportunities.",
@@ -200,7 +205,7 @@ const StudentStoriesPage = () => {
 
       {/* Stories */}
       <section className="py-24 md:py-32 px-8 md:px-16">
-        <div className="max-w-2xl mb-16">
+        <div className="mx-auto max-w-2xl mb-16 text-center md:text-left">
           <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">
             {sectionTagline}
           </p>
@@ -211,7 +216,7 @@ const StudentStoriesPage = () => {
           </h2>
         </div>
 
-        <div ref={storiesRef} className="space-y-8 max-w-5xl">
+        <div ref={storiesRef} className="mx-auto space-y-8 max-w-5xl">
           {isLoading && dynamicStories.length === 0 && (
             <p className="font-body text-sm text-muted-foreground">Loading student stories...</p>
           )}
@@ -221,14 +226,20 @@ const StudentStoriesPage = () => {
           {dynamicStories.map((story, i) => (
             <div
               key={story.name}
-              className="story-card opacity-0 group border border-border rounded-2xl overflow-hidden hover:border-accent/30 transition-all duration-500"
+              className="story-card opacity-0 group mx-auto w-full max-w-5xl border border-border rounded-2xl overflow-hidden hover:border-accent/30 transition-all duration-500"
             >
               <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] lg:grid-cols-[380px_1fr]">
                 {/* Image */}
                 <div className="relative h-64 md:h-auto overflow-hidden">
                   <img
-                    src={story.image}
+                    src={story.image || storyEsther}
                     alt={story.name}
+                    onError={(event) => {
+                      const target = event.currentTarget;
+                      if (target.src !== storyEsther) {
+                        target.src = storyEsther;
+                      }
+                    }}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute top-4 left-4">
