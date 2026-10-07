@@ -17,6 +17,8 @@ public record StudentLoginResponse(
     public record StudentProfile(
             Long applicationId,
             String prn,
+            String studentNumber,
+            String registrationNumber,
             String fullName,
             String email,
             String phoneNumber,

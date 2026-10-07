@@ -43,6 +43,14 @@ public class GlobalExceptionHandler {
         return withMessage(problem, ex.getMessage());
     }
 
+    @ExceptionHandler(NotAdmittedException.class)
+    public ProblemDetail handleNotAdmitted(NotAdmittedException ex) {
+        log.debug("Admission gate rejected portal login: {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        problem.setTitle("Not admitted");
+        return withMessage(problem, ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleUnexpected(Exception ex) {
         log.error("Unhandled exception: {}", ex.getMessage(), ex);

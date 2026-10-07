@@ -8,8 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import org.nexus.napbackend.configuration.JwtUtil;
 import org.nexus.napbackend.dto.AdminLoginRequest;
 import org.nexus.napbackend.dto.AdminLoginResponse;
@@ -23,6 +21,7 @@ import org.nexus.napbackend.model.Admin;
 import org.nexus.napbackend.model.Application;
 import org.nexus.napbackend.repository.ApplicationRepository;
 import org.nexus.napbackend.service.AdminService;
+import org.nexus.napbackend.service.StudentNumberService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -37,15 +36,18 @@ public class AdminFacade {
     private final ApplicationRepository applicationRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final StudentNumberService studentNumberService;
 
     public AdminFacade(AdminService adminService,
                        ApplicationRepository applicationRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtUtil jwtUtil) {
+                       JwtUtil jwtUtil,
+                       StudentNumberService studentNumberService) {
         this.adminService = adminService;
         this.applicationRepository = applicationRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.studentNumberService = studentNumberService;
     }
 
     @Transactional
@@ -146,7 +148,7 @@ public class AdminFacade {
         switch (reviewStatus) {
             case "admitted" -> {
                 app.setStatus("ADMITTED");
-                generateStudentNumbers(app);
+                studentNumberService.assignIfAbsent(app);
             }
             case "rejected" -> app.setStatus("REJECTED");
             case "waitlisted" -> app.setStatus("WAITLISTED");
@@ -155,41 +157,5 @@ public class AdminFacade {
 
         Application updated = applicationRepository.save(app);
         return ApplicationMapper.toDto(updated);
-    }
-
-    private void generateStudentNumbers(Application app) {
-        int year = LocalDateTime.now().getYear();
-
-        String regPrefix = String.format("REG-%d-", year);
-        String nextReg = getNextSequence(regPrefix, app::getRegistrationNumber, app::setRegistrationNumber);
-
-        String stuPrefix = String.format("STU-%d-", year);
-        String nextStu = getNextSequence(stuPrefix, app::getStudentNumber, app::setStudentNumber);
-
-        app.setRegistrationNumber(nextReg);
-        app.setStudentNumber(nextStu);
-    }
-
-    private String getNextSequence(String prefix,
-                                   Supplier<String> currentGetter,
-                                   Consumer<String> currentSetter) {
-        List<Application> existing = applicationRepository.findAll().stream()
-                .filter(a -> {
-                    String val = currentGetter.get();
-                    return val != null && val.startsWith(prefix);
-                })
-                .toList();
-
-        int maxSeq = existing.stream()
-                .map(a -> currentGetter.get())
-                .filter(java.util.Objects::nonNull)
-                .map(val -> val.substring(prefix.length()))
-                .filter(s -> s.matches("\\d+"))
-                .mapToInt(Integer::parseInt)
-                .max()
-                .orElse(0);
-
-        int nextSeq = maxSeq + 1;
-        return String.format("%s%04d", prefix, nextSeq);
     }
 }

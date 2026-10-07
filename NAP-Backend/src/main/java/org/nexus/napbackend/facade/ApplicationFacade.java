@@ -13,6 +13,7 @@ import org.nexus.napbackend.model.Program;
 import org.nexus.napbackend.service.ApplicationService;
 import org.nexus.napbackend.service.NotificationService;
 import org.nexus.napbackend.service.ProgramService;
+import org.nexus.napbackend.service.StudentNumberService;
 import org.nexus.napbackend.service.WeightingService;
 
 @Facade
@@ -22,15 +23,18 @@ public class ApplicationFacade {
     private final ProgramService programService;
     private final WeightingService weightingService;
     private final NotificationService notificationService;
+    private final StudentNumberService studentNumberService;
 
     public ApplicationFacade(ApplicationService service,
                              ProgramService programService,
                              WeightingService weightingService,
-                             NotificationService notificationService) {
+                             NotificationService notificationService,
+                             StudentNumberService studentNumberService) {
         this.service = service;
         this.programService = programService;
         this.weightingService = weightingService;
         this.notificationService = notificationService;
+        this.studentNumberService = studentNumberService;
     }
 
     @Transactional
@@ -75,6 +79,7 @@ public class ApplicationFacade {
             entity.setStatus("ADMITTED");
             String assigned = weightingService.findAssignedProgramme(entity, programmes);
             entity.setAssignedProgramme(assigned);
+            studentNumberService.assignIfAbsent(entity);
             try {
                 var results = new com.fasterxml.jackson.databind.ObjectMapper()
                         .readValue(qualificationResultsJson, new com.fasterxml.jackson.core.type.TypeReference<List<org.nexus.napbackend.dto.QualificationResult>>() {});
