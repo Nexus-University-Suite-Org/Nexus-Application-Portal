@@ -75,5 +75,15 @@ CONTENT_COLLECTIONS = [
 
 PORTAL_NAME = os.getenv("PORTAL_NAME", "Nexus University")
 
+# Optional contact overrides. Contact details normally come from the CMS
+# (footer_email / footer_phone / footer_address in site-settings), which the
+# assistant reads via app.services.contact. Set CONTACT_* only for deployments
+# that keep contact details out of the database; when set they take precedence.
+CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "").strip()
+CONTACT_PHONE = os.getenv("CONTACT_PHONE", "").strip()
+CONTACT_WHATSAPP = os.getenv("CONTACT_WHATSAPP", "").strip()
+CONTACT_ADDRESS = os.getenv("CONTACT_ADDRESS", "").strip()
+CONTACT_HOURS = os.getenv("CONTACT_HOURS", "").strip()
+
 for _dir in (DATA_DIR, CORPUS_DIR, INDEX_DIR, MODELS_DIR):
     _dir.mkdir(parents=True, exist_ok=True)

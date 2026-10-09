@@ -6,6 +6,7 @@ from app.config import (
     CHUNK_SIZE,
     CONTENT_COLLECTIONS,
 )
+from app.services import contact
 from app.utils import chunking
 from app.utils import nap_client
 
@@ -150,6 +151,9 @@ def extract_all_chunks() -> List[Dict]:
             )
 
     settings = nap_client.fetch_site_settings()
+    # Warm the contact cache from the settings we already have, so the first
+    # "who can I contact?" does not pay for its own fetch.
+    contact.prime(settings)
     chunks.extend(_site_settings_chunks(settings))
 
     programs = nap_client.fetch_programs()

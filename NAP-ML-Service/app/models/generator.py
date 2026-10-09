@@ -4,8 +4,10 @@ from app.config import (
     ANSWER_CHUNK_LIMIT,
     ANSWER_MAX_SOURCES,
     MIN_HIT_SCORE,
+    PORTAL_NAME,
 )
 from app.models.embedding import content_terms
+from app.services.contact import get_contact_details
 
 _GREETING_RE = re.compile(r"^(hi|hello|hey|good\s*(morning|afternoon|evening)|howdy)[\s!?.]*$", re.IGNORECASE)
 _THANKS_RE = re.compile(r"^(thanks|thank\s+you|thx|ty)[\s!?.]*$", re.IGNORECASE)
@@ -28,6 +30,23 @@ _CAPABILITY_RE = re.compile(
     r"|^what\s+do\s+you\s+do[\s!?.]*$"
     r"|^what\s+can\s+i\s+(ask|say)[\s!?.]*$"
     r"|^help[\s!?.]*$",
+    re.IGNORECASE,
+)
+# "Who can I contact?" must be answered from the organisation's own details,
+# not from a corpus hit that happens to mention the word "contact".
+_CONTACT_RE = re.compile(
+    r"\b(contact|contacting|contacted|phone|telephone|hotline|whatsapp|"
+    r"e-?mail|reach\s+(you|us|out|someone|somebody)|"
+    r"call\s+(you|us|the\s+(office|school|university|team))|"
+    r"talk\s+to\s+(someone|somebody|a\s+human|an?\s+(advisor|adviser|agent|person|representative|staff))|"
+    r"speak\s+to\s+(someone|somebody|a\s+human|an?\s+(advisor|adviser|agent|person|representative|staff))|"
+    r"who\s+(can|do|should)\s+i\s+(contact|call|reach|talk\s+to|speak\s+to|email)|"
+    r"how\s+(can|do|should)\s+i\s+(contact|call|reach|email|get\s+in\s+touch|get\s+hold\s+of)|"
+    r"get\s+in\s+touch|where\s+(are|is)\s+(you|your\s+office|the\s+campus|the\s+office)|"
+    r"location|located|"
+    r"(email|e-mail|mailing|postal|physical|office|campus|contact|your|our|home)\s+address|"
+    r"address\s+of\s+(the\s+)?(campus|office|school|university)|"
+    r"phone\s+number|contact\s+number|whatsapp\s+number|contact\s+details)\b",
     re.IGNORECASE,
 )
 
@@ -80,6 +99,8 @@ def _classify(query: str):
         return "identity"
     if _CAPABILITY_RE.match(query):
         return "capability"
+    if _CONTACT_RE.search(query):
+        return "contact"
     return "question"
 
 
@@ -171,7 +192,48 @@ def _body_of(chunk) -> str:
     return (meta.get("body") or chunk.get("text", "") or "").strip()
 
 
-def _compose(query: str, hits):
+def _contact_answer(portal_name: str) -> str:
+    """Warm, human reply with the organisation's contact details.
+
+    The details are read from the same CMS settings the site footer uses, so
+    the reply stays in step with the rendered page. Fields that are not
+    configured are omitted; nothing is invented.
+    """
+    details = get_contact_details()
+
+    fields = [
+        ("📧 **Email:**", details.get("email")),
+        ("📞 **Phone:**", details.get("phone")),
+        ("💬 **WhatsApp:**", details.get("whatsapp")),
+        ("📍 **Visit us:**", details.get("address")),
+        ("🕘 **Office hours:**", details.get("hours")),
+    ]
+    listed = [f"{label} {value}" for label, value in fields if value]
+
+    # No contact details configured: say so instead of quoting placeholders.
+    if not listed:
+        return (
+            "I'm not able to share the admissions office's phone or email yet — "
+            "they haven't been published on the site. You can reach the team "
+            "through the Contact page, and they'll help with anything about "
+            "courses, fees or applications. Is there a programme you'd like to "
+            "ask about in the meantime?"
+        )
+
+    lines = [
+        f"Of course — happy to help you get in touch with {portal_name}! "
+        "Here's how you can reach the team:",
+        "",
+        *listed,
+        "",
+        "For anything about courses, the admissions team is the quickest route "
+        "— they can talk you through requirements, fees and deadlines. Is there "
+        "a particular programme you'd like to know more about?",
+    ]
+    return "\n".join(lines)
+
+
+def _compose(query: str, hits, portal_name: str = PORTAL_NAME):
     """Return (answer text, hits actually quoted).
 
     The two are produced together so the source list shown under a reply cannot
@@ -179,6 +241,8 @@ def _compose(query: str, hits):
     discarded the student story, and the UI used to list both.
     """
     intent = _classify(query)
+    if intent == "contact":
+        return _contact_answer(portal_name), []
     if intent != "question":
         return INTENTS[intent], []
     if not content_terms(query):
@@ -221,8 +285,8 @@ def _compose(query: str, hits):
     return "\n".join(lines).rstrip(), quoted
 
 
-def build_answer(query: str, hits, portal_name: str = "Nexus University") -> str:
-    return _compose(query, hits)[0]
+def build_answer(query: str, hits, portal_name: str = PORTAL_NAME) -> str:
+    return _compose(query, hits, portal_name)[0]
 
 
 def quoted_sources(query: str, hits):
