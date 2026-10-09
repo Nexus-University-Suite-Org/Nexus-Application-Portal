@@ -113,6 +113,39 @@ const PlatformPage = () => {
     }
   };
 
+  const toggleStatus = async (tenant: Tenant) => {
+    const nextActive = !tenant.active;
+    const verb = nextActive ? "enable" : "disable";
+    if (
+      !window.confirm(
+        `${nextActive ? "Enable" : "Disable"} ${tenant.name}? ` +
+          (nextActive
+            ? "Its admins will be able to sign in again."
+            : "Its admins will be locked out of the admin portal."),
+      )
+    ) {
+      return;
+    }
+    setError("");
+    try {
+      const response = await fetch(`/api/v1/platform/tenants/${tenant.id}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ active: nextActive }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        throw new Error(err?.message || `Failed to ${verb} university (${response.status})`);
+      }
+      fetchTenants();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Failed to ${verb} university`);
+    }
+  };
+
   const openAdmins = async (tenant: Tenant) => {
     setAdminsFor(tenant);
     setAdmins([]);
@@ -221,9 +254,19 @@ const PlatformPage = () => {
                     <TableCell>{tenant.domain || "—"}</TableCell>
                     <TableCell>{tenant.adminCount}</TableCell>
                     <TableCell>
-                      <Badge variant={tenant.active ? "default" : "secondary"}>
-                        {tenant.active ? "Active" : "Disabled"}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={tenant.active ? "default" : "secondary"}>
+                          {tenant.active ? "Active" : "Disabled"}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => toggleStatus(tenant)}
+                        >
+                          {tenant.active ? "Disable" : "Enable"}
+                        </Button>
+                      </div>
                     </TableCell>
                     <TableCell>{formatDate(tenant.createdAt)}</TableCell>
                     <TableCell className="text-right">

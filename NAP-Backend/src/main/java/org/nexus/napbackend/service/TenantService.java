@@ -110,6 +110,22 @@ public class TenantService {
         return saved;
     }
 
+    /**
+     * Enable or disable a university. A disabled tenant's admins cannot
+     * authenticate (see {@code JwtAuthFilter} / admin login). Clears the
+     * resolution caches so the change takes effect on the next request.
+     */
+    @Transactional
+    public Tenant setActive(Long id, boolean active) {
+        Tenant tenant = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Tenant not found: " + id));
+        tenant.setActive(active);
+        Tenant saved = repository.save(tenant);
+        byRef.clear();
+        byDomain.clear();
+        return saved;
+    }
+
     private void seedDefaultSettings(Tenant tenant) {
         insertDefault(tenant.getId(), "portal_name", tenant.getName());
         for (SettingDefinition definition : catalog.definitions()) {

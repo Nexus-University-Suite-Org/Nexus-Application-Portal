@@ -6,6 +6,7 @@ import org.nexus.napbackend.dto.AdminAccountResponse;
 import org.nexus.napbackend.dto.CreateAdminRequest;
 import org.nexus.napbackend.dto.CreateTenantRequest;
 import org.nexus.napbackend.dto.TenantResponse;
+import org.nexus.napbackend.dto.UpdateTenantStatusRequest;
 import org.nexus.napbackend.model.Admin;
 import org.nexus.napbackend.model.Tenant;
 import org.nexus.napbackend.repository.AdminRepository;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -57,6 +59,13 @@ public class PlatformController {
     public ResponseEntity<TenantResponse> createTenant(@Valid @RequestBody CreateTenantRequest request) {
         Tenant tenant = tenantService.create(request.name(), request.code(), request.domain());
         return ResponseEntity.status(HttpStatus.CREATED).body(toTenantResponse(tenant));
+    }
+
+    @PatchMapping("/tenants/{tenantId}/status")
+    public ResponseEntity<TenantResponse> setTenantStatus(@PathVariable Long tenantId,
+                                                          @Valid @RequestBody UpdateTenantStatusRequest request) {
+        Tenant tenant = tenantService.setActive(tenantId, request.active());
+        return ResponseEntity.ok(toTenantResponse(tenant));
     }
 
     @GetMapping("/tenants/{tenantId}/admins")

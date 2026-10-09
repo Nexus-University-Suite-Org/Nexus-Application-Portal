@@ -6,6 +6,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
+import org.nexus.napbackend.model.Tenant;
 import org.nexus.napbackend.service.TenantService;
 import org.nexus.napbackend.tenancy.TenantContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -39,12 +41,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 String role = jwtUtil.getRole(token);
                 Long tenantId = jwtUtil.getTenantId(token);
 
-                AdminPrincipal principal = new AdminPrincipal(adminId, email, role, tenantId);
-                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
-                var auth = new UsernamePasswordAuthenticationToken(principal, null, authorities);
-                SecurityContextHolder.getContext().setAuthentication(auth);
-
                 if ("SUPER_ADMIN".equals(role)) {
+                    authenticate(adminId, email, role, tenantId);
+
                     // The platform super-admin may act across tenants by naming one
                     // with X-Tenant; without it the host-resolved tenant stands.
                     String ref = request.getHeader("X-Tenant");
@@ -54,16 +53,30 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     }
                 } else if (tenantId != null) {
                     // A university admin is pinned to their own tenant regardless of
-                    // any X-Tenant header.
-                    String code = tenantService.findById(tenantId)
-                            .map(tenant -> tenant.getCode())
-                            .orElse(null);
-                    TenantContext.set(tenantId, code);
+                    // any X-Tenant header. A deleted or disabled university means the
+                    // token is no longer honored: the request continues unauthenticated
+                    // so security rules reject it.
+                    Optional<Tenant> tenant = tenantService.findById(tenantId);
+                    if (tenant.isPresent() && Boolean.TRUE.equals(tenant.get().getActive())) {
+                        authenticate(adminId, email, role, tenantId);
+                        TenantContext.set(tenantId, tenant.get().getCode());
+                    } else {
+                        SecurityContextHolder.clearContext();
+                    }
+                } else {
+                    authenticate(adminId, email, role, tenantId);
                 }
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void authenticate(Long adminId, String email, String role, Long tenantId) {
+        AdminPrincipal principal = new AdminPrincipal(adminId, email, role, tenantId);
+        var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+        var auth = new UsernamePasswordAuthenticationToken(principal, null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
     public record AdminPrincipal(Long id, String email, String role, Long tenantId) {

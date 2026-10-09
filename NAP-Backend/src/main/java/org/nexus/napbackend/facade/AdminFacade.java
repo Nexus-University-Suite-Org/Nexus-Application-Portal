@@ -22,6 +22,7 @@ import org.nexus.napbackend.model.Application;
 import org.nexus.napbackend.repository.ApplicationRepository;
 import org.nexus.napbackend.service.AdminService;
 import org.nexus.napbackend.service.StudentNumberService;
+import org.nexus.napbackend.service.TenantService;
 import org.nexus.napbackend.tenancy.TenantContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,17 +39,20 @@ public class AdminFacade {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final StudentNumberService studentNumberService;
+    private final TenantService tenantService;
 
     public AdminFacade(AdminService adminService,
                        ApplicationRepository applicationRepository,
                        PasswordEncoder passwordEncoder,
                        JwtUtil jwtUtil,
-                       StudentNumberService studentNumberService) {
+                       StudentNumberService studentNumberService,
+                       TenantService tenantService) {
         this.adminService = adminService;
         this.applicationRepository = applicationRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.studentNumberService = studentNumberService;
+        this.tenantService = tenantService;
     }
 
     @Transactional
@@ -58,6 +62,13 @@ public class AdminFacade {
 
         if (!passwordEncoder.matches(request.password(), admin.getPasswordHash())) {
             throw new UnauthorizedException("Invalid email or password");
+        }
+
+        if (admin.getTenantId() != null) {
+            tenantService.findById(admin.getTenantId())
+                    .filter(tenant -> Boolean.TRUE.equals(tenant.getActive()))
+                    .orElseThrow(() -> new UnauthorizedException(
+                            "This university's admin portal is currently disabled"));
         }
 
         String role = resolveRole(admin);
