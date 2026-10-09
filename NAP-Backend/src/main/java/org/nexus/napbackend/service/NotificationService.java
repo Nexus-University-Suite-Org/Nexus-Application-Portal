@@ -35,19 +35,22 @@ public class NotificationService {
     }
 
     public Optional<Notification> findById(Long id) {
-        return notificationRepository.findById(id);
+        return notificationRepository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId());
     }
 
     public List<Notification> findByUserId(Long userId) {
-        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        return notificationRepository.findByTenantIdAndUserIdOrderByCreatedAtDesc(
+                TenantContext.getCurrentTenantId(), userId);
     }
 
     public List<Notification> findByUserIdAndRead(Long userId, Boolean read) {
-        return notificationRepository.findByUserIdAndReadOrderByCreatedAtDesc(userId, read);
+        return notificationRepository.findByTenantIdAndUserIdAndReadOrderByCreatedAtDesc(
+                TenantContext.getCurrentTenantId(), userId, read);
     }
 
     public List<Notification> findAll() {
-        return notificationRepository.findAllByOrderByCreatedAtDesc();
+        return notificationRepository.findAllByTenantIdOrderByCreatedAtDesc(
+                TenantContext.getCurrentTenantId());
     }
 
     public Notification update(Notification entity) {
@@ -55,11 +58,13 @@ public class NotificationService {
     }
 
     public int markAllRead(Long userId) {
-        return notificationRepository.markAll(userId, true, false);
+        return notificationRepository.markAllForTenant(
+                TenantContext.getCurrentTenantId(), userId, true, false);
     }
 
     public void deleteById(Long id) {
-        notificationRepository.deleteById(id);
+        notificationRepository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId())
+                .ifPresent(notificationRepository::delete);
     }
 
     public Announcement createAnnouncement(Announcement entity) {
@@ -69,23 +74,27 @@ public class NotificationService {
     }
 
     public List<Announcement> findAllAnnouncements() {
-        return announcementRepository.findAllByOrderByCreatedAtDesc();
+        return announcementRepository.findAllByTenantIdOrderByCreatedAtDesc(
+                TenantContext.getCurrentTenantId());
     }
 
     public List<Announcement> findAnnouncementsByCourse(Long courseId) {
-        return announcementRepository.findByCourseIdOrderByCreatedAtDesc(courseId);
+        return announcementRepository.findByTenantIdAndCourseIdOrderByCreatedAtDesc(
+                TenantContext.getCurrentTenantId(), courseId);
     }
 
     public List<Announcement> findSystemWideAnnouncements() {
-        return announcementRepository.findByIsSystemWideTrueOrderByCreatedAtDesc();
+        return announcementRepository.findByTenantIdAndIsSystemWideTrueOrderByCreatedAtDesc(
+                TenantContext.getCurrentTenantId());
     }
 
     public void deleteAnnouncement(Long id) {
-        announcementRepository.deleteById(id);
+        announcementRepository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId())
+                .ifPresent(announcementRepository::delete);
     }
 
     public Optional<Announcement> findAnnouncementById(Long id) {
-        return announcementRepository.findById(id);
+        return announcementRepository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId());
     }
 
     public Announcement updateAnnouncement(Announcement entity) {

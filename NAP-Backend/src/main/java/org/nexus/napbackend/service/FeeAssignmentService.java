@@ -30,30 +30,35 @@ public class FeeAssignmentService {
     }
 
     public Optional<FeeAssignment> findById(Long id) {
-        return repository.findById(id);
+        return repository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId());
     }
 
     public List<FeeAssignment> findAll() {
-        return repository.findAllByOrderByAcademicYearDescYearLevelAscSemesterAsc();
+        return repository.findByTenantIdOrderByAcademicYearDescYearLevelAscSemesterAsc(
+                TenantContext.getCurrentTenantId());
     }
 
     public List<FeeAssignment> findByCollege(String college) {
-        return repository.findByCollegeOrderByAcademicYearDescYearLevelAscSemesterAsc(college);
+        return repository.findByTenantIdAndCollegeOrderByAcademicYearDescYearLevelAscSemesterAsc(
+                TenantContext.getCurrentTenantId(), college);
     }
 
     public List<FeeAssignment> findByAcademicYear(String academicYear) {
-        return repository.findByAcademicYearOrderByYearLevelAscSemesterAsc(academicYear);
+        return repository.findByTenantIdAndAcademicYearOrderByYearLevelAscSemesterAsc(
+                TenantContext.getCurrentTenantId(), academicYear);
     }
 
     public void deleteById(Long id) {
-        repository.deleteById(id);
+        repository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId())
+                .ifPresent(repository::delete);
     }
 
     public List<FeeAssignment> findAllForReport() {
-        return repository.findAllForReport();
+        return repository.findAllByTenantIdForReport(TenantContext.getCurrentTenantId());
     }
 
     public List<FeeAssignment> findByAcademicYearForReport(String academicYear) {
-        return repository.findByAcademicYearForReport(academicYear);
+        return repository.findByTenantIdAndAcademicYearForReport(
+                TenantContext.getCurrentTenantId(), academicYear);
     }
 }

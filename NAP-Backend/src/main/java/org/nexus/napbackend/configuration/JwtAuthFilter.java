@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import org.nexus.napbackend.service.TenantService;
 import org.nexus.napbackend.tenancy.TenantContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,9 +18,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final TenantService tenantService;
 
-    public JwtAuthFilter(JwtUtil jwtUtil) {
+    public JwtAuthFilter(JwtUtil jwtUtil, TenantService tenantService) {
         this.jwtUtil = jwtUtil;
+        this.tenantService = tenantService;
     }
 
     @Override
@@ -44,7 +47,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 // A university admin is pinned to their own tenant regardless of any
                 // X-Tenant header. Only the platform super-admin may act across tenants.
                 if (tenantId != null && !"SUPER_ADMIN".equals(role)) {
-                    TenantContext.set(tenantId, null);
+                    String code = tenantService.findById(tenantId)
+                            .map(tenant -> tenant.getCode())
+                            .orElse(null);
+                    TenantContext.set(tenantId, code);
                 }
             }
         }

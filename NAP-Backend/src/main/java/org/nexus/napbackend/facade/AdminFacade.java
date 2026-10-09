@@ -22,6 +22,7 @@ import org.nexus.napbackend.model.Application;
 import org.nexus.napbackend.repository.ApplicationRepository;
 import org.nexus.napbackend.service.AdminService;
 import org.nexus.napbackend.service.StudentNumberService;
+import org.nexus.napbackend.tenancy.TenantContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -80,12 +81,13 @@ public class AdminFacade {
 
     @Transactional
     public DashboardStatsResponse getDashboardStats() {
-        long total = applicationRepository.count();
-        long pending = applicationRepository.countByStatus("SUBMITTED");
-        long admitted = applicationRepository.countByStatus("ADMITTED");
-        long rejected = applicationRepository.countByStatus("REJECTED");
-        long waitlisted = applicationRepository.countByStatus("WAITLISTED");
-        long draft = applicationRepository.countByStatus("DRAFT");
+        Long tenantId = TenantContext.getCurrentTenantId();
+        long total = applicationRepository.countByTenantId(tenantId);
+        long pending = applicationRepository.countByTenantIdAndStatus(tenantId, "SUBMITTED");
+        long admitted = applicationRepository.countByTenantIdAndStatus(tenantId, "ADMITTED");
+        long rejected = applicationRepository.countByTenantIdAndStatus(tenantId, "REJECTED");
+        long waitlisted = applicationRepository.countByTenantIdAndStatus(tenantId, "WAITLISTED");
+        long draft = applicationRepository.countByTenantIdAndStatus(tenantId, "DRAFT");
 
         Map<String, Long> monthlyTrend = new LinkedHashMap<>();
         LocalDateTime now = LocalDateTime.now();
@@ -94,7 +96,8 @@ public class AdminFacade {
             String key = month.format(DateTimeFormatter.ofPattern("MMM yyyy"));
             LocalDateTime startOfMonth = month.withDayOfMonth(1).atStartOfDay();
             LocalDateTime endOfMonth = month.withDayOfMonth(month.lengthOfMonth()).atTime(23, 59, 59);
-            long count = applicationRepository.countByCreatedAtBetween(startOfMonth, endOfMonth);
+            long count = applicationRepository.countByTenantIdAndCreatedAtBetween(
+                    tenantId, startOfMonth, endOfMonth);
             monthlyTrend.put(key, count);
         }
 
@@ -104,19 +107,21 @@ public class AdminFacade {
     @Transactional
     public PaginatedApplicationsResponse getApplications(String status, String search, int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Long tenantId = TenantContext.getCurrentTenantId();
 
         Page<Application> result;
 
         if (status != null && !status.isEmpty() && search != null && !search.isEmpty()) {
             String searchLower = "%" + search.toLowerCase() + "%";
-            result = applicationRepository.findByStatusAndSearch(status, searchLower, pageRequest);
+            result = applicationRepository.findByTenantIdAndStatusAndSearch(
+                    tenantId, status, searchLower, pageRequest);
         } else if (status != null && !status.isEmpty()) {
-            result = applicationRepository.findByStatusPaged(status, pageRequest);
+            result = applicationRepository.findByTenantIdAndStatusPaged(tenantId, status, pageRequest);
         } else if (search != null && !search.isEmpty()) {
             String searchLower = "%" + search.toLowerCase() + "%";
-            result = applicationRepository.findBySearch(searchLower, pageRequest);
+            result = applicationRepository.findByTenantIdAndSearch(tenantId, searchLower, pageRequest);
         } else {
-            result = applicationRepository.findAll(pageRequest);
+            result = applicationRepository.findByTenantId(tenantId, pageRequest);
         }
 
         List<ApplicationResponse> content = result.getContent().stream()
@@ -134,14 +139,16 @@ public class AdminFacade {
 
     @Transactional
     public ApplicationResponse getApplicationById(Long id) {
-        Application app = applicationRepository.findById(id)
+        Application app = applicationRepository
+                .findByIdAndTenantId(id, TenantContext.getCurrentTenantId())
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
         return ApplicationMapper.toDto(app);
     }
 
     @Transactional
     public ApplicationResponse reviewApplication(Long id, ReviewRequest request) {
-        Application app = applicationRepository.findById(id)
+        Application app = applicationRepository
+                .findByIdAndTenantId(id, TenantContext.getCurrentTenantId())
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
 
         if (!"SUBMITTED".equals(app.getStatus())) {

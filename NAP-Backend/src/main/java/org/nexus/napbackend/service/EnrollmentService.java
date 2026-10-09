@@ -17,19 +17,22 @@ public class EnrollmentService {
     }
 
     public List<Enrollment> findByStudentId(String studentId) {
-        return repository.findByStudentIdOrderByEnrolledAtDesc(studentId);
+        return repository.findByTenantIdAndStudentIdOrderByEnrolledAtDesc(
+                TenantContext.getCurrentTenantId(), studentId);
     }
 
     public Optional<Enrollment> findById(Long id) {
-        return repository.findById(id);
+        return repository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId());
     }
 
     public Optional<Enrollment> findByStudentAndCourseUnit(String studentId, Long courseUnitId) {
-        return repository.findByStudentIdAndCourseUnitId(studentId, courseUnitId);
+        return repository.findByTenantIdAndStudentIdAndCourseUnitId(
+                TenantContext.getCurrentTenantId(), studentId, courseUnitId);
     }
 
     public boolean existsByStudentAndCourseUnit(String studentId, Long courseUnitId) {
-        return repository.existsByStudentIdAndCourseUnitId(studentId, courseUnitId);
+        return repository.existsByTenantIdAndStudentIdAndCourseUnitId(
+                TenantContext.getCurrentTenantId(), studentId, courseUnitId);
     }
 
     public Enrollment create(Enrollment enrollment) {

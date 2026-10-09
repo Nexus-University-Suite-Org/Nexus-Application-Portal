@@ -40,19 +40,19 @@ public class MessageService {
     }
 
     public Optional<Message> findById(Long id) {
-        return messageRepository.findById(id);
+        return messageRepository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId());
     }
 
     public List<Message> findInbox(Long userId) {
-        return messageRepository.findInbox(userId);
+        return messageRepository.findInboxForTenant(TenantContext.getCurrentTenantId(), userId);
     }
 
     public List<Message> findSent(Long userId) {
-        return messageRepository.findSent(userId);
+        return messageRepository.findSentForTenant(TenantContext.getCurrentTenantId(), userId);
     }
 
     public List<Message> findStarred(Long userId) {
-        return messageRepository.findStarred(userId);
+        return messageRepository.findStarredForTenant(TenantContext.getCurrentTenantId(), userId);
     }
 
     public List<MessageAttachment> findAttachments(Long messageId) {
@@ -64,7 +64,8 @@ public class MessageService {
     }
 
     public void deleteMessage(Long id) {
-        messageRepository.deleteById(id);
+        messageRepository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId())
+                .ifPresent(messageRepository::delete);
     }
 
     public MessageDraft saveDraft(MessageDraft draft) {
@@ -77,14 +78,19 @@ public class MessageService {
     }
 
     public List<MessageDraft> findDrafts(Long userId) {
-        return draftRepository.findByUserIdOrderByUpdatedAtDesc(userId);
+        return draftRepository.findByTenantIdAndUserIdOrderByUpdatedAtDesc(
+                TenantContext.getCurrentTenantId(), userId);
     }
 
     public Optional<MessageDraft> findDraftByIdAndUserId(Long id, Long userId) {
-        return draftRepository.findByIdAndUserId(id, userId);
+        return draftRepository.findByIdAndUserIdAndTenantId(
+                id, userId, TenantContext.getCurrentTenantId());
     }
 
     public void deleteDraft(Long id) {
-        draftRepository.deleteById(id);
+        draftRepository.findById(id)
+                .filter(draft -> draft.getTenantId() == null
+                        || draft.getTenantId().equals(TenantContext.getCurrentTenantId()))
+                .ifPresent(draftRepository::delete);
     }
 }

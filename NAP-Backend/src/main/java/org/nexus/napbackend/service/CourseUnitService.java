@@ -17,15 +17,16 @@ public class CourseUnitService {
     }
 
     public List<CourseUnit> findByCourseId(Long courseId) {
-        return repository.findByCourseId(courseId);
+        return repository.findByTenantIdAndCourseId(TenantContext.getCurrentTenantId(), courseId);
     }
 
     public List<CourseUnit> findByCourseIdAndSemesterAndYear(Long courseId, Integer semester, Integer year) {
-        return repository.findByCourseIdAndSemesterAndYear(courseId, semester, year);
+        return repository.findByTenantIdAndCourseIdAndSemesterAndYear(
+                TenantContext.getCurrentTenantId(), courseId, semester, year);
     }
 
     public Optional<CourseUnit> findById(Long id) {
-        return repository.findById(id);
+        return repository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId());
     }
 
     public CourseUnit create(CourseUnit unit) {

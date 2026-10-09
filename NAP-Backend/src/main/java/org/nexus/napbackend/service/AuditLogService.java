@@ -24,18 +24,22 @@ public class AuditLogService {
     }
 
     public List<AuditLog> findRecent(int limit) {
-        return repository.findTop100ByOrderByCreatedAtDesc();
+        return repository.findTop100ByTenantIdOrderByCreatedAtDesc(
+                TenantContext.getCurrentTenantId());
     }
 
     public List<AuditLog> findByEntity(String entity) {
-        return repository.findByEntityOrderByCreatedAtDesc(entity);
+        return repository.findByTenantIdAndEntityOrderByCreatedAtDesc(
+                TenantContext.getCurrentTenantId(), entity);
     }
 
     public List<AuditLog> findByUserId(Long userId) {
-        return repository.findByUserIdOrderByCreatedAtDesc(userId);
+        return repository.findByTenantIdAndUserIdOrderByCreatedAtDesc(
+                TenantContext.getCurrentTenantId(), userId);
     }
 
     public List<AuditLog> findByDateRange(LocalDateTime start, LocalDateTime end) {
-        return repository.findByCreatedAtBetweenOrderByCreatedAtDesc(start, end);
+        return repository.findByTenantIdAndCreatedAtBetweenOrderByCreatedAtDesc(
+                TenantContext.getCurrentTenantId(), start, end);
     }
 }

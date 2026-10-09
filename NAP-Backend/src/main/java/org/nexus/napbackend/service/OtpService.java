@@ -28,7 +28,9 @@ public class OtpService {
     }
 
     public OtpCode generateOtp(String email, String purpose) {
-        Optional<OtpCode> existing = repository.findTopByEmailAndPurposeAndUsedFalseOrderByCreatedAtDesc(email, purpose);
+        Optional<OtpCode> existing = repository
+                .findTopByTenantIdAndEmailAndPurposeAndUsedFalseOrderByCreatedAtDesc(
+                        TenantContext.getCurrentTenantId(), email, purpose);
         if (existing.isPresent()) {
             OtpCode lastOtp = existing.get();
             if (lastOtp.getCreatedAt().plusSeconds(COOLDOWN_SECONDS).isAfter(LocalDateTime.now())) {
@@ -52,7 +54,9 @@ public class OtpService {
     }
 
     public OtpVerificationResult verifyOtp(String email, String code, String purpose) {
-        Optional<OtpCode> optionalOtp = repository.findTopByEmailAndPurposeAndUsedFalseOrderByCreatedAtDesc(email, purpose);
+        Optional<OtpCode> optionalOtp = repository
+                .findTopByTenantIdAndEmailAndPurposeAndUsedFalseOrderByCreatedAtDesc(
+                        TenantContext.getCurrentTenantId(), email, purpose);
 
         if (optionalOtp.isEmpty()) {
             throw new OtpException("NOT_FOUND", "No active OTP found for this email", 404);

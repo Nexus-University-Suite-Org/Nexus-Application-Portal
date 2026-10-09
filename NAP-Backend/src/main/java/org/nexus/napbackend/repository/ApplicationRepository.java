@@ -34,6 +34,16 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
+    long countByTenantId(Long tenantId);
+
+    long countByTenantIdAndStatus(Long tenantId, String status);
+
+    long countByTenantIdAndCreatedAtBetween(Long tenantId, LocalDateTime start, LocalDateTime end);
+
+    Optional<Application> findByIdAndTenantId(Long id, Long tenantId);
+
+    Page<Application> findByTenantId(Long tenantId, Pageable pageable);
+
     @Query("SELECT a FROM Application a WHERE a.status = :status AND " +
            "(LOWER(a.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(a.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
@@ -43,8 +53,23 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
                                            @Param("search") String search,
                                            Pageable pageable);
 
+    @Query("SELECT a FROM Application a WHERE a.tenantId = :tenantId AND a.status = :status AND " +
+           "(LOWER(a.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(a.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(a.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(a.prn) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Application> findByTenantIdAndStatusAndSearch(@Param("tenantId") Long tenantId,
+                                                       @Param("status") String status,
+                                                       @Param("search") String search,
+                                                       Pageable pageable);
+
     @Query("SELECT a FROM Application a WHERE a.status = :status")
     Page<Application> findByStatusPaged(@Param("status") String status, Pageable pageable);
+
+    @Query("SELECT a FROM Application a WHERE a.tenantId = :tenantId AND a.status = :status")
+    Page<Application> findByTenantIdAndStatusPaged(@Param("tenantId") Long tenantId,
+                                                   @Param("status") String status,
+                                                   Pageable pageable);
 
     @Query("SELECT a FROM Application a WHERE " +
            "LOWER(a.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
@@ -52,4 +77,13 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
            "LOWER(a.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(a.prn) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<Application> findBySearch(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT a FROM Application a WHERE a.tenantId = :tenantId AND (" +
+           "LOWER(a.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(a.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(a.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(a.prn) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Application> findByTenantIdAndSearch(@Param("tenantId") Long tenantId,
+                                              @Param("search") String search,
+                                              Pageable pageable);
 }

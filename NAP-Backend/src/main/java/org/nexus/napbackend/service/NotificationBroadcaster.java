@@ -15,12 +15,15 @@ public class NotificationBroadcaster {
 
     private static final Logger log = LoggerFactory.getLogger(NotificationBroadcaster.class);
 
-    private final Map<String, SseEmitter> clients = new ConcurrentHashMap<>();
+    private final Map<String, Client> clients = new ConcurrentHashMap<>();
 
-    public String connect(SseEmitter emitter) {
+    private record Client(SseEmitter emitter, Long tenantId) {
+    }
+
+    public String connect(SseEmitter emitter, Long tenantId) {
         String id = UUID.randomUUID().toString();
-        clients.put(id, emitter);
-        log.info("SSE client connected: {} (total: {})", id, clients.size());
+        clients.put(id, new Client(emitter, tenantId));
+        log.info("SSE client connected: {} tenant={} (total: {})", id, tenantId, clients.size());
 
         emitter.onCompletion(() -> {
             clients.remove(id);
@@ -55,9 +58,13 @@ public class NotificationBroadcaster {
                 "createdAt", notification.getCreatedAt() != null ? notification.getCreatedAt().toString() : ""
         );
 
-        clients.forEach((clientId, emitter) -> {
+        Long tenantId = notification.getTenantId();
+        clients.forEach((clientId, client) -> {
+            if (tenantId != null && !tenantId.equals(client.tenantId())) {
+                return;
+            }
             try {
-                emitter.send(SseEmitter.event()
+                client.emitter().send(SseEmitter.event()
                         .name("notification")
                         .data(payload));
             } catch (IOException e) {

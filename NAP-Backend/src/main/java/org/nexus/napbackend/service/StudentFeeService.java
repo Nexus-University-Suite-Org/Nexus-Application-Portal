@@ -30,18 +30,21 @@ public class StudentFeeService {
     }
 
     public Optional<StudentFee> findById(Long id) {
-        return repository.findById(id);
+        return repository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId());
     }
 
     public List<StudentFee> findByStudentId(Long studentId) {
-        return repository.findByStudentIdOrderByCreatedAtDesc(studentId);
+        return repository.findByTenantIdAndStudentIdOrderByCreatedAtDesc(
+                TenantContext.getCurrentTenantId(), studentId);
     }
 
     public List<StudentFee> findByStudentIdAndStatus(Long studentId, String status) {
-        return repository.findByStudentIdAndStatusOrderByDueDateAsc(studentId, status);
+        return repository.findByTenantIdAndStudentIdAndStatusOrderByDueDateAsc(
+                TenantContext.getCurrentTenantId(), studentId, status);
     }
 
     public void deleteById(Long id) {
-        repository.deleteById(id);
+        repository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId())
+                .ifPresent(repository::delete);
     }
 }

@@ -17,19 +17,19 @@ public class CourseService {
     }
 
     public List<Course> findAll() {
-        return repository.findAll();
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId());
     }
 
     public Optional<Course> findById(Long id) {
-        return repository.findById(id);
+        return repository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId());
     }
 
     public Optional<Course> findByName(String name) {
-        return repository.findByNameIgnoreCase(name);
+        return repository.findByTenantIdAndNameIgnoreCase(TenantContext.getCurrentTenantId(), name);
     }
 
     public Optional<Course> findByCode(String code) {
-        return repository.findByCodeIgnoreCase(code);
+        return repository.findByTenantIdAndCodeIgnoreCase(TenantContext.getCurrentTenantId(), code);
     }
 
     public Course create(Course course) {
@@ -38,6 +38,7 @@ public class CourseService {
     }
 
     public boolean existsByCode(String code) {
-        return repository.existsByCodeIgnoreCase(code);
+        return repository.existsByTenantIdAndCodeIgnoreCase(
+                TenantContext.getCurrentTenantId(), code);
     }
 }
