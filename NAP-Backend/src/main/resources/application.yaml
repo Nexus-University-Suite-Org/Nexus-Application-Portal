@@ -81,6 +81,14 @@ management:
         enabled: true
 
 nap:
+  super-admin:
+    # Bootstraps the first platform owner on startup when no SUPER_ADMIN account
+    # exists. Idempotent: once a super-admin is present the values are ignored,
+    # so they can stay set in the environment. No registration page exists for
+    # the first account on purpose.
+    email: ${SUPER_ADMIN_EMAIL:}
+    password: ${SUPER_ADMIN_PASSWORD:}
+    full-name: ${SUPER_ADMIN_FULL_NAME:Platform Administrator}
   tenancy:
     # Apex host for subdomain tenant routing, e.g. portal.example.com. A request
     # to muk.portal.example.com resolves tenant code "muk".

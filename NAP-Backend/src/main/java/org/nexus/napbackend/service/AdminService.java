@@ -37,4 +37,8 @@ public class AdminService {
     public List<Admin> findAll() {
         return repository.findAllByTenantId(TenantContext.getCurrentTenantId());
     }
+
+    public List<Admin> findAllByTenant(Long tenantId) {
+        return repository.findAllByTenantId(tenantId);
+    }
 }

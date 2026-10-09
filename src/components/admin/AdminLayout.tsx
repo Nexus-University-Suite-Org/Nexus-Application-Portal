@@ -27,6 +27,7 @@ import {
   Activity,
   CreditCard,
   CalendarClock,
+  Building2,
   LogOut,
   Menu,
   X,
@@ -109,7 +110,7 @@ const sidebarSections: SidebarSection[] = [
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { user, logout } = useAdminAuth();
+  const { user, logout, isSuperAdmin } = useAdminAuth();
   const { settings } = useSiteSettings({ keys: ["portal_name"], scope: "AdminLayout" });
   const portalName = settings.portal_name?.trim() || "Admin";
 
@@ -147,6 +148,27 @@ const AdminLayout = () => {
 
         <div className="h-[calc(100vh-4rem)] overflow-y-auto sidebar-scroll">
           <nav className="p-4 space-y-6">
+            {isSuperAdmin && (
+              <div>
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-3">
+                  Platform
+                </h3>
+                <div className="space-y-1">
+                  <Link
+                    to="/admin/platform"
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                      location.pathname.startsWith("/admin/platform")
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    <Building2 size={18} />
+                    Universities
+                  </Link>
+                </div>
+              </div>
+            )}
             {sidebarSections.map((section) => (
               <div key={section.title}>
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-3">

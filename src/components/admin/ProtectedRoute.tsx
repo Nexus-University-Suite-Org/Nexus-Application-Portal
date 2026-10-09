@@ -3,10 +3,11 @@ import { useAdminAuth } from "@/contexts/AdminAuthContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requireRole?: string;
 }
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated, loading } = useAdminAuth();
+const ProtectedRoute = ({ children, requireRole }: ProtectedRouteProps) => {
+  const { isAuthenticated, loading, user } = useAdminAuth();
 
   if (loading) {
     return (
@@ -20,6 +21,10 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   if (!isAuthenticated) {
     return <Navigate to="/admin/login" replace />;
+  }
+
+  if (requireRole && user?.role !== requireRole) {
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   return <>{children}</>;

@@ -60,6 +60,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/schemes/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/chat", "/api/v1/chat/").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/platform/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/api/v1/chat/status", "/api/v1/chat/sources", "/api/v1/chat/train").hasRole("ADMIN")
                         .anyRequest().permitAll()
                 )

@@ -12,4 +12,8 @@ public interface AdminRepository extends JpaRepository<Admin, Long> {
     boolean existsByEmail(String email);
 
     List<Admin> findAllByTenantId(Long tenantId);
+
+    long countByTenantId(Long tenantId);
+
+    Optional<Admin> findFirstByRoleOrderByIdAsc(String role);
 }

@@ -1,9 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-interface AdminUser {
+export interface AdminUser {
   id: number;
   email: string;
   fullName: string;
+  role?: string;
+  tenantId?: number | null;
 }
 
 interface AdminAuthContextType {
@@ -13,6 +15,7 @@ interface AdminAuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  isSuperAdmin: boolean;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
@@ -53,18 +56,17 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const data = await response.json();
+    const nextUser: AdminUser = {
+      id: data.id || 0,
+      email: data.email,
+      fullName: data.fullName,
+      role: data.role,
+      tenantId: data.tenantId,
+    };
     localStorage.setItem("admin_token", data.token);
-    localStorage.setItem("admin_user", JSON.stringify({
-      id: data.id || 0,
-      email: data.email,
-      fullName: data.fullName,
-    }));
+    localStorage.setItem("admin_user", JSON.stringify(nextUser));
     setToken(data.token);
-    setUser({
-      id: data.id || 0,
-      email: data.email,
-      fullName: data.fullName,
-    });
+    setUser(nextUser);
   };
 
   const logout = () => {
@@ -83,6 +85,7 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         logout,
         isAuthenticated: !!token,
+        isSuperAdmin: user?.role === "SUPER_ADMIN",
       }}
     >
       {children}

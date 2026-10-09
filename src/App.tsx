@@ -96,6 +96,7 @@ const QuickLinksAdminPage = lazy(() => import("./pages/admin/QuickLinksPage.tsx"
 const LegalPagesAdminPage = lazy(() => import("./pages/admin/LegalPagesPage.tsx"));
 const PageSectionsAdminPage = lazy(() => import("./pages/admin/PageSectionsPage.tsx"));
 const SettingsAdminPage = lazy(() => import("./pages/admin/SettingsPage.tsx"));
+const PlatformPage = lazy(() => import("./pages/admin/PlatformPage.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -192,6 +193,14 @@ const AnimatedRoutes = () => {
               }
             >
               <Route path="dashboard" element={<AdminDashboardPage />} />
+              <Route
+                path="platform"
+                element={
+                  <ProtectedRoute requireRole="SUPER_ADMIN">
+                    <PlatformPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="news" element={<NewsArticlesPage />} />
               <Route path="events" element={<EventsPage />} />
               <Route path="gallery" element={<GalleryAdminPage />} />
