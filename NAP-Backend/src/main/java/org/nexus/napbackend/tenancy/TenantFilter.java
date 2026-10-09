@@ -5,6 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Optional;
 import org.nexus.napbackend.configuration.TenancyProperties;
 import org.nexus.napbackend.model.Tenant;
@@ -16,13 +18,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
  *
  * <p>Resolution order:
  * <ol>
- *   <li>{@code X-Tenant} header (numeric id or code) — used by the ML service and
- *       any API client that knows which university it is acting for.</li>
+ *   <li>{@code X-Tenant} header (numeric id or code), but only for a caller that
+ *       presents the shared internal token - the ML service fetching a specific
+ *       university's content. A public request cannot select a tenant this way.</li>
  *   <li>An exact custom domain configured on a tenant.</li>
  *   <li>A subdomain of the configured base domain
- *       ({@code muk}.portal.example.com → code {@code muk}).</li>
+ *       ({@code muk}.portal.example.com -> code {@code muk}).</li>
  *   <li>The configured default tenant code.</li>
- *   <li>No tenant — callers fall back to {@link TenantContext#DEFAULT_TENANT_ID}.</li>
+ *   <li>No tenant - callers fall back to {@link TenantContext#DEFAULT_TENANT_ID}.</li>
  * </ol>
  *
  * <p>The context is always cleared afterwards so a thread reused by the pool
@@ -31,6 +34,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class TenantFilter extends OncePerRequestFilter {
 
     private static final String HEADER = "X-Tenant";
+    private static final String INTERNAL_HEADER = "X-Internal-Token";
 
     private final TenantService tenantService;
     private final TenancyProperties properties;
@@ -54,9 +58,11 @@ public class TenantFilter extends OncePerRequestFilter {
     }
 
     private Optional<Tenant> resolve(HttpServletRequest request) {
-        Optional<Tenant> byHeader = tenantService.resolve(request.getHeader(HEADER));
-        if (byHeader.isPresent()) {
-            return byHeader;
+        if (isTrustedCaller(request)) {
+            Optional<Tenant> byHeader = tenantService.resolve(request.getHeader(HEADER));
+            if (byHeader.isPresent()) {
+                return byHeader;
+            }
         }
 
         String serverName = request.getServerName();
@@ -81,5 +87,25 @@ public class TenantFilter extends OncePerRequestFilter {
         }
 
         return tenantService.resolve(properties.defaultTenantCode());
+    }
+
+    /**
+     * Only a caller that presents the configured internal token may select a tenant
+     * via {@code X-Tenant}. The comparison is constant-time so a wrong guess cannot
+     * be discovered by timing. When no token is configured, header selection is
+     * disabled and every request resolves by host.
+     */
+    private boolean isTrustedCaller(HttpServletRequest request) {
+        String secret = properties.internalToken();
+        if (secret.isEmpty()) {
+            return false;
+        }
+        String presented = request.getHeader(INTERNAL_HEADER);
+        if (presented == null) {
+            return false;
+        }
+        return MessageDigest.isEqual(
+                secret.getBytes(StandardCharsets.UTF_8),
+                presented.getBytes(StandardCharsets.UTF_8));
     }
 }

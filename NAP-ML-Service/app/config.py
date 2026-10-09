@@ -21,6 +21,12 @@ TENANT_DEFAULT_CODE = os.getenv("TENANT_DEFAULT_CODE", "").strip().lower()
 TENANT_DEFAULT_ID = os.getenv("TENANT_DEFAULT_ID", "1").strip().lower()
 
 NAP_BASE_URL = os.getenv("NAP_BASE_URL", "http://localhost:8080").rstrip("/")
+
+# Shared secret that lets this service select a tenant with an X-Tenant header
+# when it fetches content from the backend. Must match INTERNAL_API_TOKEN (the
+# backend's nap.tenancy.internal-token). When empty, the backend resolves every
+# request by host and the fetched content belongs to the default tenant.
+INTERNAL_API_TOKEN = os.getenv("INTERNAL_API_TOKEN", "").strip()
 EMBEDDING_MODEL_NAME = os.getenv(
     "EMBEDDING_MODEL_NAME", "sentence-transformers/all-MiniLM-L6-v2"
 )

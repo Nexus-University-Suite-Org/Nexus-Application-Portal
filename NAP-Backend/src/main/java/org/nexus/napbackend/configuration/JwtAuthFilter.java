@@ -44,9 +44,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 var auth = new UsernamePasswordAuthenticationToken(principal, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(auth);
 
-                // A university admin is pinned to their own tenant regardless of any
-                // X-Tenant header. Only the platform super-admin may act across tenants.
-                if (tenantId != null && !"SUPER_ADMIN".equals(role)) {
+                if ("SUPER_ADMIN".equals(role)) {
+                    // The platform super-admin may act across tenants by naming one
+                    // with X-Tenant; without it the host-resolved tenant stands.
+                    String ref = request.getHeader("X-Tenant");
+                    if (ref != null && !ref.isBlank()) {
+                        tenantService.resolve(ref).ifPresent(tenant ->
+                                TenantContext.set(tenant.getId(), tenant.getCode()));
+                    }
+                } else if (tenantId != null) {
+                    // A university admin is pinned to their own tenant regardless of
+                    // any X-Tenant header.
                     String code = tenantService.findById(tenantId)
                             .map(tenant -> tenant.getCode())
                             .orElse(null);

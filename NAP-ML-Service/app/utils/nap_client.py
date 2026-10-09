@@ -2,14 +2,24 @@ from typing import Optional
 
 import httpx
 
-from app.config import NAP_BASE_URL
+from app.config import INTERNAL_API_TOKEN, NAP_BASE_URL
 
 _TIMEOUT = httpx.Timeout(30.0, connect=3.0)
 
 
 def _headers(tenant: Optional[str] = None):
-    """Forward the resolved tenant so the backend returns tenant-scoped content."""
-    return {"X-Tenant": tenant} if tenant else {}
+    """Forward the resolved tenant so the backend returns tenant-scoped content.
+
+    The backend only honours ``X-Tenant`` from a caller that presents the shared
+    internal token, so it is sent alongside when configured; otherwise tenant
+    selection is ignored and the request resolves to the default tenant.
+    """
+    headers = {}
+    if tenant:
+        headers["X-Tenant"] = tenant
+    if INTERNAL_API_TOKEN:
+        headers["X-Internal-Token"] = INTERNAL_API_TOKEN
+    return headers
 
 
 def _get(path: str, tenant: Optional[str] = None):

@@ -83,12 +83,16 @@ management:
 nap:
   tenancy:
     # Apex host for subdomain tenant routing, e.g. portal.example.com. A request
-    # to muk.portal.example.com resolves tenant code "muk". Requests carrying an
-    # X-Tenant header (used by the ML service) always take precedence.
+    # to muk.portal.example.com resolves tenant code "muk".
     base-domain: ${TENANT_BASE_DOMAIN:}
-    # Tenant used when no X-Tenant header or host mapping applies. Empty falls
-    # back to the demo tenant (id 1).
+    # Tenant used when no host mapping applies. Empty falls back to the demo
+    # tenant (id 1).
     default-tenant-code: ${TENANT_DEFAULT_CODE:}
+    # Shared secret that lets the ML service select a tenant with an X-Tenant
+    # header (X-Internal-Token must match). When empty, X-Tenant is ignored and
+    # requests resolve by host only, so a public client cannot read another
+    # university's content by guessing its code.
+    internal-token: ${INTERNAL_API_TOKEN:}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5177,http://localhost:5178,http://localhost:5179,http://127.0.0.1:3000,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://127.0.0.1:5177,http://127.0.0.1:5178,http://127.0.0.1:5179}
   contact:
