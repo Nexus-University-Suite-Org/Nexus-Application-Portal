@@ -4,6 +4,7 @@ import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/ThemeToggle";
+import ChangePasswordDialog from "@/components/admin/ChangePasswordDialog";
 import {
   LayoutDashboard,
   Newspaper,
@@ -215,6 +216,7 @@ const AdminLayout = () => {
             <span className="text-sm text-muted-foreground">
               {user?.fullName || user?.email}
             </span>
+            <ChangePasswordDialog />
             <ThemeToggle solid />
             <Button variant="ghost" size="sm" onClick={logout}>
               <LogOut size={16} className="mr-2" />

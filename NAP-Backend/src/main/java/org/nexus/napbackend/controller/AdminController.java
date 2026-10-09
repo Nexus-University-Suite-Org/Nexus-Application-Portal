@@ -7,6 +7,7 @@ import org.nexus.napbackend.configuration.JwtAuthFilter;
 import org.nexus.napbackend.dto.AdminLoginRequest;
 import org.nexus.napbackend.dto.AdminLoginResponse;
 import org.nexus.napbackend.dto.ApplicationResponse;
+import org.nexus.napbackend.dto.ChangePasswordRequest;
 import org.nexus.napbackend.dto.DashboardStatsResponse;
 import org.nexus.napbackend.dto.PaginatedApplicationsResponse;
 import org.nexus.napbackend.dto.ReviewRequest;
@@ -47,6 +48,15 @@ public class AdminController {
         AdminLoginResponse response = new AdminLoginResponse(
                 null, principal.email(), null, principal.tenantId(), principal.role());
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/auth/change-password")
+    public ResponseEntity<Map<String, Object>> changePassword(
+            Authentication authentication,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        JwtAuthFilter.AdminPrincipal principal = (JwtAuthFilter.AdminPrincipal) authentication.getPrincipal();
+        adminFacade.changePassword(principal.id(), request.currentPassword(), request.newPassword());
+        return ResponseEntity.ok(Map.of("ok", true, "message", "Password updated"));
     }
 
     @GetMapping("/users")

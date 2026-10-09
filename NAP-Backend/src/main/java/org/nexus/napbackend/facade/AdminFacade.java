@@ -91,6 +91,31 @@ public class AdminFacade {
     }
 
     @Transactional
+    public void changePassword(Long adminId, String currentPassword, String newPassword) {
+        Admin admin = adminService.findById(adminId)
+                .orElseThrow(() -> new UnauthorizedException("Admin not found"));
+
+        if (!passwordEncoder.matches(currentPassword, admin.getPasswordHash())) {
+            throw new UnauthorizedException("Current password is incorrect");
+        }
+        if (passwordEncoder.matches(newPassword, admin.getPasswordHash())) {
+            throw new IllegalArgumentException(
+                    "New password must be different from the current password");
+        }
+
+        admin.setPasswordHash(passwordEncoder.encode(newPassword));
+        adminService.save(admin);
+    }
+
+    @Transactional
+    public void resetPassword(Long adminId, String newPassword) {
+        Admin admin = adminService.findById(adminId)
+                .orElseThrow(() -> new IllegalArgumentException("Admin not found: " + adminId));
+        admin.setPasswordHash(passwordEncoder.encode(newPassword));
+        adminService.save(admin);
+    }
+
+    @Transactional
     public DashboardStatsResponse getDashboardStats() {
         Long tenantId = TenantContext.getCurrentTenantId();
         long total = applicationRepository.countByTenantId(tenantId);

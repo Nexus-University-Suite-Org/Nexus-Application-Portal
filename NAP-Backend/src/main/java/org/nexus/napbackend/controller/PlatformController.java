@@ -5,8 +5,10 @@ import java.util.List;
 import org.nexus.napbackend.dto.AdminAccountResponse;
 import org.nexus.napbackend.dto.CreateAdminRequest;
 import org.nexus.napbackend.dto.CreateTenantRequest;
+import org.nexus.napbackend.dto.ResetPasswordRequest;
 import org.nexus.napbackend.dto.TenantResponse;
 import org.nexus.napbackend.dto.UpdateTenantStatusRequest;
+import org.nexus.napbackend.facade.AdminFacade;
 import org.nexus.napbackend.model.Admin;
 import org.nexus.napbackend.model.Tenant;
 import org.nexus.napbackend.repository.AdminRepository;
@@ -35,15 +37,18 @@ public class PlatformController {
     private final TenantService tenantService;
     private final AdminService adminService;
     private final AdminRepository adminRepository;
+    private final AdminFacade adminFacade;
     private final PasswordEncoder passwordEncoder;
 
     public PlatformController(TenantService tenantService,
                               AdminService adminService,
                               AdminRepository adminRepository,
+                              AdminFacade adminFacade,
                               PasswordEncoder passwordEncoder) {
         this.tenantService = tenantService;
         this.adminService = adminService;
         this.adminRepository = adminRepository;
+        this.adminFacade = adminFacade;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -100,6 +105,21 @@ public class PlatformController {
         admin.setRole("ADMIN");
         Admin saved = adminService.create(admin);
         return ResponseEntity.status(HttpStatus.CREATED).body(toAdminResponse(saved));
+    }
+
+    @PatchMapping("/tenants/{tenantId}/admins/{adminId}/password")
+    public ResponseEntity<Void> resetAdminPassword(@PathVariable Long tenantId,
+                                                   @PathVariable Long adminId,
+                                                   @Valid @RequestBody ResetPasswordRequest request) {
+        tenantService.findById(tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Tenant not found: " + tenantId));
+        Admin admin = adminService.findById(adminId)
+                .orElseThrow(() -> new IllegalArgumentException("Admin not found: " + adminId));
+        if (!tenantId.equals(admin.getTenantId())) {
+            throw new IllegalArgumentException("Admin does not belong to this university");
+        }
+        adminFacade.resetPassword(adminId, request.newPassword());
+        return ResponseEntity.noContent().build();
     }
 
     private TenantResponse toTenantResponse(Tenant tenant) {

@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Building2, Users, Loader2 } from "lucide-react";
+import { Plus, Building2, Users, Loader2, KeyRound } from "lucide-react";
 
 interface Tenant {
   id: number;
@@ -58,6 +58,10 @@ const PlatformPage = () => {
   const [admins, setAdmins] = useState<AdminAccount[]>([]);
   const [adminForm, setAdminForm] = useState({ email: "", password: "", fullName: "" });
   const [savingAdmin, setSavingAdmin] = useState(false);
+
+  const [resetFor, setResetFor] = useState<AdminAccount | null>(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [savingReset, setSavingReset] = useState(false);
 
   const fetchTenants = useCallback(async () => {
     setLoading(true);
@@ -189,6 +193,36 @@ const PlatformPage = () => {
       setError(err instanceof Error ? err.message : "Failed to create admin");
     } finally {
       setSavingAdmin(false);
+    }
+  };
+
+  const resetAdminPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminsFor || !resetFor) return;
+    setSavingReset(true);
+    setError("");
+    try {
+      const response = await fetch(
+        `/api/v1/platform/tenants/${adminsFor.id}/admins/${resetFor.id}/password`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ newPassword: resetPassword }),
+        },
+      );
+      if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        throw new Error(err?.message || `Failed to reset password (${response.status})`);
+      }
+      setResetFor(null);
+      setResetPassword("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to reset password");
+    } finally {
+      setSavingReset(false);
     }
   };
 
@@ -358,12 +392,27 @@ const PlatformPage = () => {
                 <p className="p-4 text-sm text-muted-foreground">No admins yet.</p>
               )}
               {admins.map((admin) => (
-                <div key={admin.id} className="flex items-center justify-between px-4 py-2.5">
+                <div key={admin.id} className="flex items-center justify-between gap-2 px-4 py-2.5">
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{admin.email}</p>
                     <p className="text-xs text-muted-foreground">{admin.fullName || "—"}</p>
                   </div>
-                  <Badge variant="outline">{admin.role}</Badge>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant="outline">{admin.role}</Badge>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => {
+                        setResetFor(admin);
+                        setResetPassword("");
+                        setError("");
+                      }}
+                    >
+                      <KeyRound size={13} className="mr-1" />
+                      Reset password
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -408,6 +457,40 @@ const PlatformPage = () => {
               </Button>
             </form>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!resetFor} onOpenChange={(open) => !open && setResetFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset password</DialogTitle>
+            <DialogDescription>
+              Set a new password for {resetFor?.email}. Share it with them so they
+              can sign in, then change it.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={resetAdminPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-password">New password</Label>
+              <Input
+                id="reset-password"
+                type="password"
+                placeholder="At least 8 characters"
+                minLength={8}
+                value={resetPassword}
+                onChange={(e) => setResetPassword(e.target.value)}
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setResetFor(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={savingReset}>
+                {savingReset ? "Saving..." : "Reset password"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
