@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.security.SecureRandom;
@@ -13,8 +15,6 @@ import org.springframework.stereotype.Service;
 public class OtpService {
 
     private static final Logger log = LoggerFactory.getLogger(OtpService.class);
-
-    private static final Long DEMO_TENANT_ID = 1L;
     private static final int OTP_LENGTH = 4;
     private static final int MAX_ATTEMPTS = 5;
     private static final int COOLDOWN_SECONDS = 60;
@@ -40,7 +40,7 @@ public class OtpService {
         log.info("Generated OTP for email={} purpose={}", email, purpose);
 
         OtpCode otp = new OtpCode();
-        otp.setTenantId(DEMO_TENANT_ID);
+        otp.setTenantId(TenantContext.getCurrentTenantId());
         otp.setEmail(email);
         otp.setCode(code);
         otp.setPurpose(purpose);

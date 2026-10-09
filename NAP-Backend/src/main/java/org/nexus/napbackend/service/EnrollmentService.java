@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.util.List;
 import java.util.Optional;
 import org.nexus.napbackend.model.Enrollment;
@@ -8,8 +10,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class EnrollmentService {
-
-    private static final Long DEMO_TENANT_ID = 1L;
     private final EnrollmentRepository repository;
 
     public EnrollmentService(EnrollmentRepository repository) {
@@ -33,12 +33,12 @@ public class EnrollmentService {
     }
 
     public Enrollment create(Enrollment enrollment) {
-        enrollment.setTenantId(DEMO_TENANT_ID);
+        enrollment.setTenantId(TenantContext.getCurrentTenantId());
         return repository.save(enrollment);
     }
 
     public List<Enrollment> createAll(List<Enrollment> enrollments) {
-        enrollments.forEach(e -> e.setTenantId(DEMO_TENANT_ID));
+        enrollments.forEach(e -> e.setTenantId(TenantContext.getCurrentTenantId()));
         return repository.saveAll(enrollments);
     }
 

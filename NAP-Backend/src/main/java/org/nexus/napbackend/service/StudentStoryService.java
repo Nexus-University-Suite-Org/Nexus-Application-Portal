@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -9,8 +11,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class StudentStoryService {
-
-    private static final Long DEMO_TENANT_ID = 1L;
     private final StudentStoryRepository repository;
 
     public StudentStoryService(StudentStoryRepository repository) {
@@ -18,7 +18,7 @@ public class StudentStoryService {
     }
 
     public StudentStory create(StudentStory entity) {
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setSlug(generateSlug(entity.getTitle()));
         entity.setCreatedAt(LocalDateTime.now());
         return repository.save(entity);
@@ -29,7 +29,7 @@ public class StudentStoryService {
     }
 
     public List<StudentStory> findAll() {
-        return repository.findAll();
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId());
     }
 
     public StudentStory update(Long id, StudentStory entity) {
@@ -43,7 +43,7 @@ public class StudentStoryService {
 
     public List<StudentStory> search(String query) {
         String lower = query.toLowerCase();
-        return repository.findAll().stream()
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId()).stream()
                 .filter(s -> (s.getTitle() != null && s.getTitle().toLowerCase().contains(lower))
                         || (s.getContent() != null && s.getContent().toLowerCase().contains(lower))
                         || (s.getAuthor() != null && s.getAuthor().toLowerCase().contains(lower))

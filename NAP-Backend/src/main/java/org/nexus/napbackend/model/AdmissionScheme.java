@@ -29,6 +29,9 @@ public class AdmissionScheme {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     @Column(name = "scheme_name", nullable = false, length = 300)
     private String schemeName;
 

@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -14,8 +16,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class MessageService {
 
-    private static final Long DEMO_TENANT_ID = 1L;
-
     private final MessageRepository messageRepository;
     private final MessageAttachmentRepository attachmentRepository;
     private final MessageDraftRepository draftRepository;
@@ -29,7 +29,7 @@ public class MessageService {
     }
 
     public Message sendMessage(Message entity) {
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setCreatedAt(LocalDateTime.now());
         return messageRepository.save(entity);
     }
@@ -68,7 +68,7 @@ public class MessageService {
     }
 
     public MessageDraft saveDraft(MessageDraft draft) {
-        draft.setTenantId(DEMO_TENANT_ID);
+        draft.setTenantId(TenantContext.getCurrentTenantId());
         if (draft.getId() == null) {
             draft.setCreatedAt(LocalDateTime.now());
         }

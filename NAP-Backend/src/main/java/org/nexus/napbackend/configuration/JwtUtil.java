@@ -26,16 +26,24 @@ public class JwtUtil {
     }
 
     public String generateToken(Long adminId, String email) {
-        return generateToken(adminId, email, "ADMIN");
+        return generateToken(adminId, email, "ADMIN", null);
     }
 
     public String generateToken(Long adminId, String email, String role) {
+        return generateToken(adminId, email, role, null);
+    }
+
+    public String generateToken(Long adminId, String email, String role, Long tenantId) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
-        return Jwts.builder()
+        var builder = Jwts.builder()
                 .subject(String.valueOf(adminId))
                 .claim("email", email)
-                .claim("role", role)
+                .claim("role", role);
+        if (tenantId != null) {
+            builder.claim("tenantId", tenantId);
+        }
+        return builder
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(key)
@@ -44,6 +52,14 @@ public class JwtUtil {
 
     public String getRole(String token) {
         return parseToken(token).get("role", String.class);
+    }
+
+    public Long getTenantId(String token) {
+        Object value = parseToken(token).get("tenantId");
+        if (value == null) {
+            return null;
+        }
+        return Long.valueOf(value.toString());
     }
 
     public Claims parseToken(String token) {

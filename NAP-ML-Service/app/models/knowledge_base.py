@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
@@ -7,25 +8,61 @@ from collections import Counter
 
 import numpy as np
 
+from app import config
 from app.config import INDEX_DIR, INDEX_SCHEMA_VERSION
 from app.models.embedding import EmbeddingModel
 from app.models.vector_store import VectorStore
 
 log = logging.getLogger(__name__)
 
-_CHUNKS_FILE = INDEX_DIR / "chunks.json"
-_VECTORS_FILE = INDEX_DIR / "vectors.npy"
-_STATE_FILE = INDEX_DIR / "state.json"
+# One index per tenant. Each tenant owns a directory (the default tenant uses the
+# index root itself) so a retrain for one university never overwrites another's
+# knowledge base.
+DEFAULT_KEY = "default"
+_SAFE_KEY_RE = re.compile(r"[^a-z0-9._-]+")
+
+
+def _default_refs() -> set:
+    refs = {config.TENANT_DEFAULT_ID}
+    if config.TENANT_DEFAULT_CODE:
+        refs.add(config.TENANT_DEFAULT_CODE)
+    return refs
+
+
+def tenant_key(tenant) -> str:
+    """Canonical, filesystem-safe key for a tenant reference (code or id)."""
+    ref = (tenant or "").strip().lower()
+    if not ref or ref in _default_refs():
+        return DEFAULT_KEY
+    cleaned = _SAFE_KEY_RE.sub("-", ref).strip("-")
+    return cleaned or DEFAULT_KEY
+
+
+def _index_dir_for(key: str) -> Path:
+    return INDEX_DIR if key == DEFAULT_KEY else config.TENANTS_DIR / key
 
 
 class KnowledgeBase:
-    def __init__(self):
+    def __init__(self, index_dir: Path):
+        self.index_dir = Path(index_dir)
         self.embedding = EmbeddingModel()
         self.chunks: list = []
         self._store: VectorStore | None = None
         self.trained_at: str | None = None
         self.stats: dict = {}
         self._lock = threading.RLock()
+
+    @property
+    def _chunks_file(self) -> Path:
+        return self.index_dir / "chunks.json"
+
+    @property
+    def _vectors_file(self) -> Path:
+        return self.index_dir / "vectors.npy"
+
+    @property
+    def _state_file(self) -> Path:
+        return self.index_dir / "state.json"
 
     @property
     def store_backend(self):
@@ -72,9 +109,10 @@ class KnowledgeBase:
 
     def save(self) -> None:
         with self._lock:
-            INDEX_DIR.mkdir(parents=True, exist_ok=True)
-            _VECTORS_FILE.write_bytes(self._store.vectors.tobytes()) if self._store else None
-            _CHUNKS_FILE.write_text(
+            self.index_dir.mkdir(parents=True, exist_ok=True)
+            if self._store:
+                self._vectors_file.write_bytes(self._store.vectors.tobytes())
+            self._chunks_file.write_text(
                 json.dumps(self.chunks, ensure_ascii=False), encoding="utf-8"
             )
             state = {
@@ -86,14 +124,16 @@ class KnowledgeBase:
                 "embedding_state": self.embedding.fitted_state(),
                 "schema_version": INDEX_SCHEMA_VERSION,
             }
-            _STATE_FILE.write_text(json.dumps(state, ensure_ascii=False), encoding="utf-8")
+            self._state_file.write_text(
+                json.dumps(state, ensure_ascii=False), encoding="utf-8"
+            )
 
     def load_if_exists(self) -> bool:
         with self._lock:
-            if not (_VECTORS_FILE.exists() and _CHUNKS_FILE.exists()):
+            if not (self._vectors_file.exists() and self._chunks_file.exists()):
                 return False
             try:
-                shape_state = json.loads(_STATE_FILE.read_text(encoding="utf-8"))
+                shape_state = json.loads(self._state_file.read_text(encoding="utf-8"))
                 if shape_state.get("schema_version") != INDEX_SCHEMA_VERSION:
                     log.info(
                         "stored index was built with schema %s, this build uses %s;"
@@ -103,7 +143,7 @@ class KnowledgeBase:
                     )
                     return False
                 shape = tuple(shape_state.get("shape") or (0, 1))
-                raw = np.frombuffer(_VECTORS_FILE.read_bytes(), dtype=np.float32)
+                raw = np.frombuffer(self._vectors_file.read_bytes(), dtype=np.float32)
                 vectors = raw.reshape(shape)
                 # The TF-IDF vocabulary is derived from the corpus, so it has to come back with
                 # the vectors. Without it transform() emits a zero vector, every
@@ -120,7 +160,7 @@ class KnowledgeBase:
                         vectors.shape[1],
                     )
                     return False
-                self.chunks = json.loads(_CHUNKS_FILE.read_text(encoding="utf-8"))
+                self.chunks = json.loads(self._chunks_file.read_text(encoding="utf-8"))
                 self._store = VectorStore(vectors)
                 self.trained_at = shape_state.get("trained_at")
                 self.stats = shape_state.get("stats", {})
@@ -130,4 +170,22 @@ class KnowledgeBase:
                 return False
 
 
-kb = KnowledgeBase()
+_KBS: dict[str, KnowledgeBase] = {}
+_KBS_LOCK = threading.Lock()
+
+
+def kb_for(tenant=None) -> KnowledgeBase:
+    """Return the knowledge base for a tenant, loading its index on first use."""
+    key = tenant_key(tenant)
+    with _KBS_LOCK:
+        instance = _KBS.get(key)
+        if instance is None:
+            instance = KnowledgeBase(_index_dir_for(key))
+            instance.load_if_exists()
+            _KBS[key] = instance
+        return instance
+
+
+# Backwards-compatible default instance. Callers that are not tenant-aware (and
+# the startup trainer) operate on the deployment default index.
+kb = kb_for(None)

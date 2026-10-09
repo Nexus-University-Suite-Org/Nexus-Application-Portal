@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/ThemeToggle";
 import {
@@ -17,6 +18,7 @@ import {
   Link2,
   FileText,
   LayoutList,
+  Settings,
   Mail,
   MessageSquare,
   Bell,
@@ -99,6 +101,7 @@ const sidebarSections: SidebarSection[] = [
       { label: "Quick Links", path: "/admin/quick-links", icon: <Link2 size={18} /> },
       { label: "Legal Pages", path: "/admin/legal-pages", icon: <FileText size={18} /> },
       { label: "Page Sections", path: "/admin/page-sections", icon: <LayoutList size={18} /> },
+      { label: "Settings", path: "/admin/settings", icon: <Settings size={18} /> },
     ],
   },
 ];
@@ -107,6 +110,8 @@ const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const { user, logout } = useAdminAuth();
+  const { settings } = useSiteSettings({ keys: ["portal_name"], scope: "AdminLayout" });
+  const portalName = settings.portal_name?.trim() || "Admin";
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -125,8 +130,12 @@ const AdminLayout = () => {
         }`}
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-border">
-          <Link to="/admin/dashboard" className="font-heading text-xl font-semibold">
-            Nexus Admin
+          <Link
+            to="/admin/dashboard"
+            className="font-heading text-xl font-semibold truncate"
+            title={`${portalName} Admin`}
+          >
+            {portalName} Admin
           </Link>
           <button
             className="lg:hidden text-muted-foreground hover:text-foreground"

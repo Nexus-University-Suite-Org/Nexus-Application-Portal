@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -9,8 +11,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class LegalPageService {
-
-    private static final Long DEMO_TENANT_ID = 1L;
     private final LegalPageRepository repository;
 
     public LegalPageService(LegalPageRepository repository) {
@@ -18,7 +18,7 @@ public class LegalPageService {
     }
 
     public LegalPage create(LegalPage entity) {
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setCreatedAt(LocalDateTime.now());
         return repository.save(entity);
     }
@@ -28,14 +28,14 @@ public class LegalPageService {
     }
 
     public List<LegalPage> findAll() {
-        return repository.findAll();
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId());
     }
 
     public List<LegalPage> findByType(String type) {
         if (type == null || type.isEmpty()) {
-            return repository.findAllByOrderByCreatedAtDesc();
+            return repository.findAllByTenantIdOrderByCreatedAtDesc(TenantContext.getCurrentTenantId());
         }
-        return repository.findAllByOrderByCreatedAtDesc().stream()
+        return repository.findAllByTenantIdOrderByCreatedAtDesc(TenantContext.getCurrentTenantId()).stream()
                 .filter(p -> type.equalsIgnoreCase(p.getType()))
                 .toList();
     }
@@ -51,7 +51,7 @@ public class LegalPageService {
 
     public List<LegalPage> search(String query) {
         String lower = query.toLowerCase();
-        return repository.findAllByOrderByCreatedAtDesc().stream()
+        return repository.findAllByTenantIdOrderByCreatedAtDesc(TenantContext.getCurrentTenantId()).stream()
                 .filter(p -> (p.getTitle() != null && p.getTitle().toLowerCase().contains(lower))
                         || (p.getType() != null && p.getType().toLowerCase().contains(lower))
                         || (p.getContent() != null && p.getContent().toLowerCase().contains(lower)))

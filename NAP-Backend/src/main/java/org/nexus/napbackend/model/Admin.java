@@ -29,6 +29,17 @@ public class Admin {
     @Column(name = "full_name", length = 200)
     private String fullName;
 
+    /**
+     * Tenant this admin belongs to. Null means a platform super-admin who may
+     * operate across every tenant.
+     */
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
+    /** {@code ADMIN} for a university admin, {@code SUPER_ADMIN} for the platform. */
+    @Column(length = 32)
+    private String role;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 }

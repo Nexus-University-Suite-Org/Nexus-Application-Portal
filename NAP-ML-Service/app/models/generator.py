@@ -1,12 +1,14 @@
 import re
 
+from typing import Optional
+
 from app.config import (
     ANSWER_CHUNK_LIMIT,
     ANSWER_MAX_SOURCES,
     MIN_HIT_SCORE,
-    PORTAL_NAME,
 )
 from app.models.embedding import content_terms
+from app.services import settings as site_settings
 from app.services.contact import get_contact_details
 
 _GREETING_RE = re.compile(r"^(hi|hello|hey|good\s*(morning|afternoon|evening)|howdy)[\s!?.]*$", re.IGNORECASE)
@@ -61,20 +63,23 @@ PORTAL_FALLBACK = (
 # Used when a message carries no topical words at all (e.g. "how are you",
 # "what's up"). Rather than retrieving the nearest neighbour -- which always
 # exists and reads as an unrelated data dump -- ask what the user wants.
-CLARIFY = (
-    "Happy to help! What would you like to know about Nexus University? "
-    "I can cover programmes, how to apply, entry requirements, tuition and "
-    "fees, scholarships, news and events, or student success stories."
-)
+def _clarify(portal_name: str) -> str:
+    return (
+        f"Happy to help! What would you like to know about {portal_name}? "
+        "I can cover programmes, how to apply, entry requirements, tuition and "
+        "fees, scholarships, news and events, or student success stories."
+    )
 
-INTENTS = {
-    "greeting": "Hello! I'm the Nexus University assistant. I can help with programmes, how to apply, entry requirements, tuition and fees, scholarships, and more. What would you like to know?",
-    "thanks": "You're welcome! Feel free to ask if you need anything else about Nexus University.",
-    "farewell": "Goodbye! If you need help later, just open this chat again. Best of luck with your application!",
-    "wellbeing": "I'm doing well, thanks for asking! How can I help you with Nexus University — programmes, applications, entry requirements, tuition and fees, or scholarships?",
-    "identity": "I'm the Nexus University assistant, a virtual guide for programmes, admissions, entry requirements, tuition and fees, scholarships, and more.",
-    "capability": "I can help with programmes offered, how to apply, entry requirements, tuition and fees, scholarships, admission schemes, news and events, and student success stories. What would you like to know?",
-}
+
+def _intents(portal_name: str):
+    return {
+        "greeting": f"Hello! I'm the assistant for {portal_name}. I can help with programmes, how to apply, entry requirements, tuition and fees, scholarships, and more. What would you like to know?",
+        "thanks": f"You're welcome! Feel free to ask if you need anything else about {portal_name}.",
+        "farewell": "Goodbye! If you need help later, just open this chat again. Best of luck with your application!",
+        "wellbeing": f"I'm doing well, thanks for asking! How can I help you with {portal_name} — programmes, applications, entry requirements, tuition and fees, or scholarships?",
+        "identity": f"I'm the assistant for {portal_name}, a virtual guide for programmes, admissions, entry requirements, tuition and fees, scholarships, and more.",
+        "capability": "I can help with programmes offered, how to apply, entry requirements, tuition and fees, scholarships, admission schemes, news and events, and student success stories. What would you like to know?",
+    }
 
 # Promotional and testimonial copy. Allowed as the lead source, but it has to
 # be virtually as strong as the best hit before it is listed underneath a
@@ -192,14 +197,14 @@ def _body_of(chunk) -> str:
     return (meta.get("body") or chunk.get("text", "") or "").strip()
 
 
-def _contact_answer(portal_name: str) -> str:
+def _contact_answer(portal_name: str, tenant: Optional[str] = None) -> str:
     """Warm, human reply with the organisation's contact details.
 
     The details are read from the same CMS settings the site footer uses, so
     the reply stays in step with the rendered page. Fields that are not
     configured are omitted; nothing is invented.
     """
-    details = get_contact_details()
+    details = get_contact_details(tenant=tenant)
 
     fields = [
         ("📧 **Email:**", details.get("email")),
@@ -233,22 +238,32 @@ def _contact_answer(portal_name: str) -> str:
     return "\n".join(lines)
 
 
-def _compose(query: str, hits, portal_name: str = PORTAL_NAME):
+def _compose(
+    query: str,
+    hits,
+    portal_name: Optional[str] = None,
+    fallback: Optional[str] = None,
+    no_answer: Optional[str] = None,
+    tenant: Optional[str] = None,
+):
     """Return (answer text, hits actually quoted).
 
     The two are produced together so the source list shown under a reply cannot
     advertise a record the reply dropped: an admissions question kept the FAQ and
     discarded the student story, and the UI used to list both.
     """
+    portal_name = portal_name or site_settings.portal_name(tenant)
+    fallback = fallback or PORTAL_FALLBACK
+
     intent = _classify(query)
     if intent == "contact":
-        return _contact_answer(portal_name), []
+        return _contact_answer(portal_name, tenant), []
     if intent != "question":
-        return INTENTS[intent], []
+        return _intents(portal_name).get(intent, PORTAL_FALLBACK), []
     if not content_terms(query):
-        return CLARIFY, []
+        return _clarify(portal_name), []
     if not hits:
-        return PORTAL_FALLBACK, []
+        return fallback, []
 
     selected = _select(hits)[:ANSWER_MAX_SOURCES]
     entries = []
@@ -260,7 +275,7 @@ def _compose(query: str, hits, portal_name: str = PORTAL_NAME):
         entries.append((title.strip(), body))
 
     if not entries:
-        return PORTAL_FALLBACK, []
+        return (no_answer or fallback), []
 
     quoted = [
         (chunk, score)
@@ -285,13 +300,29 @@ def _compose(query: str, hits, portal_name: str = PORTAL_NAME):
     return "\n".join(lines).rstrip(), quoted
 
 
-def build_answer(query: str, hits, portal_name: str = PORTAL_NAME) -> str:
-    return _compose(query, hits, portal_name)[0]
+def build_answer(
+    query: str,
+    hits,
+    portal_name: Optional[str] = None,
+    fallback: Optional[str] = None,
+    no_answer: Optional[str] = None,
+    tenant: Optional[str] = None,
+) -> str:
+    return _compose(query, hits, portal_name, fallback, no_answer, tenant)[0]
 
 
-def quoted_sources(query: str, hits):
+def quoted_sources(
+    query: str,
+    hits,
+    portal_name: Optional[str] = None,
+    fallback: Optional[str] = None,
+    no_answer: Optional[str] = None,
+    tenant: Optional[str] = None,
+):
     """Sources the reply actually used, in the order it used them."""
-    return extract_sources(_compose(query, hits)[1])
+    return extract_sources(
+        _compose(query, hits, portal_name, fallback, no_answer, tenant)[1]
+    )
 
 
 def extract_sources(hits):

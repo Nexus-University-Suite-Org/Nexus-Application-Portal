@@ -44,7 +44,8 @@ public class AdminController {
     @GetMapping("/auth/me")
     public ResponseEntity<AdminLoginResponse> me(Authentication authentication) {
         JwtAuthFilter.AdminPrincipal principal = (JwtAuthFilter.AdminPrincipal) authentication.getPrincipal();
-        AdminLoginResponse response = new AdminLoginResponse(null, principal.email(), null);
+        AdminLoginResponse response = new AdminLoginResponse(
+                null, principal.email(), null, principal.tenantId(), principal.role());
         return ResponseEntity.ok(response);
     }
 

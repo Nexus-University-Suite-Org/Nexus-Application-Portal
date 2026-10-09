@@ -22,6 +22,9 @@ public class Program {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     @Column(name = "program_name", nullable = false, length = 300)
     private String programName;
 

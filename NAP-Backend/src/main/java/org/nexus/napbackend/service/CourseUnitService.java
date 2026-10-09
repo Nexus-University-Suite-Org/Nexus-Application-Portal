@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.util.List;
 import java.util.Optional;
 import org.nexus.napbackend.model.CourseUnit;
@@ -8,8 +10,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CourseUnitService {
-
-    private static final Long DEMO_TENANT_ID = 1L;
     private final CourseUnitRepository repository;
 
     public CourseUnitService(CourseUnitRepository repository) {
@@ -29,12 +29,12 @@ public class CourseUnitService {
     }
 
     public CourseUnit create(CourseUnit unit) {
-        unit.setTenantId(DEMO_TENANT_ID);
+        unit.setTenantId(TenantContext.getCurrentTenantId());
         return repository.save(unit);
     }
 
     public List<CourseUnit> createAll(List<CourseUnit> units) {
-        units.forEach(u -> u.setTenantId(DEMO_TENANT_ID));
+        units.forEach(u -> u.setTenantId(TenantContext.getCurrentTenantId()));
         return repository.saveAll(units);
     }
 }

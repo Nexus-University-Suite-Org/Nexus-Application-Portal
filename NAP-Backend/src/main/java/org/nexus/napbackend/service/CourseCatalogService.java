@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -9,8 +11,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CourseCatalogService {
-
-    private static final Long DEMO_TENANT_ID = 1L;
     private final CourseCatalogRepository repository;
 
     public CourseCatalogService(CourseCatalogRepository repository) {
@@ -18,7 +18,7 @@ public class CourseCatalogService {
     }
 
     public CourseCatalog create(CourseCatalog entity) {
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setCreatedAt(LocalDateTime.now());
         entity.setUpdatedAt(LocalDateTime.now());
         return repository.save(entity);
@@ -29,7 +29,7 @@ public class CourseCatalogService {
     }
 
     public List<CourseCatalog> findAll() {
-        return repository.findAll();
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId());
     }
 
     public CourseCatalog update(Long id, CourseCatalog entity) {
@@ -44,7 +44,7 @@ public class CourseCatalogService {
 
     public List<CourseCatalog> search(String query) {
         String lower = query.toLowerCase();
-        return repository.findAll().stream()
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId()).stream()
                 .filter(c -> (c.getName() != null && c.getName().toLowerCase().contains(lower))
                         || (c.getCode() != null && c.getCode().toLowerCase().contains(lower))
                         || (c.getCollege() != null && c.getCollege().toLowerCase().contains(lower)))

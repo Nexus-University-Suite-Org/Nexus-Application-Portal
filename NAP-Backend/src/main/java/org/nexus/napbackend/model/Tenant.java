@@ -26,6 +26,17 @@ public class Tenant {
     @Column(nullable = false, length = 255)
     private String name;
 
+    /** Custom host that maps to this tenant (e.g. {@code portal.muk.ac.ug}). */
+    @Column(length = 255)
+    private String domain;
+
+    /**
+     * Nullable so adding the column to an existing, populated table cannot fail.
+     * A null value is treated as active.
+     */
+    @Column
+    private Boolean active = true;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 }

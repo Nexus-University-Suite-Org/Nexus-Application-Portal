@@ -7,4 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface NewsArticleRepository extends JpaRepository<NewsArticle, Long> {
 
     List<NewsArticle> findByPublishedTrueOrderByPublishedAtDesc();
+
+    List<NewsArticle> findByTenantIdAndPublishedTrueOrderByPublishedAtDesc(Long tenantId);
+
+    List<NewsArticle> findAllByTenantId(Long tenantId);
 }

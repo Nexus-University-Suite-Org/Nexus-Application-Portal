@@ -6,7 +6,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = Path(os.getenv("ML_DATA_DIR", str(BASE_DIR / "data")))
 CORPUS_DIR = DATA_DIR / "corpus"
 INDEX_DIR = DATA_DIR / "indices"
+# Per-tenant indices live one directory per tenant beneath this root; the
+# deployment default tenant keeps using INDEX_DIR directly so an existing
+# single-tenant index keeps loading without a rebuild.
+TENANTS_DIR = INDEX_DIR / "tenants"
 MODELS_DIR = Path(os.getenv("ML_MODELS_DIR", str(BASE_DIR / "models")))
+
+# Tenant references that map to the deployment default knowledge base, so the
+# startup trainer and the default tenant's chat requests share one index.
+# TENANT_DEFAULT_CODE mirrors the backend's TENANT_DEFAULT_CODE (e.g. "demo");
+# TENANT_DEFAULT_ID is the backend's default tenant id (TenantContext 1) used
+# when no default code is configured.
+TENANT_DEFAULT_CODE = os.getenv("TENANT_DEFAULT_CODE", "").strip().lower()
+TENANT_DEFAULT_ID = os.getenv("TENANT_DEFAULT_ID", "1").strip().lower()
 
 NAP_BASE_URL = os.getenv("NAP_BASE_URL", "http://localhost:8080").rstrip("/")
 EMBEDDING_MODEL_NAME = os.getenv(
@@ -73,7 +85,10 @@ CONTENT_COLLECTIONS = [
     "page_sections",
 ]
 
-PORTAL_NAME = os.getenv("PORTAL_NAME", "Nexus University")
+# Fallback display name used only when a tenant has not set ``portal_name`` in
+# the CMS. Deliberately generic so the assistant never impersonates a specific
+# university by default.
+PORTAL_NAME = os.getenv("PORTAL_NAME", "our university")
 
 # Optional contact overrides. Contact details normally come from the CMS
 # (footer_email / footer_phone / footer_address in site-settings), which the

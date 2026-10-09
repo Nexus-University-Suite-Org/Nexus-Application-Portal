@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -9,8 +11,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class FaqService {
-
-    private static final Long DEMO_TENANT_ID = 1L;
     private final FaqRepository repository;
 
     public FaqService(FaqRepository repository) {
@@ -18,7 +18,7 @@ public class FaqService {
     }
 
     public Faq create(Faq entity) {
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setCreatedAt(LocalDateTime.now());
         return repository.save(entity);
     }
@@ -28,14 +28,14 @@ public class FaqService {
     }
 
     public List<Faq> findAll() {
-        return repository.findAllByOrderByDisplayOrderAsc();
+        return repository.findAllByTenantIdOrderByDisplayOrderAsc(TenantContext.getCurrentTenantId());
     }
 
     public List<Faq> findByCategory(String category) {
         if (category == null || category.isEmpty()) {
-            return repository.findAllByOrderByDisplayOrderAsc();
+            return repository.findAllByTenantIdOrderByDisplayOrderAsc(TenantContext.getCurrentTenantId());
         }
-        return repository.findAllByOrderByDisplayOrderAsc().stream()
+        return repository.findAllByTenantIdOrderByDisplayOrderAsc(TenantContext.getCurrentTenantId()).stream()
                 .filter(f -> category.equalsIgnoreCase(f.getCategory()))
                 .toList();
     }
@@ -51,7 +51,7 @@ public class FaqService {
 
     public List<Faq> search(String query) {
         String lower = query.toLowerCase();
-        return repository.findAllByOrderByDisplayOrderAsc().stream()
+        return repository.findAllByTenantIdOrderByDisplayOrderAsc(TenantContext.getCurrentTenantId()).stream()
                 .filter(f -> (f.getQuestion() != null && f.getQuestion().toLowerCase().contains(lower))
                         || (f.getAnswer() != null && f.getAnswer().toLowerCase().contains(lower))
                         || (f.getCategory() != null && f.getCategory().toLowerCase().contains(lower)))

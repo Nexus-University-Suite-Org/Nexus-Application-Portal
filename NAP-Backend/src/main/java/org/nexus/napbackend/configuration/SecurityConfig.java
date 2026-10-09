@@ -2,6 +2,8 @@ package org.nexus.napbackend.configuration;
 
 import java.util.Arrays;
 import java.util.List;
+import org.nexus.napbackend.service.TenantService;
+import org.nexus.napbackend.tenancy.TenantFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -22,10 +24,17 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final CorsProperties corsProperties;
+    private final TenantService tenantService;
+    private final TenancyProperties tenancyProperties;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter, CorsProperties corsProperties) {
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter,
+                          CorsProperties corsProperties,
+                          TenantService tenantService,
+                          TenancyProperties tenancyProperties) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.corsProperties = corsProperties;
+        this.tenantService = tenantService;
+        this.tenancyProperties = tenancyProperties;
     }
 
     @Bean
@@ -54,7 +63,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/chat/status", "/api/v1/chat/sources", "/api/v1/chat/train").hasRole("ADMIN")
                         .anyRequest().permitAll()
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                // Resolve the tenant before authentication so the JWT can then pin a
+                // university admin to their own tenant.
+                .addFilterBefore(new TenantFilter(tenantService, tenancyProperties), JwtAuthFilter.class);
 
         return http.build();
     }

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, FormEvent } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
   MessageCircle,
   X,
@@ -7,34 +7,61 @@ import {
   User,
   Sparkles,
   RotateCcw,
+  BookOpen,
 } from "lucide-react";
 import gsap from "gsap";
 import { apiUrl } from "@/lib/apiUrl";
+import { useSiteSettings, parseJsonSetting } from "@/hooks/useSiteSettings";
+
+interface Source {
+  title: string;
+  collection?: string;
+  entity_id?: string;
+}
+
+interface QuickTopic {
+  label: string;
+  query: string;
+}
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  sources?: Source[];
 }
 
 const CHAT_URL = apiUrl("chat");
 const STORAGE_KEY = "nap.chatbot.history.v1";
 
-const getQuickTopics = (instituteName: string) => [
-  { label: "Programs", query: "What vocational programs do you offer?" },
-  { label: "Admissions", query: `How do I apply to ${instituteName}?` },
-  { label: "Tuition", query: "What are the costs and do you offer sponsorships?" },
-  { label: "Success Stories", query: "Tell me about graduates who found jobs" },
+const DEFAULT_QUICK_TOPICS: QuickTopic[] = [
+  { label: "Programs", query: "What programs do you offer?" },
+  { label: "Admissions", query: "How do I apply?" },
+  { label: "Fees", query: "What are the tuition fees and are there scholarships?" },
+  { label: "Contact", query: "How can I contact the admissions office?" },
 ];
+
+const normalizeTopics = (raw: unknown): QuickTopic[] => {
+  if (!Array.isArray(raw)) return DEFAULT_QUICK_TOPICS;
+  const topics = raw
+    .filter(
+      (t): t is QuickTopic =>
+        t && typeof t.label === "string" && typeof t.query === "string" && t.query.trim() !== "",
+    )
+    .map((t) => ({ label: t.label.trim(), query: t.query.trim() }));
+  return topics.length ? topics : DEFAULT_QUICK_TOPICS;
+};
 
 async function streamChat({
   messages,
   onDelta,
+  onSources,
   onDone,
   onError,
 }: {
   messages: { role: string; content: string }[];
   onDelta: (text: string) => void;
+  onSources: (sources: Source[]) => void;
   onDone: () => void;
   onError: (err: string) => void;
 }) {
@@ -91,6 +118,7 @@ async function streamChat({
           const parsed = JSON.parse(jsonStr);
           const content = parsed.choices?.[0]?.delta?.content;
           if (content) onDelta(content);
+          if (Array.isArray(parsed.sources)) onSources(parsed.sources);
         } catch {
           buffer = line + "\n" + buffer;
           break;
@@ -109,6 +137,7 @@ async function streamChat({
           const parsed = JSON.parse(jsonStr);
           const content = parsed.choices?.[0]?.delta?.content;
           if (content) onDelta(content);
+          if (Array.isArray(parsed.sources)) onSources(parsed.sources);
         } catch {
           /* ignore */
         }
@@ -282,12 +311,64 @@ const renderMarkdown = (text: string) => {
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter(
+        (m) =>
+          m &&
+          (m.role === "user" || m.role === "assistant") &&
+          typeof m.content === "string" &&
+          m.id !== "streaming",
+      ) as Message[];
+    } catch {
+      return [];
+    }
+  });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const [portalName] = useState("Nexus University");
   const chatRef = useRef<HTMLDivElement>(null);
+
+  const { settings } = useSiteSettings({
+    keys: [
+      "portal_name",
+      "chat_enabled",
+      "chat_display_name",
+      "chat_persona_name",
+      "chat_welcome_message",
+      "chat_quick_topics",
+      "chat_show_sources",
+    ],
+    scope: "ChatBot",
+  });
+
+  const chatEnabled = (settings.chat_enabled ?? "true").trim().toLowerCase() !== "false";
+  const portalName = settings.portal_name?.trim() || "University";
+  const assistantName = settings.chat_display_name?.trim() || "Assistant";
+  const personaName = settings.chat_persona_name?.trim() || "";
+  const showSources = (settings.chat_show_sources ?? "true").trim().toLowerCase() !== "false";
+
+  const quickTopics = useMemo(() => {
+    const topics = normalizeTopics(
+      parseJsonSetting<QuickTopic[]>(settings.chat_quick_topics, DEFAULT_QUICK_TOPICS),
+    );
+    return topics.map((t) => ({
+      ...t,
+      query: t.query.replace(/\{university\}/g, portalName),
+    }));
+  }, [settings.chat_quick_topics, portalName]);
+
+  const welcomeHeading = personaName ? `Hi, I'm ${personaName}! 👋` : "Hi there! 👋";
+  const welcomeBody = (
+    settings.chat_welcome_message?.trim() ||
+    `Your guide to everything ${portalName}. What would you like to know?`
+  )
+    .replace(/\{university\}/g, portalName)
+    .replace(/\{name\}/g, personaName);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -295,6 +376,21 @@ const ChatBot = () => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Persist completed history. Skip while a message is still streaming so we
+  // never store a partial answer.
+  useEffect(() => {
+    if (messages.some((m) => m.id === "streaming")) return;
+    try {
+      if (messages.length === 0) {
+        localStorage.removeItem(STORAGE_KEY);
+      } else {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+      }
+    } catch {
+      /* storage unavailable / quota */
+    }
   }, [messages]);
 
   useEffect(() => {
@@ -358,6 +454,7 @@ const ChatBot = () => {
       setIsLoading(true);
 
       let assistantSoFar = "";
+      let assistantSources: Source[] = [];
       const streamId = "streaming";
 
       const upsertAssistant = (chunk: string) => {
@@ -372,8 +469,25 @@ const ChatBot = () => {
           }
           return [
             ...prev,
-            { id: streamId, role: "assistant" as const, content: snapshot },
+            {
+              id: streamId,
+              role: "assistant" as const,
+              content: snapshot,
+              sources: assistantSources.length ? assistantSources : undefined,
+            },
           ];
+        });
+      };
+
+      const attachSources = (sources: Source[]) => {
+        if (!Array.isArray(sources) || sources.length === 0) return;
+        assistantSources = sources;
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last?.id !== streamId) return prev;
+          return prev.map((m, i) =>
+            i === prev.length - 1 ? { ...m, sources } : m,
+          );
         });
       };
 
@@ -383,6 +497,7 @@ const ChatBot = () => {
           content: m.content,
         })),
         onDelta: upsertAssistant,
+        onSources: attachSources,
         onDone: () => {
           setMessages((prev) =>
             prev.map((m) =>
@@ -417,9 +532,16 @@ const ChatBot = () => {
   const resetChat = () => {
     setMessages([]);
     setHasInteracted(false);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
   };
 
   const showWelcome = !hasInteracted && messages.length === 0;
+
+  if (!chatEnabled) return null;
 
   return (
     <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
@@ -442,7 +564,7 @@ const ChatBot = () => {
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                   <span className="text-[10px] text-accent-foreground/70 tracking-wider uppercase">
-                    AI Assistant
+                    {assistantName}
                   </span>
                 </div>
               </div>
@@ -475,14 +597,13 @@ const ChatBot = () => {
                   <Sparkles size={28} className="text-accent" />
                 </div>
                 <h3 className="font-heading text-xl font-semibold text-card-foreground mb-1.5">
-                  Hi, I'm Vera! 👋
+                  {welcomeHeading}
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-5 max-w-[260px]">
-                  Your AI guide to everything {portalName}. What would you like
-                  to know?
+                  {welcomeBody}
                 </p>
                 <div className="grid grid-cols-2 gap-2 w-full">
-                  {getQuickTopics(portalName).map((topic) => (
+                  {quickTopics.map((topic) => (
                     <button
                       key={topic.label}
                       onClick={() => sendMessage(topic.query)}
@@ -526,6 +647,25 @@ const ChatBot = () => {
                   {msg.role === "assistant" ? (
                     <div className="space-y-0.5">
                       {renderMarkdown(msg.content)}
+                      {showSources && msg.sources && msg.sources.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-border/60">
+                          <p className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+                            <BookOpen size={11} />
+                            Sources
+                          </p>
+                          <ul className="space-y-0.5">
+                            {msg.sources.map((s, i) => (
+                              <li
+                                key={`${s.title}-${i}`}
+                                className="text-[11px] text-muted-foreground truncate"
+                                title={s.title}
+                              >
+                                {s.title}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     msg.content

@@ -8,5 +8,9 @@ public interface ProgramCategoryRepository extends JpaRepository<ProgramCategory
 
     List<ProgramCategory> findAllByOrderByDisplayOrderAscNameAsc();
 
+    List<ProgramCategory> findAllByTenantIdOrderByDisplayOrderAscNameAsc(Long tenantId);
+
     boolean existsByNameIgnoreCase(String name);
+
+    boolean existsByTenantIdAndNameIgnoreCase(Long tenantId, String name);
 }

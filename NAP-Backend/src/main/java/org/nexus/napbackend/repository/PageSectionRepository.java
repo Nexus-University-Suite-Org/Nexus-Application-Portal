@@ -9,4 +9,10 @@ public interface PageSectionRepository extends JpaRepository<PageSection, Long> 
     List<PageSection> findByPageKeyOrderByCreatedAtDesc(String pageKey);
 
     List<PageSection> findAllByOrderByCreatedAtDesc();
+
+    List<PageSection> findByTenantIdAndPageKeyOrderByCreatedAtDesc(Long tenantId, String pageKey);
+
+    List<PageSection> findAllByTenantIdOrderByCreatedAtDesc(Long tenantId);
+
+    List<PageSection> findAllByTenantId(Long tenantId);
 }

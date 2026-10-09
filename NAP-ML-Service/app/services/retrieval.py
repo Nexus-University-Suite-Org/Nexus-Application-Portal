@@ -1,9 +1,9 @@
 import re
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from app.config import MIN_HIT_COVERAGE, MIN_HIT_SCORE, TOP_K_DEFAULT
 from app.models.embedding import content_terms
-from app.models.knowledge_base import kb
+from app.models.knowledge_base import kb_for
 
 _CHUNK = dict
 _SCORED = Tuple[_CHUNK, float]
@@ -45,11 +45,14 @@ def _is_contact_chunk(chunk: _CHUNK) -> bool:
     return any(hint in text for hint in _CONTACT_HINTS)
 
 
-def _contact_chunks() -> List[_CHUNK]:
+def _contact_chunks(kb) -> List[_CHUNK]:
     return [c for c in kb.chunks if _is_contact_chunk(c)]
 
 
-def retrieve(query: str, top_k: int = TOP_K_DEFAULT) -> List[_SCORED]:
+def retrieve(
+    query: str, top_k: int = TOP_K_DEFAULT, tenant: Optional[str] = None
+) -> List[_SCORED]:
+    kb = kb_for(tenant)
     expanded_top_k = max(top_k, TOP_K_DEFAULT)
     hits = kb.query(query, expanded_top_k)
     if not hits:
@@ -72,7 +75,7 @@ def retrieve(query: str, top_k: int = TOP_K_DEFAULT) -> List[_SCORED]:
     ranked = ranked[:top_k]
 
     if _is_contact_query(query):
-        promoted = [c for c in _contact_chunks() if c.get("id") not in {h[0].get("id") for h in ranked}]
+        promoted = [c for c in _contact_chunks(kb) if c.get("id") not in {h[0].get("id") for h in ranked}]
         if promoted:
             ranked = [(c, 1.0) for c in promoted] + ranked
             ranked = ranked[:max(top_k, TOP_K_DEFAULT)]

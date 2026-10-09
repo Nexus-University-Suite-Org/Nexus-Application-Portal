@@ -21,7 +21,7 @@ _STOPWORDS = frozenset(
     for from with without within please tell give show find get know need
     want like any some all more most other such only own same too very
     offer offers provide provides include includes available currently
-    nexus university universities
+    university universities
     s t don now
     """.split()
 )

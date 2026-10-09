@@ -28,10 +28,10 @@ public class ChatService {
         this.objectMapper = objectMapper;
     }
 
-    public StreamingResponseBody streamChat(ChatRequest request) {
+    public StreamingResponseBody streamChat(ChatRequest request, String tenant) {
         return outputStream -> {
             try {
-                proxyToMlService(request, outputStream);
+                proxyToMlService(request, outputStream, tenant);
             } catch (Exception e) {
                 log.error("Chat streaming error", e);
                 writeSseError(outputStream, "Service temporarily unavailable. Please try again.");
@@ -39,12 +39,15 @@ public class ChatService {
         };
     }
 
-    private void proxyToMlService(ChatRequest request, OutputStream outputStream) throws IOException {
+    private void proxyToMlService(ChatRequest request, OutputStream outputStream, String tenant) throws IOException {
         String baseUrl = mlProperties.resolvedBaseUrl();
         HttpURLConnection conn = (HttpURLConnection) URI.create(baseUrl + "/api/chat").toURL().openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "application/json");
         conn.setRequestProperty("Accept", "text/event-stream");
+        if (tenant != null && !tenant.isBlank()) {
+            conn.setRequestProperty("X-Tenant", tenant);
+        }
         conn.setDoOutput(true);
         conn.setConnectTimeout(mlProperties.connectTimeoutMs() != null ? mlProperties.connectTimeoutMs() : 5_000);
         conn.setReadTimeout(mlProperties.readTimeoutMs() != null ? mlProperties.readTimeoutMs() : 120_000);

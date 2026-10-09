@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS app_seed_repair_done (
 -- rejected on every run. ddl-auto=update does not widen existing columns.
 ALTER TABLE news_articles   ALTER COLUMN content TYPE TEXT;
 ALTER TABLE student_stories ALTER COLUMN content TYPE TEXT;
-INSERT INTO tenants (code, name, created_at) SELECT 'demo', 'University Application Portal', NOW() WHERE NOT EXISTS (SELECT 1 FROM tenants WHERE code = 'demo');
+INSERT INTO tenants (code, name, active, created_at) SELECT 'demo', 'University Application Portal', TRUE, NOW() WHERE NOT EXISTS (SELECT 1 FROM tenants WHERE code = 'demo');
 
 -- ============================================
 -- SITE SETTINGS (portal_name, nav_links, cta_buttons)

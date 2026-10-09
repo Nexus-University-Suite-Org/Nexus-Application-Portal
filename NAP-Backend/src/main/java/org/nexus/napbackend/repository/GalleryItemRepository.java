@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface GalleryItemRepository extends JpaRepository<GalleryItem, Long> {
 
     List<GalleryItem> findAllByOrderByCreatedAtDesc();
+
+    List<GalleryItem> findAllByTenantIdOrderByCreatedAtDesc(Long tenantId);
 }

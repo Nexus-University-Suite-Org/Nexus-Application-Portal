@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from app.config import (
     CHUNK_OVERLAP,
@@ -41,6 +41,11 @@ _CONTACT_SETTING_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Chat assistant configuration (persona, welcome text, quick topics, toggles).
+# It configures the assistant rather than describing the university, so it must
+# never be retrieved and quoted back as an answer.
+_CHAT_CONFIG_SETTING_RE = re.compile(r"^chat_", re.IGNORECASE)
+
 
 def _site_settings_chunks(settings: Dict) -> List[Dict]:
     if isinstance(settings, dict):
@@ -68,6 +73,8 @@ def _site_settings_chunks(settings: Dict) -> List[Dict]:
     seen = set()
     for idx, pair in enumerate(pairs):
         key = pair["settingKey"]
+        if _CHAT_CONFIG_SETTING_RE.search(str(key)):
+            continue
         if _UI_SETTING_RE.search(str(key)) and not _CONTACT_SETTING_RE.search(str(key)):
             continue
         value = chunking._render_value(pair["settingValue"])
@@ -137,10 +144,10 @@ def _program_chunks(program: Dict, index: int, source: str) -> List[Dict]:
     return chunks
 
 
-def extract_all_chunks() -> List[Dict]:
+def extract_all_chunks(tenant: Optional[str] = None) -> List[Dict]:
     chunks: List[Dict] = []
 
-    collections = nap_client.fetch_all_collections(CONTENT_COLLECTIONS)
+    collections = nap_client.fetch_all_collections(CONTENT_COLLECTIONS, tenant=tenant)
     for collection, payload in collections.items():
         records = _records_from_payload(payload)
         for idx, record in enumerate(records):
@@ -150,17 +157,17 @@ def extract_all_chunks() -> List[Dict]:
                 )
             )
 
-    settings = nap_client.fetch_site_settings()
+    settings = nap_client.fetch_site_settings(tenant=tenant)
     # Warm the contact cache from the settings we already have, so the first
     # "who can I contact?" does not pay for its own fetch.
-    contact.prime(settings)
+    contact.prime(settings, tenant=tenant)
     chunks.extend(_site_settings_chunks(settings))
 
-    programs = nap_client.fetch_programs()
+    programs = nap_client.fetch_programs(tenant=tenant)
     for idx, program in enumerate(programs):
         chunks.extend(_program_chunks(program, idx, "programs"))
 
-    schemes = nap_client.fetch_schemes()
+    schemes = nap_client.fetch_schemes(tenant=tenant)
     for idx, scheme in enumerate(schemes):
         chunks.extend(
             chunking.record_to_chunks(scheme, "schemes", idx, CHUNK_SIZE, CHUNK_OVERLAP)

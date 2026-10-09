@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -9,8 +11,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AlumniService {
-
-    private static final Long DEMO_TENANT_ID = 1L;
     private final AlumniRepository repository;
 
     public AlumniService(AlumniRepository repository) {
@@ -18,7 +18,7 @@ public class AlumniService {
     }
 
     public Alumni create(Alumni entity) {
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setCreatedAt(LocalDateTime.now());
         return repository.save(entity);
     }
@@ -28,7 +28,7 @@ public class AlumniService {
     }
 
     public List<Alumni> findAll() {
-        return repository.findAll();
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId());
     }
 
     public Alumni update(Long id, Alumni entity) {
@@ -42,7 +42,7 @@ public class AlumniService {
 
     public List<Alumni> search(String query) {
         String lower = query.toLowerCase();
-        return repository.findAll().stream()
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId()).stream()
                 .filter(a -> (a.getName() != null && a.getName().toLowerCase().contains(lower))
                         || (a.getProgram() != null && a.getProgram().toLowerCase().contains(lower))
                         || (a.getBio() != null && a.getBio().toLowerCase().contains(lower)))

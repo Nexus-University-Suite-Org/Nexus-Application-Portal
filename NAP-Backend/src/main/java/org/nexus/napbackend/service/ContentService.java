@@ -32,6 +32,7 @@ import org.nexus.napbackend.repository.PartnerRepository;
 import org.nexus.napbackend.repository.QuickLinkRepository;
 import org.nexus.napbackend.repository.ScholarshipRepository;
 import org.nexus.napbackend.repository.StudentStoryRepository;
+import org.nexus.napbackend.tenancy.TenantContext;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -87,36 +88,39 @@ public class ContentService {
     }
 
     public List<Map<String, Object>> findByCollection(String collection) {
+        Long tenantId = TenantContext.getCurrentTenantId();
         return switch (collection) {
-            case "news" -> newsRepo.findByPublishedTrueOrderByPublishedAtDesc()
+            case "news" -> newsRepo.findByTenantIdAndPublishedTrueOrderByPublishedAtDesc(tenantId)
                     .stream().map(ContentMapper::toMap).toList();
-            case "events" -> cmsEventRepo.findByPublishedTrueOrderByEventDateDesc()
+            case "events" -> cmsEventRepo.findByTenantIdAndPublishedTrueOrderByEventDateDesc(tenantId)
                     .stream().map(ContentMapper::toMap).toList();
-            case "gallery" -> galleryRepo.findAllByOrderByCreatedAtDesc()
+            case "gallery" -> galleryRepo.findAllByTenantIdOrderByCreatedAtDesc(tenantId)
                     .stream().map(ContentMapper::toMap).toList();
-            case "faqs" -> faqRepo.findAllByOrderByDisplayOrderAsc()
+            case "faqs" -> faqRepo.findAllByTenantIdOrderByDisplayOrderAsc(tenantId)
                     .stream().map(ContentMapper::toMap).toList();
-            case "alumni" -> alumniRepo.findAllByOrderByCreatedAtDesc()
+            case "alumni" -> alumniRepo.findAllByTenantIdOrderByCreatedAtDesc(tenantId)
                     .stream().map(ContentMapper::toMap).toList();
-            case "partners" -> partnerRepo.findAllByOrderByCreatedAtDesc()
+            case "partners" -> partnerRepo.findAllByTenantIdOrderByCreatedAtDesc(tenantId)
                     .stream().map(ContentMapper::toMap).toList();
-            case "scholarships" -> scholarshipRepo.findAllByOrderByCreatedAtDesc()
+            case "scholarships" -> scholarshipRepo.findAllByTenantIdOrderByCreatedAtDesc(tenantId)
                     .stream().map(ContentMapper::toMap).toList();
-            case "student_stories" -> studentStoryRepo.findAllByOrderByCreatedAtDesc()
+            case "student_stories" -> studentStoryRepo.findAllByTenantIdOrderByCreatedAtDesc(tenantId)
                     .stream().map(ContentMapper::toMap).toList();
-            case "legal_pages" -> legalPageRepo.findAllByOrderByCreatedAtDesc()
+            case "legal_pages" -> legalPageRepo.findAllByTenantIdOrderByCreatedAtDesc(tenantId)
                     .stream().map(ContentMapper::toMap).toList();
-            case "quick_links" -> quickLinkRepo.findAllByOrderByDisplayOrderAsc()
+            case "quick_links" -> quickLinkRepo.findAllByTenantIdOrderByDisplayOrderAsc(tenantId)
                     .stream().map(ContentMapper::toMap).toList();
-            case "courses" -> courseCatalogRepo.findByPublishedTrueOrderByCreatedAtDesc()
+            case "courses" -> courseCatalogRepo.findByTenantIdAndPublishedTrueOrderByCreatedAtDesc(tenantId)
                     .stream().map(ContentMapper::toMap).toList();
-            case "faculty" -> facultyMemberRepo.findAllByOrderByDisplayOrderAsc()
+            case "faculty" -> facultyMemberRepo.findAllByTenantIdOrderByDisplayOrderAsc(tenantId)
                     .stream().map(ContentMapper::toMap).toList();
-            case "page_sections" -> pageSectionRepo.findAllByOrderByCreatedAtDesc()
+            case "page_sections" -> pageSectionRepo.findAllByTenantIdOrderByCreatedAtDesc(tenantId)
                     .stream().map(ContentMapper::toMap).toList();
-            case "programs" -> programRepo.findByDeletedAtIsNullOrderByDisplayOrderAscProgramNameAsc()
+            case "programs" -> programRepo
+                    .findByTenantIdAndDeletedAtIsNullOrderByDisplayOrderAscProgramNameAsc(tenantId)
                     .stream().map(ContentMapper::toMap).toList();
-            case "site_settings" -> siteSettingRepo.findAll().stream()
+            case "site_settings" -> siteSettingRepo
+                    .findByTenantIdOrderBySettingKey(tenantId).stream()
                     .map(s -> {
                         java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
                         m.put("settingKey", s.getSettingKey());

@@ -18,7 +18,6 @@ public final class SiteSettingMapper {
     public static SiteSettingResponse toDto(SiteSetting entity) {
         return new SiteSettingResponse(
                 entity.getId(),
-                entity.getTenantId(),
                 entity.getSettingKey(),
                 entity.getSettingValue(),
                 entity.getCreatedAt(),

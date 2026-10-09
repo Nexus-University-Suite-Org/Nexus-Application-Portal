@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +50,7 @@ public class ProgramService {
             log.info("[PROGRAM-MIGRATION] Legacy 'programmes' table has {} row(s); migrating into programs.", rows.size());
             for (java.util.Map<String, Object> row : rows) {
                 Program p = new Program();
+                p.setTenantId(TenantContext.DEFAULT_TENANT_ID);
                 p.setProgramName((String) row.get("name"));
                 p.setProgramCode((String) row.get("code"));
                 p.setFacultySchool((String) row.get("faculty"));
@@ -122,6 +125,7 @@ public class ProgramService {
     }
 
     public Program create(Program entity) {
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         return repository.save(entity);
     }
 
@@ -130,19 +134,19 @@ public class ProgramService {
     }
 
     public List<Program> findAll() {
-        return repository.findByDeletedAtIsNullOrderByDisplayOrderAscProgramNameAsc();
+        return repository.findByTenantIdAndDeletedAtIsNullOrderByDisplayOrderAscProgramNameAsc(TenantContext.getCurrentTenantId());
     }
 
     public List<Program> search(String query) {
-        return repository.search(query);
+        return repository.searchByTenant(TenantContext.getCurrentTenantId(), query);
     }
 
     public List<Program> findByStatus(String status) {
-        return repository.findByDeletedAtIsNullAndStatusOrderByProgramNameAsc(status);
+        return repository.findByTenantIdAndDeletedAtIsNullAndStatusOrderByProgramNameAsc(TenantContext.getCurrentTenantId(), status);
     }
 
     public List<Program> findByType(String type) {
-        return repository.findByDeletedAtIsNullAndProgramTypeOrderByProgramNameAsc(type);
+        return repository.findByTenantIdAndDeletedAtIsNullAndProgramTypeOrderByProgramNameAsc(TenantContext.getCurrentTenantId(), type);
     }
 
     public Program update(Long id, Program entity) {
@@ -158,6 +162,6 @@ public class ProgramService {
     }
 
     public boolean existsByCode(String code) {
-        return repository.existsByProgramCodeAndDeletedAtIsNull(code);
+        return repository.existsByTenantIdAndProgramCodeAndDeletedAtIsNull(TenantContext.getCurrentTenantId(), code);
     }
 }

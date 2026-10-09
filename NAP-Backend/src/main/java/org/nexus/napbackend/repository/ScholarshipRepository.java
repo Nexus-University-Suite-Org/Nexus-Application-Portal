@@ -7,4 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ScholarshipRepository extends JpaRepository<Scholarship, Long> {
 
     List<Scholarship> findAllByOrderByCreatedAtDesc();
+
+    List<Scholarship> findAllByTenantIdOrderByCreatedAtDesc(Long tenantId);
+
+    List<Scholarship> findAllByTenantId(Long tenantId);
 }

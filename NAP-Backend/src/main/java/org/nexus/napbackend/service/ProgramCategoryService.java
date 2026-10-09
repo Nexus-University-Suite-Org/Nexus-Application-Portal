@@ -7,6 +7,7 @@ import org.nexus.napbackend.model.ProgramCategory;
 import org.nexus.napbackend.model.ProgramCategoryProgram;
 import org.nexus.napbackend.repository.ProgramCategoryProgramRepository;
 import org.nexus.napbackend.repository.ProgramCategoryRepository;
+import org.nexus.napbackend.tenancy.TenantContext;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,6 +23,7 @@ public class ProgramCategoryService {
     }
 
     public ProgramCategory create(ProgramCategory entity) {
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         return categoryRepository.save(entity);
     }
 
@@ -30,7 +32,8 @@ public class ProgramCategoryService {
     }
 
     public List<ProgramCategory> findAll() {
-        return categoryRepository.findAllByOrderByDisplayOrderAscNameAsc();
+        return categoryRepository.findAllByTenantIdOrderByDisplayOrderAscNameAsc(
+                TenantContext.getCurrentTenantId());
     }
 
     public ProgramCategory update(Long id, ProgramCategory entity) {
@@ -44,7 +47,8 @@ public class ProgramCategoryService {
     }
 
     public boolean existsByName(String name) {
-        return categoryRepository.existsByNameIgnoreCase(name);
+        return categoryRepository.existsByTenantIdAndNameIgnoreCase(
+                TenantContext.getCurrentTenantId(), name);
     }
 
     public List<Long> findProgramIdsByCategoryId(Long categoryId) {

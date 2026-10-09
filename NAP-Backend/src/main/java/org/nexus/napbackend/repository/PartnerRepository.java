@@ -7,4 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface PartnerRepository extends JpaRepository<Partner, Long> {
 
     List<Partner> findAllByOrderByCreatedAtDesc();
+
+    List<Partner> findAllByTenantIdOrderByCreatedAtDesc(Long tenantId);
+
+    List<Partner> findAllByTenantId(Long tenantId);
 }

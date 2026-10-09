@@ -81,6 +81,14 @@ management:
         enabled: true
 
 nap:
+  tenancy:
+    # Apex host for subdomain tenant routing, e.g. portal.example.com. A request
+    # to muk.portal.example.com resolves tenant code "muk". Requests carrying an
+    # X-Tenant header (used by the ML service) always take precedence.
+    base-domain: ${TENANT_BASE_DOMAIN:}
+    # Tenant used when no X-Tenant header or host mapping applies. Empty falls
+    # back to the demo tenant (id 1).
+    default-tenant-code: ${TENANT_DEFAULT_CODE:}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5177,http://localhost:5178,http://localhost:5179,http://127.0.0.1:3000,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://127.0.0.1:5177,http://127.0.0.1:5178,http://127.0.0.1:5179}
   contact:
@@ -97,9 +105,6 @@ nap:
     otp-template-id: ${EMAILJS_OTP_TEMPLATE_ID:template_rb2h0rh}
     public-key: ${EMAILJS_PUBLIC_KEY:}
     private-key: ${EMAILJS_PRIVATE_KEY:}
-  gemini:
-    api-key: ${GEMINI_API_KEY:}
-    model: ${GEMINI_MODEL:gemini-3.6-flash}
   ml-service:
     base-url: ${ML_SERVICE_BASE_URL:http://127.0.0.1:8000}
     connect-timeout-ms: ${ML_SERVICE_CONNECT_TIMEOUT:5000}

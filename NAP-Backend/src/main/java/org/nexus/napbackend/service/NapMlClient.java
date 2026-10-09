@@ -25,20 +25,31 @@ public class NapMlClient {
     }
 
     public String call(String method, String path) throws IOException {
-        return call(method, path, false);
+        return call(method, path, false, null);
+    }
+
+    public String call(String method, String path, boolean admin) throws IOException {
+        return call(method, path, admin, null);
     }
 
     /**
      * Calls the ML service. Admin paths ({@code /api/train}, {@code /api/sources})
      * are guarded by a shared token because they trigger a full index rebuild;
      * without forwarding it the ML service answers 401/403.
+     *
+     * <p>{@code tenant} is forwarded as {@code X-Tenant} so the ML service resolves
+     * the same tenant's settings and knowledge index.
      */
-    public String call(String method, String path, boolean admin) throws IOException {
+    public String call(String method, String path, boolean admin, String tenant) throws IOException {
         String baseUrl = mlProperties.resolvedBaseUrl();
         HttpURLConnection conn = (HttpURLConnection) URI.create(baseUrl + path).toURL().openConnection();
         conn.setRequestMethod(method);
         conn.setConnectTimeout(5_000);
         conn.setReadTimeout(60_000);
+
+        if (tenant != null && !tenant.isBlank()) {
+            conn.setRequestProperty("X-Tenant", tenant);
+        }
 
         if (admin) {
             String token = mlProperties.resolvedAdminToken();

@@ -59,15 +59,23 @@ public class AdminFacade {
             throw new UnauthorizedException("Invalid email or password");
         }
 
-        String token = jwtUtil.generateToken(admin.getId(), admin.getEmail());
-        return new AdminLoginResponse(token, admin.getEmail(), admin.getFullName());
+        String role = resolveRole(admin);
+        String token = jwtUtil.generateToken(admin.getId(), admin.getEmail(), role, admin.getTenantId());
+        return new AdminLoginResponse(
+                token, admin.getEmail(), admin.getFullName(), admin.getTenantId(), role);
     }
 
     @Transactional
     public AdminLoginResponse me(Long adminId) {
         Admin admin = adminService.findById(adminId)
                 .orElseThrow(() -> new UnauthorizedException("Admin not found"));
-        return new AdminLoginResponse(null, admin.getEmail(), admin.getFullName());
+        return new AdminLoginResponse(
+                null, admin.getEmail(), admin.getFullName(), admin.getTenantId(), resolveRole(admin));
+    }
+
+    private String resolveRole(Admin admin) {
+        String role = admin.getRole();
+        return role == null || role.isBlank() ? "ADMIN" : role;
     }
 
     @Transactional

@@ -107,11 +107,11 @@ const Navbar = () => {
           : "bg-transparent"
       }`}
     >
-      <div className="flex items-center justify-between px-8 md:px-16 py-5">
+      <div className="flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-10 xl:px-16 py-4 sm:py-5">
         {/* Logo */}
         <button
           onClick={() => navigate("/")}
-          className={`font-heading text-xl md:text-2xl font-light tracking-[0.3em] uppercase transition-colors duration-700 ${
+          className={`font-heading text-lg sm:text-xl 2xl:text-2xl font-light tracking-[0.2em] 2xl:tracking-[0.3em] uppercase transition-colors duration-700 text-left truncate max-w-[60%] xl:max-w-none ${
             solidNavbar ? "text-foreground" : "text-primary-foreground"
           }`}
         >
@@ -119,12 +119,12 @@ const Navbar = () => {
         </button>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden xl:flex items-center gap-3 2xl:gap-6">
           {navItems.map((item) => (
             <button
               key={item.label}
               onClick={() => handleNavClick(item.href)}
-              className={`font-body text-xs tracking-[0.2em] uppercase transition-all duration-500 relative group ${
+              className={`font-body text-[11px] 2xl:text-xs tracking-[0.1em] 2xl:tracking-[0.2em] uppercase whitespace-nowrap transition-all duration-500 relative group ${
                 solidNavbar
                   ? "text-muted-foreground hover:text-foreground"
                   : "text-primary-foreground/70 hover:text-primary-foreground"
@@ -141,14 +141,14 @@ const Navbar = () => {
             </button>
           ))}
           {/* CTA Buttons */}
-          <div className="flex items-center gap-3 pl-4 border-l border-accent/20">
+          <div className="flex items-center gap-2 2xl:gap-3 pl-2 2xl:pl-4 border-l border-accent/20">
             <ThemeToggle solid={solidNavbar} />
             <NotificationBell />
             {ctaButtons.map((btn) => (
               <button
                 key={btn.label}
                 onClick={() => navigate(btn.href)}
-                className={`px-5 py-2.5 font-body text-xs tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:scale-105 ${
+                className={`px-3 2xl:px-5 py-2 2xl:py-2.5 font-body text-[10px] 2xl:text-xs tracking-[0.1em] 2xl:tracking-[0.2em] uppercase rounded-[20px] whitespace-nowrap transition-all duration-500 hover:scale-105 ${
                   btn.style === "accent"
                     ? "bg-accent text-accent-foreground hover:bg-accent/90"
                     : `bg-foreground/10 text-foreground hover:bg-foreground/20`
@@ -164,7 +164,7 @@ const Navbar = () => {
         {/* Mobile Toggle */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className={`md:hidden relative z-10 transition-colors duration-500 ${
+          className={`xl:hidden relative z-10 shrink-0 transition-colors duration-500 ${
             solidNavbar ? "text-foreground" : "text-primary-foreground"
           }`}
           aria-label="Toggle menu"
@@ -178,22 +178,22 @@ const Navbar = () => {
   const mobileMenu = mobileOpen
     ? createPortal(
         <div
-          className="fixed inset-0 md:hidden overflow-y-auto"
+          className="fixed inset-0 xl:hidden overflow-y-auto"
           style={{ zIndex: 9999, backgroundColor: "hsl(var(--background))" }}
         >
           <button
             onClick={() => setMobileOpen(false)}
-            className="absolute top-5 right-8 text-foreground"
+            className="absolute top-5 right-4 sm:right-8 text-foreground"
             aria-label="Close menu"
           >
             <X size={24} />
           </button>
-          <div className="flex flex-col items-center pt-24 pb-12 gap-6">
+          <div className="flex min-h-full w-full flex-col items-center pt-20 pb-12 px-6 gap-4 sm:gap-5">
             {navItems.map((item) => (
               <button
                 key={item.label}
                 onClick={() => handleNavClick(item.href)}
-                className={`font-heading text-2xl font-light tracking-[0.15em] uppercase transition-all duration-500 hover:text-accent ${
+                className={`font-heading text-xl sm:text-2xl font-light tracking-[0.15em] uppercase text-center transition-all duration-500 hover:text-accent ${
                   isActive(item.href) ? "text-accent" : "text-foreground"
                 }`}
               >
@@ -207,7 +207,7 @@ const Navbar = () => {
               <button
                 key={btn.label}
                 onClick={() => handleNavClick(btn.href)}
-                className={`px-8 py-4 font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 mt-4 ${
+                className={`w-full max-w-xs justify-center px-6 py-3.5 font-body text-xs sm:text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 mt-2 ${
                   btn.style === "accent"
                     ? "bg-accent text-accent-foreground hover:bg-accent/90"
                     : "bg-accent/20 text-accent hover:bg-accent/30"

@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -11,8 +13,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class NotificationService {
-
-    private static final Long DEMO_TENANT_ID = 1L;
 
     private final NotificationRepository notificationRepository;
     private final AnnouncementRepository announcementRepository;
@@ -27,7 +27,7 @@ public class NotificationService {
     }
 
     public Notification create(Notification entity) {
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setCreatedAt(LocalDateTime.now());
         Notification saved = notificationRepository.save(entity);
         broadcaster.broadcast(saved);
@@ -63,7 +63,7 @@ public class NotificationService {
     }
 
     public Announcement createAnnouncement(Announcement entity) {
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setCreatedAt(LocalDateTime.now());
         return announcementRepository.save(entity);
     }
