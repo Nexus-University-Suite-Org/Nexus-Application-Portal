@@ -5,10 +5,31 @@ from app.config import (
     ANSWER_MAX_SOURCES,
     MIN_HIT_SCORE,
 )
+from app.models.embedding import content_terms
 
 _GREETING_RE = re.compile(r"^(hi|hello|hey|good\s*(morning|afternoon|evening)|howdy)[\s!?.]*$", re.IGNORECASE)
 _THANKS_RE = re.compile(r"^(thanks|thank\s+you|thx|ty)[\s!?.]*$", re.IGNORECASE)
 _FAREWELL_RE = re.compile(r"^(bye|goodbye|see\s+ya|see\s+you)[\s!?.]*$", re.IGNORECASE)
+_WELLBEING_RE = re.compile(
+    r"^how\s+(are|r)\s+(you|u|things)(\s+(doing|today|these\s+days))?[\s!?.]*$"
+    r"|^how('s| is)?\s*it\s+going[\s!?.]*$"
+    r"|^how\s+do\s+you\s+do[\s!?.]*$",
+    re.IGNORECASE,
+)
+_IDENTITY_RE = re.compile(
+    r"^(who|what)\s+are\s+you[\s!?.]*$"
+    r"|^what('s| is)?\s*your\s+name[\s!?.]*$"
+    r"|^what\s+is\s+this[\s!?.]*$"
+    r"|^are\s+you\s+(a\s+)?(bot|robot|human|real|ai)[\s!?.]*$",
+    re.IGNORECASE,
+)
+_CAPABILITY_RE = re.compile(
+    r"^what\s+can\s+you\s+(do|help\s+(me\s+)?with|answer)[\s!?.]*$"
+    r"|^what\s+do\s+you\s+do[\s!?.]*$"
+    r"|^what\s+can\s+i\s+(ask|say)[\s!?.]*$"
+    r"|^help[\s!?.]*$",
+    re.IGNORECASE,
+)
 
 PORTAL_FALLBACK = (
     "I couldn't find that in our information yet. The admissions office can "
@@ -18,10 +39,22 @@ PORTAL_FALLBACK = (
     "student success stories."
 )
 
+# Used when a message carries no topical words at all (e.g. "how are you",
+# "what's up"). Rather than retrieving the nearest neighbour -- which always
+# exists and reads as an unrelated data dump -- ask what the user wants.
+CLARIFY = (
+    "Happy to help! What would you like to know about Nexus University? "
+    "I can cover programmes, how to apply, entry requirements, tuition and "
+    "fees, scholarships, news and events, or student success stories."
+)
+
 INTENTS = {
     "greeting": "Hello! I'm the Nexus University assistant. I can help with programmes, how to apply, entry requirements, tuition and fees, scholarships, and more. What would you like to know?",
     "thanks": "You're welcome! Feel free to ask if you need anything else about Nexus University.",
     "farewell": "Goodbye! If you need help later, just open this chat again. Best of luck with your application!",
+    "wellbeing": "I'm doing well, thanks for asking! How can I help you with Nexus University — programmes, applications, entry requirements, tuition and fees, or scholarships?",
+    "identity": "I'm the Nexus University assistant, a virtual guide for programmes, admissions, entry requirements, tuition and fees, scholarships, and more.",
+    "capability": "I can help with programmes offered, how to apply, entry requirements, tuition and fees, scholarships, admission schemes, news and events, and student success stories. What would you like to know?",
 }
 
 # Promotional and testimonial copy. Allowed as the lead source, but it has to
@@ -41,7 +74,24 @@ def _classify(query: str):
         return "thanks"
     if _FAREWELL_RE.match(query):
         return "farewell"
+    if _WELLBEING_RE.match(query):
+        return "wellbeing"
+    if _IDENTITY_RE.match(query):
+        return "identity"
+    if _CAPABILITY_RE.match(query):
+        return "capability"
     return "question"
+
+
+def is_conversational(query: str) -> bool:
+    """Whether a message is small talk or carries nothing to retrieve on.
+
+    A message with no topical words (all stopwords, e.g. "how are you") must
+    not reach retrieval: the vector store always returns the nearest
+    neighbours, which is how an unrelated terms/CTA dump got attached to a
+    plain greeting.
+    """
+    return _classify(query) != "question" or not content_terms(query)
 
 
 def _normalise(text: str) -> str:
@@ -131,6 +181,8 @@ def _compose(query: str, hits):
     intent = _classify(query)
     if intent != "question":
         return INTENTS[intent], []
+    if not content_terms(query):
+        return CLARIFY, []
     if not hits:
         return PORTAL_FALLBACK, []
 

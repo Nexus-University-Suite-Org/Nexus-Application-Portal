@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.config import PORTAL_NAME
-from app.models.generator import build_answer, quoted_sources
+from app.models.generator import build_answer, is_conversational, quoted_sources
 from app.models.knowledge_base import kb
 from app.services.retrieval import retrieve
 
@@ -65,7 +65,12 @@ async def chat(request: ChatRequest):
     if not kb.is_trained():
         return _sse_unavailable(query)
 
-    hits = await anyio.to_thread.run_sync(retrieve, query)
+    # Small talk and messages with no topical words are answered from the canned
+    # intents; running retrieval for them only risks attaching unrelated records.
+    if is_conversational(query):
+        hits = []
+    else:
+        hits = await anyio.to_thread.run_sync(retrieve, query)
     return _sse_response(query, hits)
 
 
