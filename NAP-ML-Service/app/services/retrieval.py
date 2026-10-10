@@ -4,6 +4,7 @@ from typing import List, Optional, Tuple
 from app.config import MIN_HIT_COVERAGE, MIN_HIT_SCORE, TOP_K_DEFAULT
 from app.models.embedding import content_terms
 from app.models.knowledge_base import kb_for
+from app.utils.intent import is_catalog_query
 
 _CHUNK = dict
 _SCORED = Tuple[_CHUNK, float]
@@ -49,10 +50,51 @@ def _contact_chunks(kb) -> List[_CHUNK]:
     return [c for c in kb.chunks if _is_contact_chunk(c)]
 
 
+# A tenant's real catalogue lives in ``programs``; ``courses`` is the generic
+# demo collection and is only a fallback. Each record is titled by its degree,
+# so a "what courses do you offer" question never shares enough wording to rank
+# them -- they have to be returned wholesale instead of by similarity.
+_CATALOG_COLLECTIONS = ("programs", "courses")
+
+
+def _catalog_chunks(kb) -> List[_CHUNK]:
+    by_collection = {}
+    for chunk in kb.chunks:
+        meta = chunk.get("metadata", {}) or {}
+        collection = meta.get("collection")
+        if collection in _CATALOG_COLLECTIONS:
+            by_collection.setdefault(collection, []).append(chunk)
+
+    selected: List[_CHUNK] = []
+    for collection in _CATALOG_COLLECTIONS:
+        records = by_collection.get(collection)
+        if records:
+            selected = records
+            break
+
+    # De-dupe by title so the same programme is not listed twice.
+    seen = set()
+    deduped: List[_CHUNK] = []
+    for chunk in selected:
+        meta = chunk.get("metadata", {}) or {}
+        key = (meta.get("title") or chunk.get("id") or "").strip().lower()
+        if key and key in seen:
+            continue
+        seen.add(key)
+        deduped.append(chunk)
+    return deduped
+
+
 def retrieve(
     query: str, top_k: int = TOP_K_DEFAULT, tenant: Optional[str] = None
 ) -> List[_SCORED]:
     kb = kb_for(tenant)
+
+    if is_catalog_query(query):
+        catalog = _catalog_chunks(kb)
+        if catalog:
+            return [(chunk, 1.0) for chunk in catalog]
+
     expanded_top_k = max(top_k, TOP_K_DEFAULT)
     hits = kb.query(query, expanded_top_k)
     if not hits:

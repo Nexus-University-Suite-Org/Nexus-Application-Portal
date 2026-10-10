@@ -8,10 +8,32 @@ import {
   Sparkles,
   RotateCcw,
   BookOpen,
+  Calculator,
+  ChevronLeft,
+  Check,
+  AlertCircle,
+  Loader2,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import gsap from "gsap";
 import { apiUrl } from "@/lib/apiUrl";
 import { useSiteSettings, parseJsonSetting } from "@/hooks/useSiteSettings";
+import {
+  GENDER_BONUS,
+  computeWeight,
+  formatScore,
+  recommendFor,
+  uacePrincipalGradeOptions,
+  subsidiaryGradeOptions,
+  oLevelGradeOptions,
+  uaceSubjectOptions,
+  oLevelSubjectOptions,
+  subsidiarySubjectOptions,
+  type SubjectGrade,
+  type WeightInput,
+  type ProgramRecommendation,
+} from "@/lib/weighting";
 
 interface Source {
   title: string;
@@ -29,7 +51,67 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   sources?: Source[];
+  result?: WizardResult;
 }
+
+interface WizardResult {
+  summary: string;
+  aLevelWeight: number;
+  oLevelWeight: number;
+  genderBonus: number;
+  total: number;
+  adjusted: number;
+  primaryName: string;
+  recommendations: ProgramRecommendation[];
+}
+
+type WizardStepId = "intro" | "principal" | "subsidiary" | "olevel" | "gender" | "results";
+
+interface WizardState {
+  active: boolean;
+  step: WizardStepId;
+  principal: SubjectGrade[];
+  generalPaper: string;
+  subMathSubject: string;
+  subMathGrade: string;
+  oLevel: SubjectGrade[];
+  gender: "" | "Male" | "Female" | "Other";
+  busy: boolean;
+  error: string;
+}
+
+const WIZARD_STEPS: { id: WizardStepId; label: string }[] = [
+  { id: "intro", label: "How it works" },
+  { id: "principal", label: "A-Level subjects" },
+  { id: "subsidiary", label: "General Paper" },
+  { id: "olevel", label: "O-Level results" },
+  { id: "gender", label: "Gender" },
+  { id: "results", label: "Your matches" },
+];
+
+const EMPTY_WIZARD: WizardState = {
+  active: false,
+  step: "intro",
+  principal: [
+    { subject: "", grade: "" },
+    { subject: "", grade: "" },
+  ],
+  generalPaper: "",
+  subMathSubject: "",
+  subMathGrade: "",
+  oLevel: Array.from({ length: 5 }, () => ({ subject: "", grade: "" })),
+  gender: "",
+  busy: false,
+  error: "",
+};
+
+const WEIGHT_QUICK_TOPIC: QuickTopic = {
+  label: "Admission Weight",
+  query: "Calculate my admission weight",
+};
+
+const WEIGHT_TRIGGER_RE =
+  /(admission\s+weight|\bmy\s+weight\b|\bmy\s+points\b|\b(calculate|compute|work\s+out|figure\s+out)\b[^.?]*\b(weight|points|score)\b|\brecommend\b[^.?]*\b(program|programme|cours|study)\b|\bwhich\s+(program|programme|cours)\b[^.?]*\b(fit|suitab|qualif|apply|best)|\bwhat\s+(can|could)\s+i\s+(apply|qualif)|cut\s*-?\s*off)/i;
 
 const CHAT_URL = apiUrl("chat");
 const STORAGE_KEY = "nap.chatbot.history.v1";
@@ -309,6 +391,194 @@ const renderMarkdown = (text: string) => {
   return blocks;
 };
 
+const WzSelect = ({
+  value,
+  onChange,
+  options,
+  placeholder,
+  ariaLabel,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+  placeholder: string;
+  ariaLabel: string;
+}) => (
+  <select
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    aria-label={ariaLabel}
+    className="flex-1 min-w-0 bg-background border border-border rounded-lg px-2 py-1.5 text-[12px] text-card-foreground focus:outline-none focus:border-accent/50"
+  >
+    <option value="">{placeholder}</option>
+    {options.map((o) => (
+      <option key={o} value={o}>
+        {o}
+      </option>
+    ))}
+  </select>
+);
+
+const SubjectGradeRow = ({
+  row,
+  index,
+  subjectOptions,
+  gradeOptions,
+  subjectPlaceholder,
+  gradePlaceholder,
+  onUpdate,
+  onRemove,
+  canRemove,
+}: {
+  row: SubjectGrade;
+  index: number;
+  subjectOptions: string[];
+  gradeOptions: string[];
+  subjectPlaceholder: string;
+  gradePlaceholder: string;
+  onUpdate: (index: number, patch: Partial<SubjectGrade>) => void;
+  onRemove: (index: number) => void;
+  canRemove: boolean;
+}) => (
+  <div className="flex items-center gap-1.5">
+    <WzSelect
+      value={row.subject}
+      onChange={(v) => onUpdate(index, { subject: v })}
+      options={subjectOptions}
+      placeholder={subjectPlaceholder}
+      ariaLabel={`Subject ${index + 1}`}
+    />
+    <WzSelect
+      value={row.grade}
+      onChange={(v) => onUpdate(index, { grade: v })}
+      options={gradeOptions}
+      placeholder={gradePlaceholder}
+      ariaLabel={`Grade ${index + 1}`}
+    />
+    {canRemove && (
+      <button
+        type="button"
+        onClick={() => onRemove(index)}
+        className="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+        title="Remove row"
+      >
+        <Trash2 size={13} />
+      </button>
+    )}
+  </div>
+);
+
+const BAND_STYLES: Record<ProgramRecommendation["band"], { label: string; badge: string }> = {
+  Qualified: { label: "Qualified", badge: "bg-green-500/15 text-green-600 border-green-500/25" },
+  Close: { label: "Close", badge: "bg-amber-500/15 text-amber-600 border-amber-500/25" },
+  Reach: { label: "Reach", badge: "bg-muted text-muted-foreground border-border" },
+};
+
+const ResultCard = ({ result }: { result: WizardResult }) => {
+  const subjectsLine = (text: string | undefined) =>
+    text ? text.replace(/\s+/g, " ").trim() : "—";
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-xl border border-border bg-background/60 p-3 space-y-1.5">
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          Your admission weight
+        </p>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[12px]">
+          <span className="text-muted-foreground" title={result.primaryName}>
+            A-Level (for best match)
+          </span>
+          <span className="text-right font-medium">{formatScore(result.aLevelWeight)}</span>
+          <span className="text-muted-foreground">O-Level (best 8)</span>
+          <span className="text-right font-medium">{formatScore(result.oLevelWeight)}</span>
+          <span className="text-muted-foreground">
+            Female bonus{result.genderBonus ? ` (+${formatScore(result.genderBonus)})` : ""}
+          </span>
+          <span className="text-right font-medium">{formatScore(result.genderBonus)}</span>
+          <span className="text-foreground font-semibold border-t border-border pt-1">Total</span>
+          <span className="text-right font-bold text-accent text-[13px] border-t border-border pt-1">
+            {formatScore(result.adjusted)}
+          </span>
+        </div>
+        <p className="text-[10px] text-muted-foreground pt-0.5">
+          Shown for <span className="text-foreground/70">{result.primaryName}</span>; other
+          programmes may score differently.
+        </p>
+      </div>
+
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-3 flex-wrap text-[10px] uppercase tracking-wider text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-green-500" /> Meets cut-off
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-500" /> Close (within 1.5)
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-muted-foreground/40" /> Reach
+          </span>
+        </div>
+      </div>
+
+      {result.recommendations.length === 0 ? (
+        <p className="text-[12px] text-muted-foreground">
+          I couldn&rsquo;t load the programme list. Please try again.
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {result.recommendations.map((r) => (
+            <li key={r.program.programCode} className="rounded-xl border border-border p-3 space-y-1.5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-card-foreground leading-snug">
+                    {r.program.programName}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {r.program.programCode} · {r.program.facultySchool || "Faculty"}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${BAND_STYLES[r.band].badge}`}
+                >
+                  {BAND_STYLES[r.band].label}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-[11px]">
+                <div>
+                  <p className="text-muted-foreground">Your weight</p>
+                  <p className="font-semibold">{formatScore(r.adjusted)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Cut-off</p>
+                  <p className="font-semibold">{formatScore(r.program.cutoffScore)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Slack</p>
+                  <p className={`font-semibold ${r.margin >= 0 ? "text-green-600" : "text-muted-foreground"}`}>
+                    {r.margin >= 0 ? "+" : ""}{formatScore(r.margin)}
+                  </p>
+                </div>
+              </div>
+              {!r.meetsUcePasses && (
+                <p className="text-[11px] text-amber-600 flex items-start gap-1.5">
+                  <AlertCircle size={12} className="shrink-0 mt-0.5" />
+                  You have {r.oLevelPasses} O-Level passes but this programme requires{" "}
+                  {r.program.minimumUcePasses}.
+                </p>
+              )}
+              <div className="text-[11px] text-muted-foreground space-y-0.5">
+                <p><span className="text-foreground/70">Essential:</span> {subjectsLine(r.program.essentialSubjects)}</p>
+                <p><span className="text-foreground/70">Relevant:</span> {subjectsLine(r.program.relevantSubjects)}</p>
+                <p><span className="text-foreground/70">Desirable:</span> {subjectsLine(r.program.desirableSubjects)}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -331,6 +601,7 @@ const ChatBot = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [wizard, setWizard] = useState<WizardState>(EMPTY_WIZARD);
   const chatRef = useRef<HTMLDivElement>(null);
 
   const { settings } = useSiteSettings({
@@ -356,7 +627,8 @@ const ChatBot = () => {
     const topics = normalizeTopics(
       parseJsonSetting<QuickTopic[]>(settings.chat_quick_topics, DEFAULT_QUICK_TOPICS),
     );
-    return topics.map((t) => ({
+    const withWeight = [WEIGHT_QUICK_TOPIC, ...topics.filter((t) => t.query !== WEIGHT_QUICK_TOPIC.query)];
+    return withWeight.map((t) => ({
       ...t,
       query: t.query.replace(/\{university\}/g, portalName),
     }));
@@ -437,10 +709,148 @@ const ChatBot = () => {
     }
   }, [isOpen]);
 
+  const updatePrincipal = (index: number, patch: Partial<SubjectGrade>) =>
+    setWizard((w) => ({
+      ...w,
+      principal: w.principal.map((r, i) => (i === index ? { ...r, ...patch } : r)),
+    }));
+
+  const updateOLevel = (index: number, patch: Partial<SubjectGrade>) =>
+    setWizard((w) => ({
+      ...w,
+      oLevel: w.oLevel.map((r, i) => (i === index ? { ...r, ...patch } : r)),
+    }));
+
+  const addPrincipal = () =>
+    setWizard((w) => ({ ...w, principal: [...w.principal, { subject: "", grade: "" }] }));
+
+  const addOLevel = () =>
+    setWizard((w) => ({ ...w, oLevel: [...w.oLevel, { subject: "", grade: "" }] }));
+
+  const removePrincipal = (index: number) =>
+    setWizard((w) => ({ ...w, principal: w.principal.filter((_, i) => i !== index) }));
+
+  const removeOLevel = (index: number) =>
+    setWizard((w) => ({ ...w, oLevel: w.oLevel.filter((_, i) => i !== index) }));
+
+  const goBack = () =>
+    setWizard((w) => {
+      const order: WizardStepId[] = ["intro", "principal", "subsidiary", "olevel", "gender", "results"];
+      const idx = order.indexOf(w.step);
+      return { ...w, step: order[Math.max(0, idx - 1)], error: "" };
+    });
+
+  const goNext = () =>
+    setWizard((w) => {
+      if (w.step === "principal") {
+        if (w.principal.filter((r) => r.subject && r.grade).length < 2)
+          return { ...w, error: "Please enter at least two A-Level principal subjects with grades." };
+        return { ...w, step: "subsidiary", error: "" };
+      }
+      if (w.step === "subsidiary") return { ...w, step: "olevel", error: "" };
+      if (w.step === "olevel") {
+        if (w.oLevel.filter((r) => r.subject && r.grade).length < 5)
+          return { ...w, error: "Please enter at least five O-Level subjects with grades." };
+        return { ...w, step: "gender", error: "" };
+      }
+      if (w.step === "intro") return { ...w, step: "principal", error: "" };
+      return w;
+    });
+
+  const finishWizard = async () => {
+    if (!wizard.gender) {
+      setWizard((w) => ({ ...w, error: "Please select your gender to apply the correct bonus." }));
+      return;
+    }
+
+    const principal = wizard.principal.filter((r) => r.subject && r.grade);
+    const oLevel = wizard.oLevel.filter((r) => r.subject && r.grade);
+    const input: WeightInput = {
+      principal,
+      subsidiaries: [
+        ...(wizard.generalPaper
+          ? [{ subject: "General Paper", grade: wizard.generalPaper }]
+          : []),
+        ...(wizard.subMathSubject && wizard.subMathGrade
+          ? [{ subject: wizard.subMathSubject, grade: wizard.subMathGrade }]
+          : []),
+      ],
+      oLevel,
+      gender: wizard.gender,
+    };
+
+    const gradeSummary = [
+      `A-Level: ${principal.map((s) => `${s.subject} ${s.grade}`).join(", ")}`,
+      input.subsidiaries.length
+        ? `Subsidiary: ${input.subsidiaries.map((s) => `${s.subject} ${s.grade}`).join(", ")}`
+        : null,
+      `O-Level: ${oLevel.map((s) => `${s.subject} ${s.grade}`).join(", ")}`,
+      `Gender: ${wizard.gender}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    setWizard((w) => ({ ...w, busy: true, error: "" }));
+
+    try {
+      const recommendations = await recommendFor(input);
+      const top = recommendations.slice(0, 8);
+      const best = recommendations[0];
+
+      const result: WizardResult = {
+        summary: gradeSummary,
+        aLevelWeight: best?.aLevelWeight ?? 0,
+        oLevelWeight: best?.oLevelWeight ?? 0,
+        genderBonus: best?.genderBonus ?? 0,
+        total: best?.total ?? 0,
+        adjusted: best?.adjusted ?? 0,
+        primaryName: best?.program.programName ?? "your best match",
+        recommendations: top,
+      };
+
+      const intro =
+        top.length > 0
+          ? "Here's what I calculated from your grades. A-Level weighting depends on each programme's Essential, Relevant and Desirable subjects, so the score changes per programme — I've compared you against every active NAD programme below."
+          : "I couldn't load the current programme list right now. Please try again in a moment.";
+
+      setMessages((prev) => [
+        ...prev,
+        { id: `${Date.now()}-u`, role: "user", content: `Here are my grades:\n${gradeSummary}` },
+        { id: `${Date.now()}-a`, role: "assistant", content: intro, result },
+      ]);
+      setWizard(EMPTY_WIZARD);
+      setHasInteracted(true);
+    } catch {
+      setWizard((w) => ({
+        ...w,
+        busy: false,
+        error: "Couldn't reach the admissions dashboard. Check your connection and try again.",
+      }));
+    }
+  };
+
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim() || isLoading) return;
       setHasInteracted(true);
+
+      if (WEIGHT_TRIGGER_RE.test(text)) {
+        const userMsg: Message = {
+          id: Date.now().toString(),
+          role: "user",
+          content: text.trim(),
+        };
+        const introMsg: Message = {
+          id: `${Date.now()}-intro`,
+          role: "assistant",
+          content:
+            "Great — let's work out your admission weight and find your best-fit programmes. I'll use the standard Uganda public-university formula:\n\n**A-Level** → grade points (A=6 … E=2) × subject weight (Essential ×3, Relevant ×2, Desirable ×1, Other ×0.5)\n**O-Level** → your best 8 subjects (D1/D2=0.3, Credit 3-6=0.2, Pass 7-8=0.1)\n**Female applicants** → +1.5 bonus\n\nFollow the steps in the panel below. You can go back at any time.",
+        };
+        setMessages((prev) => [...prev, userMsg, introMsg]);
+        setWizard({ ...EMPTY_WIZARD, active: true, step: "intro" });
+        setInput("");
+        return;
+      }
 
       const userMsg: Message = {
         id: Date.now().toString(),
@@ -532,6 +942,7 @@ const ChatBot = () => {
   const resetChat = () => {
     setMessages([]);
     setHasInteracted(false);
+    setWizard(EMPTY_WIZARD);
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {
@@ -540,6 +951,10 @@ const ChatBot = () => {
   };
 
   const showWelcome = !hasInteracted && messages.length === 0;
+  const wizardStepIndex = Math.max(
+    0,
+    WIZARD_STEPS.findIndex((s) => s.id === wizard.step),
+  );
 
   if (!chatEnabled) return null;
 
@@ -647,6 +1062,11 @@ const ChatBot = () => {
                   {msg.role === "assistant" ? (
                     <div className="space-y-0.5">
                       {renderMarkdown(msg.content)}
+                      {msg.result && (
+                        <div className="mt-2 pt-2 border-t border-border/60">
+                          <ResultCard result={msg.result} />
+                        </div>
+                      )}
                       {showSources && msg.sources && msg.sources.length > 0 && (
                         <div className="mt-2 pt-2 border-t border-border/60">
                           <p className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
@@ -697,6 +1117,232 @@ const ChatBot = () => {
                   </div>
                 </div>
               )}
+            {/* Admission Weight wizard */}
+            {wizard.active && (
+              <div className="rounded-2xl border border-accent/30 bg-card p-3 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-accent">
+                    <Calculator size={13} /> Admission Weight
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground">
+                      {WIZARD_STEPS[wizardStepIndex]?.label}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setWizard(EMPTY_WIZARD)}
+                      className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      title="Close calculator"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* progress dots */}
+                <div className="flex gap-1.5">
+                  {WIZARD_STEPS.slice(0, 5).map((s, i) => (
+                    <span
+                      key={s.id}
+                      className={`h-1 flex-1 rounded-full transition-colors ${
+                        i <= wizardStepIndex ? "bg-accent" : "bg-border"
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                {wizard.step === "intro" && (
+                  <div className="space-y-2">
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      I&rsquo;ll ask for your A-Level principal subjects, General Paper / subsidiary
+                      grade, best O-Level subjects and gender, then rank every current NAD
+                      programme against its cut-off.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={goNext}
+                      className="w-full py-2 rounded-xl bg-accent text-accent-foreground text-[12px] font-medium hover:bg-accent/85 transition-colors"
+                    >
+                      Let&rsquo;s start
+                    </button>
+                  </div>
+                )}
+
+                {wizard.step === "principal" && (
+                  <div className="space-y-2">
+                    <p className="text-[11px] text-muted-foreground">
+                      Add your A-Level principal subjects and grades (at least two).
+                    </p>
+                    <div className="space-y-1.5">
+                      {wizard.principal.map((row, i) => (
+                        <SubjectGradeRow
+                          key={i}
+                          row={row}
+                          index={i}
+                          subjectOptions={uaceSubjectOptions}
+                          gradeOptions={uacePrincipalGradeOptions}
+                          subjectPlaceholder="Subject"
+                          gradePlaceholder="Grade"
+                          onUpdate={updatePrincipal}
+                          onRemove={removePrincipal}
+                          canRemove={wizard.principal.length > 1}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addPrincipal}
+                      className="flex items-center gap-1 text-[11px] text-accent hover:underline"
+                    >
+                      <Plus size={12} /> Add another subject
+                    </button>
+                  </div>
+                )}
+
+                {wizard.step === "subsidiary" && (
+                  <div className="space-y-2">
+                    <p className="text-[11px] text-muted-foreground">
+                      Add General Paper and/or a subsidiary subject (optional).
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-24 shrink-0 text-[11px] text-muted-foreground">
+                        General Paper
+                      </span>
+                      <WzSelect
+                        value={wizard.generalPaper}
+                        onChange={(v) => setWizard((w) => ({ ...w, generalPaper: v }))}
+                        options={subsidiaryGradeOptions}
+                        placeholder="Grade"
+                        ariaLabel="General Paper grade"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-24 shrink-0 text-[11px] text-muted-foreground">
+                        Subsidiary
+                      </span>
+                      <WzSelect
+                        value={wizard.subMathSubject}
+                        onChange={(v) => setWizard((w) => ({ ...w, subMathSubject: v }))}
+                        options={subsidiarySubjectOptions.filter((s) => s !== "General Paper")}
+                        placeholder="Subject"
+                        ariaLabel="Subsidiary subject"
+                      />
+                      <WzSelect
+                        value={wizard.subMathGrade}
+                        onChange={(v) => setWizard((w) => ({ ...w, subMathGrade: v }))}
+                        options={subsidiaryGradeOptions}
+                        placeholder="Grade"
+                        ariaLabel="Subsidiary grade"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {wizard.step === "olevel" && (
+                  <div className="space-y-2">
+                    <p className="text-[11px] text-muted-foreground">
+                      Add your O-Level subjects and grades (at least five; your best 8 are used).
+                    </p>
+                    <div className="space-y-1.5">
+                      {wizard.oLevel.map((row, i) => (
+                        <SubjectGradeRow
+                          key={i}
+                          row={row}
+                          index={i}
+                          subjectOptions={oLevelSubjectOptions}
+                          gradeOptions={oLevelGradeOptions}
+                          subjectPlaceholder="Subject"
+                          gradePlaceholder="Grade"
+                          onUpdate={updateOLevel}
+                          onRemove={removeOLevel}
+                          canRemove={wizard.oLevel.length > 1}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addOLevel}
+                      className="flex items-center gap-1 text-[11px] text-accent hover:underline"
+                    >
+                      <Plus size={12} /> Add another subject
+                    </button>
+                  </div>
+                )}
+
+                {wizard.step === "gender" && (
+                  <div className="space-y-2">
+                    <p className="text-[11px] text-muted-foreground">
+                      Select your gender. Female applicants receive the +{formatScore(GENDER_BONUS)}{" "}
+                      affirmative-action bonus.
+                    </p>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {(["Female", "Male", "Other"] as const).map((g) => (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => setWizard((w) => ({ ...w, gender: g, error: "" }))}
+                          className={`py-2 rounded-xl text-[12px] font-medium border transition-colors ${
+                            wizard.gender === g
+                              ? "bg-accent text-accent-foreground border-accent"
+                              : "bg-background text-card-foreground border-border hover:border-accent/40"
+                          }`}
+                        >
+                          {g}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {wizard.error && (
+                  <p className="text-[11px] text-destructive flex items-start gap-1.5">
+                    <AlertCircle size={12} className="shrink-0 mt-0.5" />
+                    {wizard.error}
+                  </p>
+                )}
+
+                {wizard.step !== "intro" && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={goBack}
+                      disabled={wizard.busy}
+                      className="flex items-center gap-1 px-3 py-2 rounded-xl border border-border text-[12px] text-card-foreground hover:bg-muted transition-colors disabled:opacity-40"
+                    >
+                      <ChevronLeft size={13} /> Back
+                    </button>
+                    {wizard.step === "gender" ? (
+                      <button
+                        type="button"
+                        onClick={finishWizard}
+                        disabled={wizard.busy}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-accent text-accent-foreground text-[12px] font-medium hover:bg-accent/85 transition-colors disabled:opacity-60"
+                      >
+                        {wizard.busy ? (
+                          <>
+                            <Loader2 size={13} className="animate-spin" /> Calculating…
+                          </>
+                        ) : (
+                          <>
+                            <Check size={13} /> See my matches
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={goNext}
+                        disabled={wizard.busy}
+                        className="flex-1 py-2 rounded-xl bg-accent text-accent-foreground text-[12px] font-medium hover:bg-accent/85 transition-colors disabled:opacity-60"
+                      >
+                        Next
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
 

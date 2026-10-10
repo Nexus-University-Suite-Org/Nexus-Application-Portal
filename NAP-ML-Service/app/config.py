@@ -50,7 +50,7 @@ MIN_HIT_SCORE = float(os.getenv("MIN_HIT_SCORE", "0.16"))
 MIN_HIT_COVERAGE = float(os.getenv("MIN_HIT_COVERAGE", "0.5"))
 # Bump when the chunk text format changes so a persisted index built by an older
 # build is discarded instead of answering with the previous wording.
-INDEX_SCHEMA_VERSION = int(os.getenv("INDEX_SCHEMA_VERSION", "2"))
+INDEX_SCHEMA_VERSION = int(os.getenv("INDEX_SCHEMA_VERSION", "3"))
 
 DEFAULT_PORT = int(os.getenv("DEFAULT_PORT", "8000"))
 

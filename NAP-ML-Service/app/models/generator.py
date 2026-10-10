@@ -10,8 +10,21 @@ from app.config import (
 from app.models.embedding import content_terms
 from app.services import settings as site_settings
 from app.services.contact import get_contact_details
+from app.utils.intent import is_catalog_query
 
-_GREETING_RE = re.compile(r"^(hi|hello|hey|good\s*(morning|afternoon|evening)|howdy)[\s!?.]*$", re.IGNORECASE)
+_GREETING_RE = re.compile(
+    r"^(hi|hiya|hello|hey|heya|howdy|yo|greetings|"
+    r"good\s*(morning|afternoon|evening|day))([\s,!.?]+there)?[\s!?.]*$",
+    re.IGNORECASE,
+)
+# A greeting followed by a real question ("hello, what's your name?") must be
+# classified by the question, not the greeting. Stripping a leading interjection
+# lets the identity/capability patterns see the actual request.
+_LEAD_GREETING_RE = re.compile(
+    r"^(hi|hiya|hello|hey|heya|howdy|yo|greetings|"
+    r"good\s*(morning|afternoon|evening|day))[\s,!.?-]+",
+    re.IGNORECASE,
+)
 _THANKS_RE = re.compile(r"^(thanks|thank\s+you|thx|ty)[\s!?.]*$", re.IGNORECASE)
 _FAREWELL_RE = re.compile(r"^(bye|goodbye|see\s+ya|see\s+you)[\s!?.]*$", re.IGNORECASE)
 _WELLBEING_RE = re.compile(
@@ -22,8 +35,9 @@ _WELLBEING_RE = re.compile(
 )
 _IDENTITY_RE = re.compile(
     r"^(who|what)\s+are\s+you[\s!?.]*$"
-    r"|^what('s| is)?\s*your\s+name[\s!?.]*$"
+    r"|^what(?:'s|\s+is|s)?\s+your\s+name[\s!?.]*$"
     r"|^what\s+is\s+this[\s!?.]*$"
+    r"|^who\s+am\s+i\s+(talking|speaking)\s+to[\s!?.]*$"
     r"|^are\s+you\s+(a\s+)?(bot|robot|human|real|ai)[\s!?.]*$",
     re.IGNORECASE,
 )
@@ -88,24 +102,37 @@ _LOW_PRIORITY_COLLECTIONS = {"student_stories", "alumni", "partners"}
 _LOW_PRIORITY_RATIO = 0.95
 
 _WHITESPACE_RE = re.compile(r"\s+")
+_APOSTROPHE_RE = re.compile(r"[’`]")
+
+
+def _normalise_query(text: str) -> str:
+    """Lower-case, collapse whitespace and unify apostrophes for intent matching."""
+    text = _APOSTROPHE_RE.sub("'", text or "")
+    return _WHITESPACE_RE.sub(" ", text.strip().lower())
 
 
 def _classify(query: str):
-    query = query.strip().lower()
+    query = _normalise_query(query)
     if _GREETING_RE.match(query):
         return "greeting"
-    if _THANKS_RE.match(query):
+    # Everything after a leading "hi/hello/hey" is what the user actually asked;
+    # classifying the remainder makes "hello, what's your name?" an identity
+    # question instead of a retrieval miss.
+    core = _LEAD_GREETING_RE.sub("", query).strip()
+    if _THANKS_RE.match(core):
         return "thanks"
-    if _FAREWELL_RE.match(query):
+    if _FAREWELL_RE.match(core):
         return "farewell"
-    if _WELLBEING_RE.match(query):
+    if _WELLBEING_RE.match(core):
         return "wellbeing"
-    if _IDENTITY_RE.match(query):
+    if _IDENTITY_RE.match(core):
         return "identity"
-    if _CAPABILITY_RE.match(query):
+    if _CAPABILITY_RE.match(core):
         return "capability"
-    if _CONTACT_RE.search(query):
+    if _CONTACT_RE.search(core):
         return "contact"
+    if is_catalog_query(core):
+        return "catalog"
     return "question"
 
 
@@ -117,6 +144,10 @@ def is_conversational(query: str) -> bool:
     neighbours, which is how an unrelated terms/CTA dump got attached to a
     plain greeting.
     """
+    # A catalogue request is small-talk-free by classification but still needs
+    # retrieval, so it must not be short-circuited here.
+    if is_catalog_query(_normalise_query(query)):
+        return False
     return _classify(query) != "question" or not content_terms(query)
 
 
@@ -197,6 +228,39 @@ def _body_of(chunk) -> str:
     return (meta.get("body") or chunk.get("text", "") or "").strip()
 
 
+def _catalog_answer(portal_name: str, hits, fallback: Optional[str] = None) -> str:
+    """List every programme on offer.
+
+    A "what courses do you offer" question shares almost no wording with the
+    degree records, so retrieval cannot rank them individually. The records are
+    presented as one list instead, so the reply shows the whole catalogue rather
+    than a single, arbitrary nearest neighbour.
+    """
+    entries = []
+    seen = set()
+    for chunk, _score in hits:
+        meta = chunk.get("metadata", {}) or {}
+        title = (meta.get("title") or "").strip()
+        key = title.lower()
+        if not title or key in seen:
+            continue
+        seen.add(key)
+        entries.append((title, _truncate(_body_of(chunk), 240)))
+
+    if not entries:
+        return fallback or PORTAL_FALLBACK
+
+    lines = [f"Here are the programmes {portal_name} offers:", ""]
+    for title, body in entries:
+        line = f"• **{title}**"
+        if body:
+            line += f" — {body}"
+        lines.append(line)
+    lines.append("")
+    lines.append("Would you like details on any of these?")
+    return "\n".join(lines)
+
+
 def _contact_answer(portal_name: str, tenant: Optional[str] = None) -> str:
     """Warm, human reply with the organisation's contact details.
 
@@ -258,6 +322,10 @@ def _compose(
     intent = _classify(query)
     if intent == "contact":
         return _contact_answer(portal_name, tenant), []
+    if intent == "catalog":
+        if hits:
+            return _catalog_answer(portal_name, hits, fallback), hits
+        return fallback, []
     if intent != "question":
         return _intents(portal_name).get(intent, PORTAL_FALLBACK), []
     if not content_terms(query):

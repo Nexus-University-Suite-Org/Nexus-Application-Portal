@@ -41,3 +41,32 @@ export const apiUrl = (path: string) => {
   const cleaned = path.replace(/^\/+/, "").replace(/^v1\//, "");
   return `${apiBaseUrl}/v1/${cleaned}`;
 };
+
+/**
+ * Nexus Admissions Dashboard (NAD) base URL.
+ *
+ * The application form's course selection reads the programme catalogue that
+ * the admissions dashboard publishes (stored in the NAD database), so it needs
+ * a separate base from the NAP backend. Unlike `VITE_API_BASE_URL` there is no
+ * same-origin reverse proxy for this service, so it defaults to the deployed
+ * NAD origin. The public endpoints allow any origin, so no CORS setup is needed.
+ */
+const rawNadBase = import.meta.env.VITE_NAD_API_BASE_URL?.trim() ?? "";
+
+const normalizeNadBase = (raw: string) => {
+  const trimmed = raw.replace(/\/+$/, "");
+  if (!trimmed) return "https://admissions-backend-production-0985.up.railway.app/api";
+  return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
+};
+
+export const nadApiBaseUrl = normalizeNadBase(rawNadBase);
+
+/**
+ * Build a NAD URL for a path below the `/v1` prefix.
+ *
+ * @example nadApiUrl("public/programs") // "<nad>/api/v1/public/programs"
+ */
+export const nadApiUrl = (path: string) => {
+  const cleaned = path.replace(/^\/+/, "").replace(/^v1\//, "");
+  return `${nadApiBaseUrl}/v1/${cleaned}`;
+};

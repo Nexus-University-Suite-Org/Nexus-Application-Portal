@@ -29,7 +29,10 @@ def _records_from_payload(payload):
 # because navigation is dense with the same words a question uses.
 _UI_SETTING_RE = re.compile(
     r"(nav|cta|footer|social|menu|breadcrumb|cookie|consent|analytics|seo|meta_|"
-    r"logo|favicon|icon|banner|pill|badge|social_link|quick_action)",
+    r"logo|favicon|icon|banner|pill|badge|social_link|quick_action|"
+    r"btn|button|heading|sub_?heading|tagline|subtitle|hero|donate|donation|"
+    r"success_story|story_|testimonial|stats?|stat_|carousel|slide|quote|"
+    r"author|outcome|what_we_teach)",
     re.IGNORECASE,
 )
 
