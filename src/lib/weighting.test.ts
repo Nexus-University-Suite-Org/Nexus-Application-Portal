@@ -5,6 +5,7 @@ import {
   subjectCategory,
   oLevelPoints,
   aLevelGradePoints,
+  isWeightQuery,
   type WeightInput,
 } from "@/lib/weighting";
 import type { NadProgram } from "@/lib/nadPrograms";
@@ -72,5 +73,38 @@ describe("weighting", () => {
     const ranked = recommendPrograms(input, [cs, low]);
     expect(ranked[0].program.programCode).toBe("BSC-CS");
     expect(ranked[1].band).toBe("Reach");
+  });
+});
+
+describe("isWeightQuery", () => {
+  it("matches natural admissions-weight phrasing", () => {
+    [
+      "hello can you calculate my weights",
+      "can you calculate my weights please",
+      "what is my admission weight?",
+      "what is my cut off",
+      "help me work out my weighted score",
+      "which programme fits me",
+      "which programmes can i apply for",
+      "what can I apply for",
+      "recommend a course for me",
+      "do i qualify for computer science",
+      "am i eligible for law",
+      "which course should i do",
+    ].forEach((q) => expect(isWeightQuery(q), q).toBe(true));
+  });
+
+  it("leaves general questions for the normal chat flow", () => {
+    [
+      "How do I apply?",
+      "What programs do you offer?",
+      "What are the tuition fees and are there scholarships?",
+      "How can I contact the admissions office?",
+      "hello",
+      "tell me about the campus",
+      "when do applications open",
+      "what courses do you offer",
+      "i qualify for a scholarship",
+    ].forEach((q) => expect(isWeightQuery(q), q).toBe(false));
   });
 });

@@ -23,6 +23,7 @@ import {
   GENDER_BONUS,
   computeWeight,
   formatScore,
+  isWeightQuery,
   recommendFor,
   uacePrincipalGradeOptions,
   subsidiaryGradeOptions,
@@ -109,9 +110,6 @@ const WEIGHT_QUICK_TOPIC: QuickTopic = {
   label: "Admission Weight",
   query: "Calculate my admission weight",
 };
-
-const WEIGHT_TRIGGER_RE =
-  /(admission\s+weight|\bmy\s+weight\b|\bmy\s+points\b|\b(calculate|compute|work\s+out|figure\s+out)\b[^.?]*\b(weight|points|score)\b|\brecommend\b[^.?]*\b(program|programme|cours|study)\b|\bwhich\s+(program|programme|cours)\b[^.?]*\b(fit|suitab|qualif|apply|best)|\bwhat\s+(can|could)\s+i\s+(apply|qualif)|cut\s*-?\s*off)/i;
 
 const CHAT_URL = apiUrl("chat");
 const STORAGE_KEY = "nap.chatbot.history.v1";
@@ -886,7 +884,7 @@ const ChatBot = () => {
       if (!text.trim() || isLoading) return;
       setHasInteracted(true);
 
-      if (WEIGHT_TRIGGER_RE.test(text)) {
+      if (isWeightQuery(text)) {
         const userMsg: Message = {
           id: Date.now().toString(),
           role: "user",

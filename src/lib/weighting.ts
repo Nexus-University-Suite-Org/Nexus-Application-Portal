@@ -290,3 +290,27 @@ export async function recommendFor(input: WeightInput): Promise<ProgramRecommend
   const programs = await fetchActivePrograms();
   return recommendPrograms(input, programs);
 }
+
+/**
+ * Natural-language detection for the admission-weight calculator. Tolerant
+ * patterns (plurals, "calc", "which course should I do") so casual phrasing
+ * like "hello can you calculate my weights" opens the wizard, while general
+ * questions ("what programmes do you offer") still fall through to chat.
+ */
+export const weightIntentPatterns: RegExp[] = [
+  /\badmission\s+weights?\b/i,
+  /\bcut\s*-?\s*off\b/i,
+  /\bmy\s+(weights?|points?|scores?|marks?|aggregates?)\b/i,
+  /\bweighted?\s+(score|scores|points?|marks?|aggregate)\b/i,
+  /\b(calculate|compute|calc|work\s*out|figure\s*out|determine|evaluate|check|find|tell\s+me|know)\b[^.?]*\b(weight|point|score|mark|aggregate)s?\b/i,
+  /\bwhat('?s|\s+is)\s+my\s+(weight|points?|score|marks?|aggregate)\b/i,
+  /\b(which|what)\s+(program|programme|course|degree|field)s?\b[^.?]*\b(fit|suit|qualif|appl|best|can\s+i|should\s+i|do\s+i)\w*/i,
+  /\brecommend\b[^.?]*\b(program|programme|course|degree|study|field)\w*/i,
+  /\bwhat\s+(can|could|should)\s+i\s+(apply|qualif|study|do)\b/i,
+  /\b(do|can|will|would)\s+i\s+(qualif|get\s+in|be\s+accepted|meet)\w*/i,
+  /\bam\s+i\s+(eligible|qualified)\b/i,
+  /\b(program|programme|course|degree)\s+(recommendation|recommender|match|matches)\b/i,
+];
+
+export const isWeightQuery = (text: string) =>
+  weightIntentPatterns.some((re) => re.test(text));
