@@ -35,6 +35,7 @@ import {
   type WeightInput,
   type ProgramRecommendation,
 } from "@/lib/weighting";
+import { shouldSuggest, type Suggestion } from "@/lib/chatSuggestions";
 
 interface Source {
   title: string;
@@ -53,6 +54,7 @@ interface Message {
   content: string;
   sources?: Source[];
   result?: WizardResult;
+  suggestions?: Suggestion[];
 }
 
 interface WizardResult {
@@ -963,9 +965,16 @@ const ChatBot = () => {
         onDelta: upsertAssistant,
         onSources: attachSources,
         onDone: () => {
+          const suggestions = shouldSuggest(text, assistantSoFar);
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === streamId ? { ...m, id: Date.now().toString() } : m,
+              m.id === streamId
+                ? {
+                    ...m,
+                    id: Date.now().toString(),
+                    suggestions: suggestions.length ? suggestions : undefined,
+                  }
+                : m,
             ),
           );
           setIsLoading(false);
@@ -994,6 +1003,12 @@ const ChatBot = () => {
   };
 
   const reRunWizard = () => setWizard({ ...EMPTY_WIZARD, active: true, step: "intro" });
+
+  const handleSuggestion = (msgId: string, query: string) => {
+    setMessages((prev) => prev.map((m) => (m.id === msgId ? { ...m, suggestions: undefined } : m)));
+    sendMessage(query);
+    setHasInteracted(true);
+  };
 
   const resetChat = () => {
     setMessages([]);
@@ -1141,6 +1156,25 @@ const ChatBot = () => {
                               </li>
                             ))}
                           </ul>
+                        </div>
+                      )}
+                      {msg.suggestions && msg.suggestions.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-border/60">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">
+                            Related questions
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {msg.suggestions.map((s) => (
+                              <button
+                                key={s.query}
+                                type="button"
+                                onClick={() => handleSuggestion(msg.id, s.query)}
+                                className="text-[11px] px-2.5 py-1 rounded-full border border-accent/40 text-accent hover:bg-accent/10 transition-colors"
+                              >
+                                {s.label}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
