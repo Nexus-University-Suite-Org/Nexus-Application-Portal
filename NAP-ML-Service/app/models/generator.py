@@ -10,7 +10,11 @@ from app.config import (
 from app.models.embedding import content_terms
 from app.services import settings as site_settings
 from app.services.contact import get_contact_details
-from app.utils.intent import is_catalog_query
+from app.utils.intent import (
+    LISTABLE_TOPICS,
+    classify_topics,
+    is_catalog_query,
+)
 
 _GREETING_RE = re.compile(
     r"^(hi|hiya|hello|hey|heya|howdy|yo|greetings|"
@@ -21,8 +25,9 @@ _GREETING_RE = re.compile(
 # classified by the question, not the greeting. Stripping a leading interjection
 # lets the identity/capability patterns see the actual request.
 _LEAD_GREETING_RE = re.compile(
-    r"^(hi|hiya|hello|hey|heya|howdy|yo|greetings|"
-    r"good\s*(morning|afternoon|evening|day))[\s,!.?-]+",
+    r"^(?:hi|hiya|hello|hey|heya|howdy|yo|greetings|"
+    r"good\s*(?:morning|afternoon|evening|day))"
+    r"(?:[\s,!.?-]+there)?[\s,!.?-]+",
     re.IGNORECASE,
 )
 _THANKS_RE = re.compile(r"^(thanks|thank\s+you|thx|ty)[\s!?.]*$", re.IGNORECASE)
@@ -261,6 +266,45 @@ def _catalog_answer(portal_name: str, hits, fallback: Optional[str] = None) -> s
     return "\n".join(lines)
 
 
+def _list_answer(portal_name: str, hits, list_topic: str, fallback: Optional[str] = None) -> str:
+    """List every record of a collection for a generic collection question.
+
+    "What's the latest news?" shares almost no wording with an individual news
+    record, so ranking picks one arbitrary neighbour. The whole collection is
+    listed instead -- the same wholesale presentation the catalogue uses.
+    """
+    intros = {
+        "news": ("Here are the latest updates from {portal}:", "Would you like details on any of these?"),
+        "events": ("Here are the upcoming events at {portal}:", "Which of these would you like to know more about?"),
+        "stories": ("Here are a few stories from our students and alumni:", "Would you like to read any of these in full?"),
+    }
+    intro, closer = intros.get(list_topic, ("Here's what we have:", "Anything you'd like to know more about?"))
+
+    entries = []
+    seen = set()
+    for chunk, _score in hits:
+        meta = chunk.get("metadata", {}) or {}
+        title = (meta.get("title") or "").strip()
+        key = title.lower()
+        if not title or key in seen:
+            continue
+        seen.add(key)
+        entries.append((title, _truncate(_body_of(chunk), 240)))
+
+    if not entries:
+        return fallback or PORTAL_FALLBACK
+
+    lines = [intro.format(portal=portal_name), ""]
+    for title, body in entries:
+        line = f"• **{title}**"
+        if body:
+            line += f" — {body}"
+        lines.append(line)
+    lines.append("")
+    lines.append(closer)
+    return "\n".join(lines)
+
+
 def _contact_answer(portal_name: str, tenant: Optional[str] = None) -> str:
     """Warm, human reply with the organisation's contact details.
 
@@ -325,6 +369,13 @@ def _compose(
     if intent == "catalog":
         if hits:
             return _catalog_answer(portal_name, hits, fallback), hits
+        return fallback, []
+    # A question that only names a collection ("what's the latest news?")
+    # is answered by listing that collection.
+    topics = classify_topics(query)
+    if topics["primary"] in LISTABLE_TOPICS and not topics["secondary"]:
+        if hits:
+            return _list_answer(portal_name, hits, topics["primary"], fallback), hits
         return fallback, []
     if intent != "question":
         return _intents(portal_name).get(intent, PORTAL_FALLBACK), []

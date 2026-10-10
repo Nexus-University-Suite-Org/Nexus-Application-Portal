@@ -28,6 +28,92 @@ _STOPWORDS = frozenset(
 
 _MIN_STEM_LEN = 4
 
+# Words whose trailing "s" is not a plural and must survive the stemmer.
+# "news" -> "new" would otherwise break both retrieval and topic detection.
+_NO_STRIP = frozenset({"news"})
+
+# Confident synonym folds applied after stemming, to both the corpus and the
+# query, so the vector space itself knows that "cost" means "fee". Each fold is
+# a high-confidence equivalence: a wrong fold would attach documents to
+# questions they do not answer, so nothing speculative lives here.
+# Do not fold "financial": a bank that funds student loans and a scholarship
+# both discuss money, and folding them together drags the wrong record in.
+_SYNONYM_FOLD = {
+    # fee family
+    "tuition": "fee",
+    "tuitionfees": "fee",
+    "ugx": "fee",
+    "cost": "fee",
+    "costs": "fee",
+    "price": "fee",
+    "prices": "fee",
+    "pay": "fee",
+    "paying": "fee",
+    "payable": "fee",
+    "payments": "fee",
+    "payment": "fee",
+    "installment": "fee",
+    "installments": "fee",
+    "instalments": "fee",
+    # application family
+    "application": "apply",
+    "applications": "apply",
+    "apply": "apply",
+    "applicant": "apply",
+    "applicants": "apply",
+    "submit": "apply",
+    "submission": "apply",
+    "register": "apply",
+    "registration": "apply",
+    # admission is its own token (an admissions office is a place, not a verb)
+    # requirement family
+    "requirement": "requirement",
+    "requirements": "requirement",
+    "entry": "requirement",
+    "eligible": "requirement",
+    "eligibility": "requirement",
+    "qualify": "qualification",
+    "qualifies": "qualification",
+    "qualification": "qualification",
+    "qualifications": "qualification",
+    "grade": "credit",
+    "grades": "credit",
+    "credit": "credit",
+    "credits": "credit",
+    "prerequisite": "requirement",
+    # deadline family
+    "deadline": "deadline",
+    "deadlines": "deadline",
+    "closing": "deadline",
+    "intake": "deadline",
+    # scholarship family (grants and bursaries ARE scholarships)
+    "bursary": "scholarship",
+    "bursaries": "scholarship",
+    "grant": "scholarship",
+    "grants": "scholarship",
+    "stipend": "scholarship",
+    "sponsorship": "scholarship",
+    # story family
+    "testimonial": "story",
+    "testimonials": "story",
+    "success": "story",
+    "story": "story",
+    "stories": "story",
+    "alumni": "story",
+    "alumnus": "story",
+    # campus family
+    "residence": "accommodation",
+    "hostel": "accommodation",
+    "accommodation": "accommodation",
+    # event family
+    "symposium": "event",
+    "ceremony": "event",
+    "homecoming": "event",
+    "workshop": "event",
+    "seminars": "event",
+    "seminar": "event",
+}
+
 
 def _stem(token: str) -> str:
     """Collapse the endings that stop a question matching its own answer.
@@ -36,6 +122,8 @@ def _stem(token: str) -> str:
     singular; without this the assistant claimed to know nothing about
     scholarships while three records sat in the index.
     """
+    if token in _NO_STRIP:
+        return token
     if len(token) > _MIN_STEM_LEN and token.endswith("ies"):
         return token[:-3] + "y"
     if len(token) > _MIN_STEM_LEN and token.endswith("sses"):
@@ -52,7 +140,8 @@ def _stem(token: str) -> str:
 def _tokenize(text: str) -> List[str]:
     tokens = [t for t in _TOKEN_RE.findall(text.lower()) if t not in _STOPWORDS]
     stemmed = [_stem(t) for t in tokens]
-    return [t for t in stemmed if t]
+    folded = [_SYNONYM_FOLD.get(t, t) for t in stemmed]
+    return [t for t in folded if t]
 
 
 def content_terms(text: str) -> set:

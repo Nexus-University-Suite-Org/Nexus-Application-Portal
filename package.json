@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
+    "eval:chat": "NAP-ML-Service/.venv/Scripts/python NAP-ML-Service/scripts/eval_chat.py --verbose",
     "test": "vitest run",
     "test:watch": "vitest"
   },
