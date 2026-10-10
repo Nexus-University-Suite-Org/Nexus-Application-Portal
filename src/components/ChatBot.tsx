@@ -115,6 +115,31 @@ const WEIGHT_TRIGGER_RE =
 
 const CHAT_URL = apiUrl("chat");
 const STORAGE_KEY = "nap.chatbot.history.v1";
+const WIZARD_STORAGE_KEY = "nap.chatbot.wizard.v1";
+
+const hasWizardData = (w: WizardState) =>
+  w.principal.some((r) => r.subject || r.grade) ||
+  w.oLevel.some((r) => r.subject || r.grade) ||
+  Boolean(w.generalPaper || w.subMathSubject || w.subMathGrade || w.gender);
+
+const loadWizard = (): WizardState => {
+  try {
+    const raw = localStorage.getItem(WIZARD_STORAGE_KEY);
+    if (!raw) return EMPTY_WIZARD;
+    const parsed = JSON.parse(raw) as Partial<WizardState>;
+    if (!parsed || typeof parsed !== "object") return EMPTY_WIZARD;
+    return {
+      ...EMPTY_WIZARD,
+      ...parsed,
+      principal: Array.isArray(parsed.principal) ? parsed.principal : EMPTY_WIZARD.principal,
+      oLevel: Array.isArray(parsed.oLevel) ? parsed.oLevel : EMPTY_WIZARD.oLevel,
+      busy: false,
+      error: "",
+    };
+  } catch {
+    return EMPTY_WIZARD;
+  }
+};
 
 const DEFAULT_QUICK_TOPICS: QuickTopic[] = [
   { label: "Programs", query: "What programs do you offer?" },
@@ -474,7 +499,7 @@ const BAND_STYLES: Record<ProgramRecommendation["band"], { label: string; badge:
   Reach: { label: "Reach", badge: "bg-muted text-muted-foreground border-border" },
 };
 
-const ResultCard = ({ result }: { result: WizardResult }) => {
+const ResultCard = ({ result, onRerun }: { result: WizardResult; onRerun?: () => void }) => {
   const subjectsLine = (text: string | undefined) =>
     text ? text.replace(/\s+/g, " ").trim() : "—";
 
@@ -575,6 +600,16 @@ const ResultCard = ({ result }: { result: WizardResult }) => {
           ))}
         </ul>
       )}
+
+      {onRerun && (
+        <button
+          type="button"
+          onClick={onRerun}
+          className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-accent/40 text-accent text-[12px] font-medium hover:bg-accent/10 transition-colors"
+        >
+          <RotateCcw size={13} /> Re-run with different grades
+        </button>
+      )}
     </div>
   );
 };
@@ -601,7 +636,7 @@ const ChatBot = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const [wizard, setWizard] = useState<WizardState>(EMPTY_WIZARD);
+  const [wizard, setWizard] = useState<WizardState>(loadWizard);
   const chatRef = useRef<HTMLDivElement>(null);
 
   const { settings } = useSiteSettings({
@@ -664,6 +699,23 @@ const ChatBot = () => {
       /* storage unavailable / quota */
     }
   }, [messages]);
+
+  // Persist the in-progress calculator so a refresh (or re-opening the chat)
+  // resumes where the student left off. Transient flags are never stored.
+  useEffect(() => {
+    try {
+      if (!wizard.active && !hasWizardData(wizard)) {
+        localStorage.removeItem(WIZARD_STORAGE_KEY);
+      } else {
+        localStorage.setItem(
+          WIZARD_STORAGE_KEY,
+          JSON.stringify({ ...wizard, busy: false, error: "" }),
+        );
+      }
+    } catch {
+      /* storage unavailable / quota */
+    }
+  }, [wizard]);
 
   useEffect(() => {
     if (chatRef.current && isOpen) {
@@ -847,7 +899,11 @@ const ChatBot = () => {
             "Great — let's work out your admission weight and find your best-fit programmes. I'll use the standard Uganda public-university formula:\n\n**A-Level** → grade points (A=6 … E=2) × subject weight (Essential ×3, Relevant ×2, Desirable ×1, Other ×0.5)\n**O-Level** → your best 8 subjects (D1/D2=0.3, Credit 3-6=0.2, Pass 7-8=0.1)\n**Female applicants** → +1.5 bonus\n\nFollow the steps in the panel below. You can go back at any time.",
         };
         setMessages((prev) => [...prev, userMsg, introMsg]);
-        setWizard({ ...EMPTY_WIZARD, active: true, step: "intro" });
+        setWizard((w) =>
+          hasWizardData(w) && w.step !== "results"
+            ? { ...w, active: true, busy: false, error: "" }
+            : { ...EMPTY_WIZARD, active: true, step: "intro" },
+        );
         setInput("");
         return;
       }
@@ -939,12 +995,15 @@ const ChatBot = () => {
     }
   };
 
+  const reRunWizard = () => setWizard({ ...EMPTY_WIZARD, active: true, step: "intro" });
+
   const resetChat = () => {
     setMessages([]);
     setHasInteracted(false);
     setWizard(EMPTY_WIZARD);
     try {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(WIZARD_STORAGE_KEY);
     } catch {
       /* ignore */
     }
@@ -1064,7 +1123,7 @@ const ChatBot = () => {
                       {renderMarkdown(msg.content)}
                       {msg.result && (
                         <div className="mt-2 pt-2 border-t border-border/60">
-                          <ResultCard result={msg.result} />
+                          <ResultCard result={msg.result} onRerun={reRunWizard} />
                         </div>
                       )}
                       {showSources && msg.sources && msg.sources.length > 0 && (
@@ -1128,6 +1187,16 @@ const ChatBot = () => {
                     <span className="text-[10px] text-muted-foreground">
                       {WIZARD_STEPS[wizardStepIndex]?.label}
                     </span>
+                    {wizard.step !== "intro" && (
+                      <button
+                        type="button"
+                        onClick={reRunWizard}
+                        className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        title="Re-run calculator"
+                      >
+                        <RotateCcw size={13} />
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => setWizard(EMPTY_WIZARD)}
