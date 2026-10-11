@@ -18,8 +18,18 @@ import {
   Trash2,
 } from "lucide-react";
 import gsap from "gsap";
+import { cn } from "@/lib/utils";
 import { apiUrl } from "@/lib/apiUrl";
 import { useSiteSettings, parseJsonSetting } from "@/hooks/useSiteSettings";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+} from "@/components/ui/command";
 import {
   GENDER_BONUS,
   aLevelDesirableText,
@@ -424,43 +434,167 @@ const renderMarkdown = (text: string) => {
   return blocks;
 };
 
-const WzSelect = ({
+const WzCombo = ({
   value,
   onChange,
   options,
   placeholder,
   ariaLabel,
+  freeText = true,
+  disabledValues,
 }: {
   value: string;
   onChange: (value: string) => void;
   options: string[];
   placeholder: string;
   ariaLabel: string;
-}) => (
-  <div className="relative flex-1 min-w-0">
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      aria-label={ariaLabel}
-      className={`w-full appearance-none bg-background border text-[12px] rounded-xl pl-2.5 pr-7 py-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent/50 cursor-pointer ${
-        value
-          ? "text-card-foreground border-border/80 hover:border-accent/40"
-          : "text-muted-foreground border-border/60 hover:border-border"
-      }`}
-    >
-      <option value="">{placeholder}</option>
-      {options.map((o) => (
-        <option key={o} value={o}>
-          {o}
-        </option>
-      ))}
-    </select>
-    <ChevronDown
-      size={13}
-      className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground"
-    />
-  </div>
-);
+  freeText?: boolean;
+  disabledValues?: string[];
+}) => {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const disabled = useMemo(() => new Set(disabledValues ?? []), [disabledValues]);
+
+  useEffect(() => {
+    if (open) {
+      const t = window.setTimeout(() => inputRef.current?.focus(), 30);
+      return () => window.clearTimeout(t);
+    }
+  }, [open]);
+
+  const q = query.trim();
+  const lowerQ = q.toLowerCase();
+  const matches = lowerQ ? options.filter((o) => o.toLowerCase().includes(lowerQ)) : options;
+  const noMatch = freeText && lowerQ !== "" && matches.length === 0;
+
+  const commit = (v: string) => {
+    onChange(v);
+    setOpen(false);
+  };
+
+  const handleOpenChange = (o: boolean) => {
+    setOpen(o);
+    if (o) setQuery("");
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
+    const highlighted = listRef.current?.querySelector('[data-selected="true"]');
+    if (highlighted) return;
+    e.preventDefault();
+    if (noMatch && q) commit(q);
+    else if (matches.length === 1) commit(matches[0]);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <div className="relative flex-1 min-w-0">
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            aria-label={ariaLabel}
+            data-combo-trigger
+            className={cn(
+              "w-full flex items-center justify-between gap-1 bg-background border text-[12px] rounded-xl pl-2.5 pr-2 py-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent/50 cursor-pointer",
+              open && "ring-2 ring-accent/25 border-accent/50",
+              value
+                ? "text-card-foreground border-border/80 hover:border-accent/40"
+                : "text-muted-foreground border-border/60 hover:border-border",
+            )}
+          >
+            <span className="truncate">{value || placeholder}</span>
+            {value && (
+              <span
+                role="button"
+                tabIndex={-1}
+                title="Clear"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onChange("");
+                }}
+                className="shrink-0 p-0.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                <X size={11} />
+              </span>
+            )}
+            <ChevronDown
+              size={13}
+              className={cn(
+                "shrink-0 text-muted-foreground transition-transform duration-200",
+                open && "rotate-180",
+              )}
+            />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          sideOffset={4}
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          onCloseAutoFocus={(e) => e.preventDefault()}
+          className="w-[var(--radix-popover-trigger-width)] min-w-[170px] max-w-[calc(100vw-2rem)] z-[60] rounded-xl border-border/70 p-0 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.25)]"
+        >
+          <Command className="overflow-hidden rounded-xl">
+            <div className="p-1.5">
+              <CommandInput
+                ref={inputRef}
+                value={query}
+                onValueChange={setQuery}
+                onKeyDown={handleInputKeyDown}
+                placeholder={`Search ${placeholder.toLowerCase()}…`}
+                className="h-8 rounded-lg !text-[12px]"
+              />
+            </div>
+            <CommandList ref={listRef} className="max-h-52 p-1 sidebar-scroll">
+              {noMatch && (
+                <CommandItem
+                  value={`custom:${lowerQ}`}
+                  onSelect={() => commit(q)}
+                  className="text-[12px] rounded-lg px-2 py-1.5 cursor-pointer !text-accent"
+                >
+                  <Plus size={12} className="mr-1.5 shrink-0" />
+                  Use &ldquo;{q}&rdquo; as typed
+                </CommandItem>
+              )}
+              <CommandEmpty className="py-4 text-center text-[11px] text-muted-foreground">
+                {freeText ? "No match — type and press Enter to use it" : "No matching option"}
+              </CommandEmpty>
+              <CommandGroup>
+                {options.map((o) => (
+                  <CommandItem
+                    key={o}
+                    value={o}
+                    disabled={disabled.has(o)}
+                    onSelect={() => commit(o)}
+                    className="text-[12px] rounded-lg px-2 py-1.5 cursor-pointer"
+                  >
+                    <Check
+                      size={12}
+                      className={cn(
+                        "mr-1.5 shrink-0",
+                        value === o ? "opacity-100 text-accent" : "opacity-0",
+                      )}
+                    />
+                    <span className="truncate">{o}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+            <div className="px-2 py-1 border-t border-border/60">
+              <p className="text-[9px] text-muted-foreground text-center tracking-wide">
+                {freeText ? "↵ Enter to confirm · type to filter" : "Type to filter · click to select"}
+              </p>
+            </div>
+          </Command>
+        </PopoverContent>
+      </div>
+    </Popover>
+  );
+};
 
 const SubjectGradeRow = ({
   row,
@@ -472,6 +606,7 @@ const SubjectGradeRow = ({
   onUpdate,
   onRemove,
   canRemove,
+  disabledSubjects,
 }: {
   row: SubjectGrade;
   index: number;
@@ -482,21 +617,24 @@ const SubjectGradeRow = ({
   onUpdate: (index: number, patch: Partial<SubjectGrade>) => void;
   onRemove: (index: number) => void;
   canRemove: boolean;
+  disabledSubjects?: string[];
 }) => (
   <div className="flex items-center gap-1.5">
-    <WzSelect
+    <WzCombo
       value={row.subject}
       onChange={(v) => onUpdate(index, { subject: v })}
       options={subjectOptions}
       placeholder={subjectPlaceholder}
       ariaLabel={`Subject ${index + 1}`}
+      disabledValues={disabledSubjects}
     />
-    <WzSelect
+    <WzCombo
       value={row.grade}
       onChange={(v) => onUpdate(index, { grade: v })}
       options={gradeOptions}
       placeholder={gradePlaceholder}
       ariaLabel={`Grade ${index + 1}`}
+      freeText={false}
     />
     {canRemove && (
       <button
@@ -750,12 +888,20 @@ const ChatBot = () => {
     .replace(/\{university\}/g, portalName)
     .replace(/\{name\}/g, personaName);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const wizardRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = scrollAreaRef.current;
+    if (!el) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 160;
+    if (nearBottom) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   // Persist completed history. Skip while a message is still streaming so we
@@ -817,6 +963,18 @@ const ChatBot = () => {
       }
     }
   }, [messages.length]);
+
+  // Keep the active wizard step in view (the checklist can grow), and focus
+  // the step's first field so typing starts straight away.
+  useEffect(() => {
+    if (!wizard.active) return;
+    const t = window.setTimeout(() => {
+      wizardRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      const first = wizardRef.current?.querySelector<HTMLElement>("[data-combo-trigger]");
+      first?.focus({ preventScroll: true });
+    }, 80);
+    return () => window.clearTimeout(t);
+  }, [wizard.active, wizard.step, wizard.busy]);
 
   // Pulse animation on FAB
   useEffect(() => {
@@ -1150,7 +1308,7 @@ const ChatBot = () => {
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scroll-smooth">
+          <div ref={scrollAreaRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scroll-smooth">
             {/* Welcome State */}
             {showWelcome && (
               <div className="flex flex-col items-center text-center pt-6 pb-4 px-2">
@@ -1199,7 +1357,7 @@ const ChatBot = () => {
                   </div>
                 )}
                 <div
-                  className={`min-w-0 max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed break-words overflow-wrap-anywhere ${
+                  className={`min-w-0 max-w-[85%] sm:max-w-[80%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed break-words [overflow-wrap:anywhere] ${
                     msg.role === "user"
                       ? "bg-accent text-accent-foreground rounded-br-lg"
                       : "bg-muted text-card-foreground rounded-bl-lg border border-border"
@@ -1284,7 +1442,10 @@ const ChatBot = () => {
               )}
             {/* Admission Weight wizard */}
             {wizard.active && (
-              <div className="rounded-2xl border border-accent/30 bg-card p-3 space-y-3 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.12)]">
+              <div
+                ref={wizardRef}
+                className="rounded-2xl border border-accent/30 bg-card p-3 space-y-3 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.12)]"
+              >
                 <div className="flex items-center justify-between gap-2">
                   <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-accent">
                     <span className="w-6 h-6 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
@@ -1366,6 +1527,10 @@ const ChatBot = () => {
                           onUpdate={updatePrincipal}
                           onRemove={removePrincipal}
                           canRemove={wizard.principal.length > 1}
+                          disabledSubjects={wizard.principal
+                            .filter((_, j) => j !== i)
+                            .map((r) => r.subject)
+                            .filter(Boolean)}
                         />
                       ))}
                     </div>
@@ -1389,31 +1554,33 @@ const ChatBot = () => {
                       <span className="w-24 shrink-0 text-[11px] text-muted-foreground">
                         General Paper
                       </span>
-                      <WzSelect
+                      <WzCombo
                         value={wizard.generalPaper}
                         onChange={(v) => setWizard((w) => ({ ...w, generalPaper: v }))}
                         options={subsidiaryGradeOptions}
                         placeholder="Grade"
                         ariaLabel="General Paper grade"
+                        freeText={false}
                       />
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="w-24 shrink-0 text-[11px] text-muted-foreground">
                         Subsidiary
                       </span>
-                      <WzSelect
+                      <WzCombo
                         value={wizard.subMathSubject}
                         onChange={(v) => setWizard((w) => ({ ...w, subMathSubject: v }))}
                         options={subsidiarySubjectOptions.filter((s) => s !== "General Paper")}
                         placeholder="Subject"
                         ariaLabel="Subsidiary subject"
                       />
-                      <WzSelect
+                      <WzCombo
                         value={wizard.subMathGrade}
                         onChange={(v) => setWizard((w) => ({ ...w, subMathGrade: v }))}
                         options={subsidiaryGradeOptions}
                         placeholder="Grade"
                         ariaLabel="Subsidiary grade"
+                        freeText={false}
                       />
                     </div>
                   </div>
@@ -1437,6 +1604,10 @@ const ChatBot = () => {
                           onUpdate={updateOLevel}
                           onRemove={removeOLevel}
                           canRemove={wizard.oLevel.length > 1}
+                          disabledSubjects={wizard.oLevel
+                            .filter((_, j) => j !== i)
+                            .map((r) => r.subject)
+                            .filter(Boolean)}
                         />
                       ))}
                     </div>
