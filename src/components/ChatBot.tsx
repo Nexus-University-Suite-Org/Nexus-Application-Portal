@@ -9,6 +9,7 @@ import {
   RotateCcw,
   BookOpen,
   Calculator,
+  ChevronDown,
   ChevronLeft,
   Check,
   AlertCircle,
@@ -436,19 +437,29 @@ const WzSelect = ({
   placeholder: string;
   ariaLabel: string;
 }) => (
-  <select
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
-    aria-label={ariaLabel}
-    className="flex-1 min-w-0 bg-background border border-border rounded-lg px-2 py-1.5 text-[12px] text-card-foreground focus:outline-none focus:border-accent/50"
-  >
-    <option value="">{placeholder}</option>
-    {options.map((o) => (
-      <option key={o} value={o}>
-        {o}
-      </option>
-    ))}
-  </select>
+  <div className="relative flex-1 min-w-0">
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label={ariaLabel}
+      className={`w-full appearance-none bg-background border text-[12px] rounded-xl pl-2.5 pr-7 py-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent/50 cursor-pointer ${
+        value
+          ? "text-card-foreground border-border/80 hover:border-accent/40"
+          : "text-muted-foreground border-border/60 hover:border-border"
+      }`}
+    >
+      <option value="">{placeholder}</option>
+      {options.map((o) => (
+        <option key={o} value={o}>
+          {o}
+        </option>
+      ))}
+    </select>
+    <ChevronDown
+      size={13}
+      className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground"
+    />
+  </div>
 );
 
 const SubjectGradeRow = ({
@@ -1273,10 +1284,13 @@ const ChatBot = () => {
               )}
             {/* Admission Weight wizard */}
             {wizard.active && (
-              <div className="rounded-2xl border border-accent/30 bg-card p-3 space-y-3">
+              <div className="rounded-2xl border border-accent/30 bg-card p-3 space-y-3 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.12)]">
                 <div className="flex items-center justify-between gap-2">
                   <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-accent">
-                    <Calculator size={13} /> Admission Weight
+                    <span className="w-6 h-6 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
+                      <Calculator size={12} />
+                    </span>
+                    Admission Weight
                   </p>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-muted-foreground">
@@ -1368,7 +1382,8 @@ const ChatBot = () => {
                 {wizard.step === "subsidiary" && (
                   <div className="space-y-2">
                     <p className="text-[11px] text-muted-foreground">
-                      Add General Paper and/or a subsidiary subject (optional).
+                      Add General Paper and/or a subsidiary subject (optional). GP &amp; ICT are
+                      graded on the <span className="text-foreground/70">1&ndash;9</span> scale.
                     </p>
                     <div className="flex items-center gap-1.5">
                       <span className="w-24 shrink-0 text-[11px] text-muted-foreground">

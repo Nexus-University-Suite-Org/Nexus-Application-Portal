@@ -76,7 +76,8 @@ export interface ProgramRecommendation extends WeightResult {
 }
 
 export const uacePrincipalGradeOptions = ["A", "B", "C", "D", "E"];
-export const subsidiaryGradeOptions = ["A", "B", "C", "D", "E", "O", "F"];
+/** General Paper and ICT are graded on the numeric 1–9 scale, not A–F. */
+export const subsidiaryGradeOptions = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 export const oLevelGradeOptions = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 export const uaceSubjectOptions = [

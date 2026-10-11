@@ -6,6 +6,7 @@ import {
   subjectCategory,
   oLevelPoints,
   aLevelGradePoints,
+  subsidiaryGradeOptions,
   isWeightQuery,
   type WeightInput,
 } from "@/lib/weighting";
@@ -82,7 +83,7 @@ describe("weighting", () => {
         { subject: "Economics", grade: "B" }, // Essential x3 -> 15
         { subject: "Commerce", grade: "A" }, // Relevant x2 -> 12
       ],
-      subsidiaries: [{ subject: "General Paper", grade: "C" }], // flat +1.0
+      subsidiaries: [{ subject: "General Paper", grade: "3" }], // numeric pass -> +1.0
       oLevel: [],
       gender: "Male",
     };
@@ -134,7 +135,7 @@ describe("weighting", () => {
         { subject: "Physics", grade: "A" },
         { subject: "Computer Studies", grade: "A" },
       ],
-      subsidiaries: [{ subject: "General Paper", grade: "A" }],
+      subsidiaries: [{ subject: "General Paper", grade: "1" }],
       oLevel: [],
       gender: "Male",
     };
@@ -168,13 +169,32 @@ describe("weighting", () => {
   it("scores a failed subsidiary as 0 and unlisted principals as not counted", () => {
     const input: WeightInput = {
       principal: [{ subject: "History", grade: "A" }], // Other -> weight 0
-      subsidiaries: [{ subject: "General Paper", grade: "F" }], // fail -> 0
+      subsidiaries: [{ subject: "General Paper", grade: "9" }], // numeric fail -> 0
       oLevel: [],
       gender: "Male",
     };
     const r = computeWeight(input, cs);
     expect(r.aLevelWeight).toBeCloseTo(0);
     expect(r.subsidiaryPoints).toBeCloseTo(0);
+  });
+
+  it("grades General Paper and ICT on the numeric 1-9 scale", () => {
+    expect(subsidiaryGradeOptions).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+    for (const pass of ["1", "2", "3", "4", "5", "6"]) {
+      const r = computeWeight(
+        { principal: [], subsidiaries: [{ subject: "General Paper", grade: pass }], oLevel: [], gender: "Male" },
+        cs,
+      );
+      expect(r.subsidiaryPoints, `grade ${pass}`).toBeCloseTo(1);
+    }
+    for (const fail of ["7", "8", "9"]) {
+      const r = computeWeight(
+        { principal: [], subsidiaries: [{ subject: "ICT", grade: fail }], oLevel: [], gender: "Male" },
+        cs,
+      );
+      expect(r.subsidiaryPoints, `grade ${fail}`).toBeCloseTo(0);
+      expect(r.breakdown[0].category).toBe("Subsidiary (fail)");
+    }
   });
 
   it("filters and ranks programmes", () => {
