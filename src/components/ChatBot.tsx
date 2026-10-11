@@ -134,6 +134,9 @@ const WEIGHT_QUICK_TOPIC: QuickTopic = {
 const CHAT_URL = apiUrl("chat");
 const STORAGE_KEY = "nap.chatbot.history.v1";
 const WIZARD_STORAGE_KEY = "nap.chatbot.wizard.v1";
+const CHAT_SIZE_KEY = "nap.chatbot.size.v1";
+const CHAT_MIN_WIDTH = 320;
+const CHAT_MIN_HEIGHT = 420;
 
 const hasWizardData = (w: WizardState) =>
   w.principal.some((r) => r.subject || r.grade) ||
@@ -873,6 +876,20 @@ const ResultCard = ({ result, onRerun }: { result: WizardResult; onRerun?: () =>
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [chatSize, setChatSize] = useState(() => {
+    try {
+      const raw = localStorage.getItem(CHAT_SIZE_KEY);
+      if (raw) {
+        const p = JSON.parse(raw) as { w?: number; h?: number };
+        if (typeof p.w === "number" && typeof p.h === "number") {
+          return { w: Math.max(CHAT_MIN_WIDTH, p.w), h: Math.max(CHAT_MIN_HEIGHT, p.h) };
+        }
+      }
+    } catch {
+      /* storage unavailable / bad value */
+    }
+    return { w: 400, h: 580 };
+  });
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -895,6 +912,42 @@ const ChatBot = () => {
   const [hasInteracted, setHasInteracted] = useState(false);
   const [wizard, setWizard] = useState<WizardState>(loadWizard);
   const chatRef = useRef<HTMLDivElement>(null);
+  const resizeStartRef = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
+
+  // Remember the user's chosen chat window size across sessions.
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHAT_SIZE_KEY, JSON.stringify(chatSize));
+    } catch {
+      /* storage unavailable / quota */
+    }
+  }, [chatSize]);
+
+  // The window is anchored to the bottom-right, so the free corner is the
+  // top-left: dragging it up/left grows the panel, down/right shrinks it.
+  const startResize = (e: React.PointerEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    resizeStartRef.current = { x: e.clientX, y: e.clientY, w: chatSize.w, h: chatSize.h };
+  };
+
+  const onResizeMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const start = resizeStartRef.current;
+    if (!start) return;
+    const maxW = Math.max(CHAT_MIN_WIDTH, window.innerWidth - 32);
+    const maxH = Math.max(CHAT_MIN_HEIGHT, window.innerHeight - 96);
+    const w = Math.min(Math.max(CHAT_MIN_WIDTH, start.w + (start.x - e.clientX)), maxW);
+    const h = Math.min(Math.max(CHAT_MIN_HEIGHT, start.h + (start.y - e.clientY)), maxH);
+    setChatSize((prev) => (prev.w === w && prev.h === h ? prev : { w, h }));
+  };
+
+  const endResize = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    resizeStartRef.current = null;
+  };
 
   const { settings } = useSiteSettings({
     keys: [
@@ -1313,8 +1366,10 @@ const ChatBot = () => {
       {isOpen && (
         <div
           ref={chatRef}
-          className="absolute bottom-16 right-0 w-[calc(100vw-2rem)] sm:w-[400px] h-[min(580px,calc(100vh-6rem))] rounded-3xl border border-border/40 bg-card text-card-foreground shadow-[0_25px_80px_-12px_rgba(0,0,0,0.25)] flex flex-col overflow-hidden"
+          style={{ width: chatSize.w, height: chatSize.h }}
+          className="absolute bottom-16 right-0 min-w-[320px] max-w-[calc(100vw-2rem)] min-h-[420px] max-h-[calc(100vh-6rem)]"
         >
+          <div className="relative w-full h-full rounded-3xl border border-border/40 bg-card text-card-foreground shadow-[0_25px_80px_-12px_rgba(0,0,0,0.25)] flex flex-col overflow-hidden">
           {/* Header */}
           <div className="relative flex items-center justify-between px-5 py-4 bg-gradient-to-r from-accent to-accent/85">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.1),transparent_60%)]" />
@@ -1769,6 +1824,34 @@ const ChatBot = () => {
               Powered by {portalName} AI · Responses may be approximate
             </p>
           </div>
+          </div>
+
+          {/* Resize handle — drag the free (top-left) corner to resize */}
+          <button
+            type="button"
+            aria-label="Resize chat window"
+            title="Drag to resize"
+            onPointerDown={startResize}
+            onPointerMove={onResizeMove}
+            onPointerUp={endResize}
+            onPointerCancel={endResize}
+            className="absolute -top-2 -left-2 z-10 w-5 h-5 rounded-lg bg-accent text-accent-foreground shadow-md flex items-center justify-center cursor-nwse-resize touch-none opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-opacity"
+          >
+            <svg
+              width="11"
+              height="11"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M11 19H5V13" />
+              <path d="M13 5H19V11" />
+            </svg>
+          </button>
         </div>
       )}
 
