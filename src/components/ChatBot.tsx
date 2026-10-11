@@ -21,6 +21,9 @@ import { apiUrl } from "@/lib/apiUrl";
 import { useSiteSettings, parseJsonSetting } from "@/hooks/useSiteSettings";
 import {
   GENDER_BONUS,
+  aLevelDesirableText,
+  aLevelEssentials,
+  aLevelRelevantText,
   computeWeight,
   formatScore,
   isWeightQuery,
@@ -31,10 +34,13 @@ import {
   uaceSubjectOptions,
   oLevelSubjectOptions,
   subsidiarySubjectOptions,
+  uceSubjectNames,
+  type ProgramBand,
   type SubjectGrade,
   type WeightInput,
   type ProgramRecommendation,
 } from "@/lib/weighting";
+import type { NadProgram } from "@/lib/nadPrograms";
 import { shouldSuggest, type Suggestion } from "@/lib/chatSuggestions";
 
 interface Source {
@@ -60,6 +66,7 @@ interface Message {
 interface WizardResult {
   summary: string;
   aLevelWeight: number;
+  subsidiaryPoints: number;
   oLevelWeight: number;
   genderBonus: number;
   total: number;
@@ -493,15 +500,29 @@ const SubjectGradeRow = ({
   </div>
 );
 
-const BAND_STYLES: Record<ProgramRecommendation["band"], { label: string; badge: string }> = {
+const BAND_STYLES: Record<ProgramBand, { label: string; badge: string }> = {
   Qualified: { label: "Qualified", badge: "bg-green-500/15 text-green-600 border-green-500/25" },
   Close: { label: "Close", badge: "bg-amber-500/15 text-amber-600 border-amber-500/25" },
   Reach: { label: "Reach", badge: "bg-muted text-muted-foreground border-border" },
+  Review: { label: "Review", badge: "bg-sky-500/15 text-sky-700 border-sky-500/25" },
+  Ineligible: { label: "Not eligible", badge: "bg-red-500/15 text-red-600 border-red-500/25" },
 };
 
 const ResultCard = ({ result, onRerun }: { result: WizardResult; onRerun?: () => void }) => {
-  const subjectsLine = (text: string | undefined) =>
-    text ? text.replace(/\s+/g, " ").trim() : "—";
+  const essentialsOf = (p: NadProgram) => aLevelEssentials(p).join(", ") || "—";
+  const relevantOf = (p: NadProgram) => aLevelRelevantText(p) || "—";
+  const desirableOf = (p: NadProgram) => aLevelDesirableText(p) || "—";
+  const uceLineOf = (p: NadProgram) => {
+    const names = uceSubjectNames(p.essentialSubjects);
+    return (
+      [
+        names.length ? names.join(", ") : null,
+        p.minimumUcePasses ? `min ${p.minimumUcePasses} passes` : null,
+      ]
+        .filter(Boolean)
+        .join(" · ") || "—"
+    );
+  };
 
   return (
     <div className="space-y-3">
@@ -511,10 +532,12 @@ const ResultCard = ({ result, onRerun }: { result: WizardResult; onRerun?: () =>
         </p>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[12px]">
           <span className="text-muted-foreground" title={result.primaryName}>
-            A-Level (for best match)
+            A-Level principals (weighted)
           </span>
           <span className="text-right font-medium">{formatScore(result.aLevelWeight)}</span>
-          <span className="text-muted-foreground">O-Level (best 8)</span>
+          <span className="text-muted-foreground">Subsidiary (flat +1 each)</span>
+          <span className="text-right font-medium">{formatScore(result.subsidiaryPoints)}</span>
+          <span className="text-muted-foreground">O-Level (best 8, max 2.4)</span>
           <span className="text-right font-medium">{formatScore(result.oLevelWeight)}</span>
           <span className="text-muted-foreground">
             Female bonus{result.genderBonus ? ` (+${formatScore(result.genderBonus)})` : ""}
@@ -526,21 +549,27 @@ const ResultCard = ({ result, onRerun }: { result: WizardResult; onRerun?: () =>
           </span>
         </div>
         <p className="text-[10px] text-muted-foreground pt-0.5">
-          Shown for <span className="text-foreground/70">{result.primaryName}</span>; other
-          programmes may score differently.
+          A-Level subjects are weighted per programme (Essential ×3, Relevant ×2, Desirable ×1,
+          unlisted = 0); O-Level is a separate lump and never counts as a programme subject.
         </p>
       </div>
 
       <div className="space-y-1.5">
-        <div className="flex items-center gap-3 flex-wrap text-[10px] uppercase tracking-wider text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-green-500" /> Meets cut-off
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-amber-500" /> Close (within 1.5)
+            <span className="w-2 h-2 rounded-full bg-amber-500" /> Close
           </span>
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-muted-foreground/40" /> Reach
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-sky-500" /> Review cut-off
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-red-500" /> Missing essentials
           </span>
         </div>
       </div>
@@ -551,53 +580,86 @@ const ResultCard = ({ result, onRerun }: { result: WizardResult; onRerun?: () =>
         </p>
       ) : (
         <ul className="space-y-2">
-          {result.recommendations.map((r) => (
-            <li key={r.program.programCode} className="rounded-xl border border-border p-3 space-y-1.5">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-[13px] font-medium text-card-foreground leading-snug">
-                    {r.program.programName}
+          {result.recommendations.map((r) => {
+            const uceLine = uceLineOf(r.program);
+            return (
+              <li key={r.program.programCode} className="rounded-xl border border-border p-3 space-y-1.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-card-foreground leading-snug">
+                      {r.program.programName}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {r.program.programCode} · {r.program.facultySchool || "Faculty"}
+                    </p>
+                  </div>
+                  <span
+                    className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${BAND_STYLES[r.band].badge}`}
+                  >
+                    {BAND_STYLES[r.band].label}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-[11px]">
+                  <div>
+                    <p className="text-muted-foreground">Your weight</p>
+                    <p className="font-semibold">{formatScore(r.adjusted)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Cut-off (NAD)</p>
+                    <p className="font-semibold">{formatScore(r.cutoff)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Slack</p>
+                    {r.band === "Review" || r.band === "Ineligible" ? (
+                      <p className="font-semibold text-muted-foreground">—</p>
+                    ) : (
+                      <p className={`font-semibold ${r.margin >= 0 ? "text-green-600" : "text-muted-foreground"}`}>
+                        {r.margin >= 0 ? "+" : ""}{formatScore(r.margin)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {r.ineligible && (
+                  <p className="text-[11px] text-red-600 flex items-start gap-1.5">
+                    <AlertCircle size={12} className="shrink-0 mt-0.5" />
+                    Not eligible: this programme requires A-Level {r.missingEssentials.join(", ")}.
                   </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {r.program.programCode} · {r.program.facultySchool || "Faculty"}
+                )}
+                {r.band === "Review" && (
+                  <p className="text-[11px] text-sky-700 flex items-start gap-1.5">
+                    <AlertCircle size={12} className="shrink-0 mt-0.5" />
+                    NAD lists the cut-off as {formatScore(r.cutoff)}, which sits on the old raw
+                    scale, not the weighted scale. Confirm the weighted cut-off with the admissions
+                    office before relying on this.
+                  </p>
+                )}
+                {!r.meetsUcePasses && (
+                  <p className="text-[11px] text-amber-600 flex items-start gap-1.5">
+                    <AlertCircle size={12} className="shrink-0 mt-0.5" />
+                    You have {r.oLevelPasses} O-Level passes but this programme requires{" "}
+                    {r.program.minimumUcePasses}.
+                  </p>
+                )}
+                <div className="text-[11px] text-muted-foreground space-y-0.5">
+                  <p>
+                    <span className="text-foreground/70">A-Level Essential:</span>{" "}
+                    {essentialsOf(r.program)}
+                  </p>
+                  <p>
+                    <span className="text-foreground/70">A-Level Relevant:</span>{" "}
+                    {relevantOf(r.program)}
+                  </p>
+                  <p>
+                    <span className="text-foreground/70">A-Level Desirable:</span>{" "}
+                    {desirableOf(r.program)}
+                  </p>
+                  <p>
+                    <span className="text-foreground/70">UCE (O-Level):</span> {uceLine}
                   </p>
                 </div>
-                <span
-                  className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${BAND_STYLES[r.band].badge}`}
-                >
-                  {BAND_STYLES[r.band].label}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-[11px]">
-                <div>
-                  <p className="text-muted-foreground">Your weight</p>
-                  <p className="font-semibold">{formatScore(r.adjusted)}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Cut-off</p>
-                  <p className="font-semibold">{formatScore(r.program.cutoffScore)}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Slack</p>
-                  <p className={`font-semibold ${r.margin >= 0 ? "text-green-600" : "text-muted-foreground"}`}>
-                    {r.margin >= 0 ? "+" : ""}{formatScore(r.margin)}
-                  </p>
-                </div>
-              </div>
-              {!r.meetsUcePasses && (
-                <p className="text-[11px] text-amber-600 flex items-start gap-1.5">
-                  <AlertCircle size={12} className="shrink-0 mt-0.5" />
-                  You have {r.oLevelPasses} O-Level passes but this programme requires{" "}
-                  {r.program.minimumUcePasses}.
-                </p>
-              )}
-              <div className="text-[11px] text-muted-foreground space-y-0.5">
-                <p><span className="text-foreground/70">Essential:</span> {subjectsLine(r.program.essentialSubjects)}</p>
-                <p><span className="text-foreground/70">Relevant:</span> {subjectsLine(r.program.relevantSubjects)}</p>
-                <p><span className="text-foreground/70">Desirable:</span> {subjectsLine(r.program.desirableSubjects)}</p>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
 
@@ -852,6 +914,7 @@ const ChatBot = () => {
       const result: WizardResult = {
         summary: gradeSummary,
         aLevelWeight: best?.aLevelWeight ?? 0,
+        subsidiaryPoints: best?.subsidiaryPoints ?? 0,
         oLevelWeight: best?.oLevelWeight ?? 0,
         genderBonus: best?.genderBonus ?? 0,
         total: best?.total ?? 0,
@@ -862,7 +925,7 @@ const ChatBot = () => {
 
       const intro =
         top.length > 0
-          ? "Here's what I calculated from your grades. A-Level weighting depends on each programme's Essential, Relevant and Desirable subjects, so the score changes per programme — I've compared you against every active NAD programme below."
+          ? "Here's what I calculated from your grades. A-Level principals are weighted by each programme's Essential (×3), Relevant (×2) and Desirable (×1) subjects; subsidiaries add a flat +1; O-Level is a separate best-8 lump (max 2.4) and never counts as a programme subject. I compared you against every active NAD programme using its published cut-off — programmes whose cut-off is still on the old raw scale are flagged rather than assumed."
           : "I couldn't load the current programme list right now. Please try again in a moment.";
 
       setMessages((prev) => [
@@ -896,7 +959,7 @@ const ChatBot = () => {
           id: `${Date.now()}-intro`,
           role: "assistant",
           content:
-            "Great — let's work out your admission weight and find your best-fit programmes. I'll use the standard Uganda public-university formula:\n\n**A-Level** → grade points (A=6 … E=2) × subject weight (Essential ×3, Relevant ×2, Desirable ×1, Other ×0.5)\n**O-Level** → your best 8 subjects (D1/D2=0.3, Credit 3-6=0.2, Pass 7-8=0.1)\n**Female applicants** → +1.5 bonus\n\nFollow the steps in the panel below. You can go back at any time.",
+            "Great — let's work out your admission weight and find your best-fit programmes. I'll use the standard Uganda public-university formula:\n\n**A-Level** (principals) → grade points (A=6 … F=0) × subject weight (Essential ×3, Relevant ×2, Desirable ×1; unlisted = 0)\n**Subsidiary** (General Paper etc.) → flat +1 per passed subject, not multiplied\n**O-Level** → separate best-8 lump (D1/D2=0.3, Credit 3-6=0.2, Pass 7-8=0.1), max 2.4 — never counted as a programme subject\n**Female applicants** → +1.5 bonus\nCut-offs are read from the admissions dashboard for each programme.\n\nFollow the steps in the panel below. You can go back at any time.",
         };
         setMessages((prev) => [...prev, userMsg, introMsg]);
         setWizard((w) =>
@@ -1257,7 +1320,9 @@ const ChatBot = () => {
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
                       I&rsquo;ll ask for your A-Level principal subjects, General Paper / subsidiary
                       grade, best O-Level subjects and gender, then rank every current NAD
-                      programme against its cut-off.
+                      programme against its cut-off. Standard formula: A-Level principals ×
+                      (Essential 3, Relevant 2, Desirable 1), a flat +1 subsidiary, and a best-8
+                      O-Level lump (max 2.4) that never counts as a programme subject.
                     </p>
                     <button
                       type="button"
