@@ -675,31 +675,66 @@ const ResultCard = ({ result, onRerun }: { result: WizardResult; onRerun?: () =>
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-border bg-background/60 p-3 space-y-1.5">
+      <div className="rounded-xl border border-border bg-background/60 p-3 space-y-2">
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          Your admission weight
+          Your admission weight by programme
         </p>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[12px]">
-          <span className="text-muted-foreground" title={result.primaryName}>
-            A-Level principals (weighted)
-          </span>
-          <span className="text-right font-medium">{formatScore(result.aLevelWeight)}</span>
-          <span className="text-muted-foreground">Subsidiary (flat +1 each)</span>
-          <span className="text-right font-medium">{formatScore(result.subsidiaryPoints)}</span>
-          <span className="text-muted-foreground">O-Level (best 8, max 2.4)</span>
-          <span className="text-right font-medium">{formatScore(result.oLevelWeight)}</span>
-          <span className="text-muted-foreground">
-            Female bonus{result.genderBonus ? ` (+${formatScore(result.genderBonus)})` : ""}
-          </span>
-          <span className="text-right font-medium">{formatScore(result.genderBonus)}</span>
-          <span className="text-foreground font-semibold border-t border-border pt-1">Total</span>
-          <span className="text-right font-bold text-accent text-[13px] border-t border-border pt-1">
-            {formatScore(result.adjusted)}
-          </span>
-        </div>
-        <p className="text-[10px] text-muted-foreground pt-0.5">
-          A-Level subjects are weighted per programme (Essential ×3, Relevant ×2, Desirable ×1,
-          unlisted = 0); O-Level is a separate lump and never counts as a programme subject.
+        {result.recommendations.length > 0 && (
+          <ol className="space-y-1">
+            {result.recommendations.map((r, i) => (
+              <li key={r.program.programCode} className="flex items-center gap-2">
+                <span
+                  className={`w-5 h-5 shrink-0 rounded-lg flex items-center justify-center text-[10px] font-semibold ${
+                    i === 0 ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {i + 1}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[12px] text-card-foreground">
+                  {r.program.programName}
+                </span>
+                <span className="shrink-0 text-[11px] font-semibold text-card-foreground">
+                  {formatScore(r.adjusted)}
+                </span>
+                <span
+                  className={`shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded-full border ${BAND_STYLES[r.band].badge}`}
+                >
+                  {BAND_STYLES[r.band].label}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+        {result.recommendations.length > 0 && (
+          <div className="border-t border-border/60 pt-2">
+            <p className="text-[10px] text-muted-foreground">
+              Breakdown for your best match —{" "}
+              <span className="font-medium text-card-foreground/80">{result.primaryName}</span>
+            </p>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[12px] mt-1">
+              <span className="text-muted-foreground" title={result.primaryName}>
+                A-Level principals (weighted)
+              </span>
+              <span className="text-right font-medium">{formatScore(result.aLevelWeight)}</span>
+              <span className="text-muted-foreground">Subsidiary (flat +1 each)</span>
+              <span className="text-right font-medium">{formatScore(result.subsidiaryPoints)}</span>
+              <span className="text-muted-foreground">O-Level (best 8, max 2.4)</span>
+              <span className="text-right font-medium">{formatScore(result.oLevelWeight)}</span>
+              <span className="text-muted-foreground">
+                Female bonus{result.genderBonus ? ` (+${formatScore(result.genderBonus)})` : ""}
+              </span>
+              <span className="text-right font-medium">{formatScore(result.genderBonus)}</span>
+              <span className="text-foreground font-semibold border-t border-border pt-1">Total</span>
+              <span className="text-right font-bold text-accent text-[13px] border-t border-border pt-1">
+                {formatScore(result.adjusted)}
+              </span>
+            </div>
+          </div>
+        )}
+        <p className="text-[10px] text-muted-foreground">
+          A-Level weights are programme-specific (Essential ×3, Relevant ×2, Desirable ×1,
+          unlisted = 0) — the same grades score differently per programme, so they&rsquo;re ranked
+          best-first above. O-Level is a separate lump and never counts as a programme subject.
         </p>
       </div>
 
@@ -729,18 +764,29 @@ const ResultCard = ({ result, onRerun }: { result: WizardResult; onRerun?: () =>
         </p>
       ) : (
         <ul className="space-y-2">
-          {result.recommendations.map((r) => {
+          {result.recommendations.map((r, rankIndex) => {
             const uceLine = uceLineOf(r.program);
             return (
               <li key={r.program.programCode} className="rounded-xl border border-border p-3 space-y-1.5">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-card-foreground leading-snug">
-                      {r.program.programName}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {r.program.programCode} · {r.program.facultySchool || "Faculty"}
-                    </p>
+                  <div className="min-w-0 flex items-start gap-2">
+                    <span
+                      className={`shrink-0 mt-0.5 w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-semibold ${
+                        rankIndex === 0
+                          ? "bg-accent/15 text-accent"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {rankIndex + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium text-card-foreground leading-snug">
+                        {r.program.programName}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {r.program.programCode} · {r.program.facultySchool || "Faculty"}
+                      </p>
+                    </div>
                   </div>
                   <span
                     className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${BAND_STYLES[r.band].badge}`}
