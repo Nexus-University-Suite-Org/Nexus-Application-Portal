@@ -2450,7 +2450,7 @@ const ApplicationStartPage = () => {
                           {!otpVerified && (
                             <>
                               <div className="space-y-3">
-                                <div className="flex items-stretch gap-2">
+                                <div className="flex flex-wrap sm:flex-nowrap items-stretch gap-2">
                                   <input
                                     value={otpCode}
                                     onChange={(e) =>
@@ -2472,7 +2472,7 @@ const ApplicationStartPage = () => {
                                     type="button"
                                     onClick={handleVerifyOtp}
                                     disabled={!otpSent || verifyingOtp || otpCode.length < 4}
-                                    className="px-5 py-2.5 rounded-[10px] bg-accent text-accent-foreground font-body text-xs tracking-[0.16em] uppercase disabled:opacity-40 hover:bg-accent/90 transition-colors"
+                                    className="whitespace-nowrap flex-shrink-0 px-5 py-2.5 rounded-[10px] bg-accent text-accent-foreground font-body text-xs tracking-[0.16em] uppercase disabled:opacity-40 hover:bg-accent/90 transition-colors"
                                   >
                                     {verifyingOtp ? (
                                       <span className="flex items-center gap-2">
