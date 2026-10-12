@@ -386,7 +386,7 @@ const NewsPage = () => {
             <button
               key={e.id}
               onClick={() => setModalItem({ kind: "event", title: e.title, subtitle: e.type, body: `Date: ${e.date}`, category: e.type, date: e.date })}
-              className="event-item group flex items-center justify-between py-8 border-t border-primary-foreground/10 last:border-b w-full text-left cursor-pointer"
+              className="event-item group flex flex-wrap sm:flex-nowrap items-start sm:items-center justify-between gap-4 py-8 border-t border-primary-foreground/10 last:border-b w-full text-left cursor-pointer overflow-hidden min-w-0"
             >
               <div className="flex items-center gap-6">
                 <Calendar size={18} className="text-accent shrink-0" />
