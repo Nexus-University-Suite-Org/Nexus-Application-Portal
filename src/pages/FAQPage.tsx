@@ -228,7 +228,7 @@ const FAQPage = () => {
               Contact our admissions team at{" "}
               <a
                 href="mailto:admissions@universityapplicationportal.edu"
-                className="text-accent font-semibold hover:text-accent/80 transition-colors"
+                className="text-accent font-semibold hover:text-accent/80 transition-colors break-all md:break-normal"
               >
                 admissions@universityapplicationportal.edu
               </a>{" "}
