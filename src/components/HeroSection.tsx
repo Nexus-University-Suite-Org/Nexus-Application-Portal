@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Heart, Users, ArrowRight } from "lucide-react";
+import { Heart, Users, ArrowRight, GraduationCap } from "lucide-react";
 import heroCampus from "@/assets/hero-campus.jpg";
 import { useContentCollection } from "@/hooks/useContentCollection";
 
@@ -39,6 +39,8 @@ const HeroSection = () => {
   const [heroHeading2, setHeroHeading2] = useState("& Vulnerable Youth");
   const [heroHeading3, setHeroHeading3] = useState("Through Practical Skills");
   const [heroSubtitle, setHeroSubtitle] = useState("We equip vulnerable youth and single mothers with vocational skills that enable them to earn sustainable livelihoods and build better futures.");
+  const [heroCtaApply, setHeroCtaApply] = useState("Apply Now");
+  const [heroCtaApplyVisible, setHeroCtaApplyVisible] = useState(true);
   const [heroCtaDonate, setHeroCtaDonate] = useState("Donate Now");
   const [heroCtaSponsor, setHeroCtaSponsor] = useState("Sponsor a Student");
   const [heroCtaDonateVisible, setHeroCtaDonateVisible] = useState(true);
@@ -66,6 +68,8 @@ const HeroSection = () => {
         if (data.hero_heading_2) setHeroHeading2(data.hero_heading_2);
         if (data.hero_heading_3) setHeroHeading3(data.hero_heading_3);
         if (data.hero_subtitle) setHeroSubtitle(data.hero_subtitle);
+        if (data.hero_cta_apply) setHeroCtaApply(data.hero_cta_apply);
+        if (data.hero_cta_apply_visible !== undefined) setHeroCtaApplyVisible(data.hero_cta_apply_visible !== 'false');
         if (data.hero_cta_donate) setHeroCtaDonate(data.hero_cta_donate);
         if (data.hero_cta_sponsor) setHeroCtaSponsor(data.hero_cta_sponsor);
         if (data.hero_cta_donate_visible !== undefined) setHeroCtaDonateVisible(data.hero_cta_donate_visible !== 'false');
@@ -248,12 +252,25 @@ const HeroSection = () => {
             ref={ctaRef}
             className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 mt-8 sm:mt-10 opacity-0"
           >
+            {heroCtaApplyVisible && (
+              <button
+                onClick={() => navigate("/admissions/application/start")}
+                className="group flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 bg-accent text-accent-foreground font-body text-xs sm:text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 hover:scale-105"
+              >
+                <GraduationCap size={16} className="shrink-0" />
+                {heroCtaApply}
+                <ArrowRight
+                  size={16}
+                  className="shrink-0 group-hover:translate-x-1 transition-transform duration-300"
+                />
+              </button>
+            )}
             {heroCtaDonateVisible && (
               <button
                 onClick={() => navigate("/donate")}
-                className="group flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 bg-accent text-accent-foreground font-body text-xs sm:text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 hover:scale-105"
+                className="group flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 border border-primary-foreground/50 text-primary-foreground font-body text-xs sm:text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent"
               >
-                <Heart size={16} className="fill-current shrink-0" />
+                <Heart size={16} className="shrink-0" />
                 {heroCtaDonate}
               </button>
             )}
