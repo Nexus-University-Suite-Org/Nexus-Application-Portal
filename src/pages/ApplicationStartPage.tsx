@@ -802,6 +802,8 @@ const ApplicationStartPage = () => {
   const guardianTypeRef = useRef<HTMLDivElement>(null);
   const [kinRelOpen, setKinRelOpen] = useState(false);
   const kinRelRef = useRef<HTMLDivElement>(null);
+  const formSectionRef = useRef<HTMLElement>(null);
+  const [scrollToErrorRequest, setScrollToErrorRequest] = useState(0);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -1722,7 +1724,39 @@ const ApplicationStartPage = () => {
     return 0;
   };
 
+  useEffect(() => {
+    if (scrollToErrorRequest === 0) return;
+    const container = formSectionRef.current;
+    if (!container) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      const errorNodes = Array.from(
+        container.querySelectorAll<HTMLElement>("p.text-destructive"),
+      ).filter((node) => node.offsetParent !== null);
+      const target = errorNodes[0];
+      if (!target) return;
+
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      const focusable = target.parentElement?.querySelector<HTMLElement>(
+        'input:not([type="file"]), select, textarea, [role="combobox"], button',
+      );
+      if (focusable) {
+        window.setTimeout(
+          () => focusable.focus({ preventScroll: true }),
+          400,
+        );
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [scrollToErrorRequest]);
+
   const handleNext = () => {
+    // Scroll to the first visible field showing a validation error. Runs after
+    // render so newly shown errors (and switched sub-steps) are in the DOM.
+    const scrollToFirstError = () =>
+      setScrollToErrorRequest((request) => request + 1);
+
     console.log("[NEXT] activeStep:", activeStep, "academicSubStep:", academicSubStep, "documentSubStep:", documentSubStep);
 
     if (activeStep === 2 && academicSubStep < academicStepLabels.length - 1) {
@@ -1733,6 +1767,7 @@ const ApplicationStartPage = () => {
       if (currentSubErrors.length > 0) {
         console.log("[NEXT] BLOCKED — current sub-step has errors:", currentSubErrors.map((k) => `${k}: ${allErrors[k]}`));
         setErrors((prev) => ({ ...prev, ...allErrors }));
+        scrollToFirstError();
         return;
       }
       setErrors((prev) => {
@@ -1768,6 +1803,7 @@ const ApplicationStartPage = () => {
         console.log("[NEXT] jumping to failing document sub-step:", findFirstFailingDocumentSubStep(stepErrors));
         setDocumentSubStep(findFirstFailingDocumentSubStep(stepErrors));
       }
+      scrollToFirstError();
       return;
     }
 
@@ -1826,7 +1862,11 @@ const ApplicationStartPage = () => {
     const submitErrors = validateStepFields(5);
     const valid = Object.keys(submitErrors).length === 0;
     console.log("[SUBMIT] validateStep(5) =", valid, "errors:", Object.entries(submitErrors).map(([k, v]) => `${k}: ${v}`));
-    if (!valid) return;
+    if (!valid) {
+      setErrors(submitErrors);
+      setScrollToErrorRequest((request) => request + 1);
+      return;
+    }
     setSubmittingApplication(true);
     setSubmissionStatus("");
     try {
@@ -2175,7 +2215,7 @@ const ApplicationStartPage = () => {
               </div>
             </aside>
 
-            <section className="border border-border rounded-[20px] md:rounded-[24px] p-4 sm:p-6 md:p-10 bg-background">
+            <section ref={formSectionRef} className="border border-border rounded-[20px] md:rounded-[24px] p-4 sm:p-6 md:p-10 bg-background">
               {submitted ? (
                 <div className="flex flex-col items-center text-center py-8 sm:py-12">
                   <div className="relative mb-8">
