@@ -307,6 +307,8 @@ const oLevelSubjectOptions = [
 
 const uaceGradeOptions = ["A", "B", "C", "D", "E"];
 
+const uaceSubsidiaryGradeOptions = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
 const oLevelGradeOptions = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 const uacePrincipalGradeToPoints: Record<string, number> = {
@@ -323,6 +325,15 @@ const uaceSubsidiaryGradeToPoints: Record<string, number> = {
   C: 1,
   D: 1,
   E: 1,
+  "1": 1,
+  "2": 1,
+  "3": 1,
+  "4": 1,
+  "5": 1,
+  "6": 1,
+  "7": 0,
+  "8": 0,
+  "9": 0,
 };
 
 const certificateGradeOptions = [
@@ -1580,10 +1591,12 @@ const ApplicationStartPage = () => {
           nextErrors.uaceGeneralPaperGrade =
             "General Paper grade is required for UACE applicants.";
         } else if (
-          !uaceGradeOptions.includes(formData.uaceGeneralPaperGrade.trim())
+          !uaceSubsidiaryGradeOptions.includes(
+            formData.uaceGeneralPaperGrade.trim(),
+          )
         ) {
           nextErrors.uaceGeneralPaperGrade =
-            "General Paper grade must be between A and E.";
+            "General Paper grade must be between 1 and 9.";
         }
 
         if (!formData.uaceIctOrSubMathSubject.trim()) {
@@ -1595,10 +1608,12 @@ const ApplicationStartPage = () => {
           nextErrors.uaceIctOrSubMathGrade =
             "Grade for ICT/Subsidiary Mathematics is required.";
         } else if (
-          !uaceGradeOptions.includes(formData.uaceIctOrSubMathGrade.trim())
+          !uaceSubsidiaryGradeOptions.includes(
+            formData.uaceIctOrSubMathGrade.trim(),
+          )
         ) {
           nextErrors.uaceIctOrSubMathGrade =
-            "ICT/Subsidiary Mathematics grade must be between A and E.";
+            "ICT/Subsidiary Mathematics grade must be between 1 and 9.";
         }
       }
 
@@ -3869,7 +3884,7 @@ const ApplicationStartPage = () => {
                                     className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
                                   >
                                     <option value="">Select grade</option>
-                                    {uaceGradeOptions.map((grade) => (
+                                    {uaceSubsidiaryGradeOptions.map((grade) => (
                                       <option key={`gp-${grade}`} value={grade}>
                                         {grade}
                                       </option>
@@ -3923,14 +3938,16 @@ const ApplicationStartPage = () => {
                                       className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
                                     >
                                       <option value="">Select grade</option>
-                                      {uaceGradeOptions.map((grade) => (
-                                        <option
-                                          key={`sub-${grade}`}
-                                          value={grade}
-                                        >
-                                          {grade}
-                                        </option>
-                                      ))}
+                                      {uaceSubsidiaryGradeOptions.map(
+                                        (grade) => (
+                                          <option
+                                            key={`sub-${grade}`}
+                                            value={grade}
+                                          >
+                                            {grade}
+                                          </option>
+                                        ),
+                                      )}
                                     </select>
                                     {errors.uaceIctOrSubMathGrade && (
                                       <p className="text-xs text-destructive mt-2">

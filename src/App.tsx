@@ -6,6 +6,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import PageTransition from "@/components/PageTransition";
+import ScrollToTop from "@/components/ScrollToTop";
 import useSmoothScroll from "@/hooks/useSmoothScroll";
 import { AdminAuthProvider, useAdminAuth } from "@/contexts/AdminAuthContext";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
@@ -249,6 +250,7 @@ const App = () => {
           <DebugOverlay />
           <BrowserRouter>
             <AdminAuthProvider>
+              <ScrollToTop />
               <AnimatedRoutes />
             </AdminAuthProvider>
           </BrowserRouter>
