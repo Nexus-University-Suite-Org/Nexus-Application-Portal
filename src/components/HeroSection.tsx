@@ -226,23 +226,23 @@ const HeroSection = () => {
         className="relative z-10 flex flex-col justify-end flex-1 px-5 sm:px-8 lg:px-16 pt-28 sm:pt-40 pb-16 lg:pb-24"
       >
         <div className="max-w-5xl">
-          <p className="font-body text-[10px] sm:text-xs tracking-[0.2em] sm:tracking-[0.3em] uppercase text-accent mb-4 sm:mb-6 flex items-center gap-2">
-            <Heart size={12} className="fill-accent shrink-0" />
+          <p className="font-body text-[10px] sm:text-xs tracking-[0.2em] sm:tracking-[0.3em] uppercase text-white mb-4 sm:mb-6 flex items-center gap-2">
+            <Heart size={12} className="fill-white shrink-0" />
             <span>{heroTagline}</span>
           </p>
           <h1
             ref={titleRef}
-            className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl text-primary-foreground leading-[0.95] sm:leading-[0.92] max-w-4xl break-words opacity-0"
+            className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl text-white leading-[0.95] sm:leading-[0.92] max-w-4xl break-words opacity-0"
           >
             {heroHeading1}
             <br />
-            <em className="text-accent">{heroHeading2}</em>
+            <em className="text-white">{heroHeading2}</em>
             <br />
             {heroHeading3}
           </h1>
           <p
             ref={subtitleRef}
-            className="font-body mt-6 sm:mt-8 text-primary-foreground/75 max-w-xl text-base sm:text-lg leading-relaxed opacity-0"
+            className="font-body mt-6 sm:mt-8 text-white max-w-xl text-base sm:text-lg leading-relaxed opacity-0"
           >
             {heroSubtitle}
           </p>
@@ -255,7 +255,7 @@ const HeroSection = () => {
             {heroCtaApplyVisible && (
               <button
                 onClick={() => navigate("/admissions/application/start")}
-                className="group flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 bg-accent text-accent-foreground font-body text-xs sm:text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 hover:scale-105"
+                className="group flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 bg-accent text-white font-body text-xs sm:text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 hover:scale-105"
               >
                 <GraduationCap size={16} className="shrink-0" />
                 {heroCtaApply}
@@ -268,7 +268,7 @@ const HeroSection = () => {
             {heroCtaDonateVisible && (
               <button
                 onClick={() => navigate("/donate")}
-                className="group flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 border border-primary-foreground/50 text-primary-foreground font-body text-xs sm:text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent"
+                className="group flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 border border-primary-foreground/50 text-white font-body text-xs sm:text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-white"
               >
                 <Heart size={16} className="shrink-0" />
                 {heroCtaDonate}
@@ -277,7 +277,7 @@ const HeroSection = () => {
             {heroCtaSponsorVisible && (
               <button
                 onClick={() => navigate("/donate#sponsor")}
-                className="group flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 border border-primary-foreground/50 text-primary-foreground font-body text-xs sm:text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent"
+                className="group flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 border border-primary-foreground/50 text-white font-body text-xs sm:text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-white"
               >
                 <Users size={16} className="shrink-0" />
                 {heroCtaSponsor}
@@ -286,7 +286,7 @@ const HeroSection = () => {
             {heroCtaLearnMoreVisible && (
               <button
                 onClick={() => navigate("/about")}
-                className="group flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 text-primary-foreground/70 font-body text-xs sm:text-sm tracking-[0.2em] uppercase transition-all duration-500 hover:text-primary-foreground"
+                className="group flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 text-white font-body text-xs sm:text-sm tracking-[0.2em] uppercase transition-all duration-500 hover:text-white"
               >
                 {heroCtaLearnMore}
                 <ArrowRight
@@ -305,10 +305,10 @@ const HeroSection = () => {
         >
           {heroStats.map((stat) => (
             <div key={stat.label} className="text-center md:text-left">
-              <p className="font-heading text-2xl sm:text-3xl md:text-4xl font-light text-accent">
+              <p className="font-heading text-2xl sm:text-3xl md:text-4xl font-light text-white">
                 {stat.value}
               </p>
-              <p className="font-body text-[10px] sm:text-xs tracking-[0.15em] sm:tracking-[0.2em] uppercase text-primary-foreground/60 mt-1">
+              <p className="font-body text-[10px] sm:text-xs tracking-[0.15em] sm:tracking-[0.2em] uppercase text-white mt-1">
                 {stat.label}
               </p>
             </div>
@@ -318,7 +318,7 @@ const HeroSection = () => {
 
       {/* Scroll indicator */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-2 opacity-50 z-10">
-        <span className="font-body text-[10px] tracking-[0.3em] uppercase text-primary-foreground">
+        <span className="font-body text-[10px] tracking-[0.3em] uppercase text-white">
           Scroll
         </span>
         <div className="w-px h-8 bg-primary-foreground/50 animate-pulse" />
