@@ -49,6 +49,15 @@ in the background with retries (`AUTO_TRAIN_ON_STARTUP`), so a fresh deploy beco
 usable without anyone clicking a button. A failed fetch never overwrites a working
 index — `train()` raises rather than rebuilding from an empty chunk list.
 
+### Source links
+
+Set `SITE_LINK_BASE` to the public site origin (e.g. `https://portal.example.com`)
+and answers append a `[Read more](…)` link to each cited source. Programmes
+deep-link to `/programs/:id`; collections without a per-record route
+(`news`, `events`, `student_stories`, `alumni`, `quick_links`, `courses`) link to
+their listing page, since source metadata carries no slug. Left unset, no links
+are emitted — which also keeps the offline evaluation baseline stable.
+
 ### Persisting the index
 
 The built index lives under `ML_DATA_DIR` (default `./data`) and `.gitignore`d, so it

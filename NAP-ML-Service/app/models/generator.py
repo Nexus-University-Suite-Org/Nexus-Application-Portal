@@ -6,6 +6,8 @@ from app.config import (
     ANSWER_CHUNK_LIMIT,
     ANSWER_MAX_SOURCES,
     MIN_HIT_SCORE,
+    SITE_LINK_BASE,
+    SOURCE_PATHS,
 )
 from app.models.embedding import content_terms
 from app.services import settings as site_settings
@@ -233,6 +235,27 @@ def _body_of(chunk) -> str:
     return (meta.get("body") or chunk.get("text", "") or "").strip()
 
 
+def _link_for(meta) -> str:
+    """A "read more" markdown link for a chunk, or "" when links are disabled.
+
+    Link generation is off unless ``SITE_LINK_BASE`` is configured, so the
+    offline evaluation baseline (which diffs answer text) stays stable and
+    deployments that don't want links are unaffected.
+    """
+    if not SITE_LINK_BASE:
+        return ""
+    collection = (meta or {}).get("collection")
+    path = SOURCE_PATHS.get(collection)
+    if not path:
+        return ""
+    if "{id}" in path:
+        entity_id = (meta or {}).get("entity_id")
+        if entity_id is None:
+            return ""
+        path = path.format(id=entity_id)
+    return f"[Read more]({SITE_LINK_BASE}{path})"
+
+
 def _catalog_answer(portal_name: str, hits, fallback: Optional[str] = None) -> str:
     """List every programme on offer.
 
@@ -250,16 +273,18 @@ def _catalog_answer(portal_name: str, hits, fallback: Optional[str] = None) -> s
         if not title or key in seen:
             continue
         seen.add(key)
-        entries.append((title, _truncate(_body_of(chunk), 240)))
+        entries.append((title, _truncate(_body_of(chunk), 240), _link_for(meta)))
 
     if not entries:
         return fallback or PORTAL_FALLBACK
 
     lines = [f"Here are the programmes {portal_name} offers:", ""]
-    for title, body in entries:
+    for title, body, link in entries:
         line = f"• **{title}**"
         if body:
             line += f" — {body}"
+        if link:
+            line += f"  {link}"
         lines.append(line)
     lines.append("")
     lines.append("Would you like details on any of these?")
@@ -289,16 +314,18 @@ def _list_answer(portal_name: str, hits, list_topic: str, fallback: Optional[str
         if not title or key in seen:
             continue
         seen.add(key)
-        entries.append((title, _truncate(_body_of(chunk), 240)))
+        entries.append((title, _truncate(_body_of(chunk), 240), _link_for(meta)))
 
     if not entries:
         return fallback or PORTAL_FALLBACK
 
     lines = [intro.format(portal=portal_name), ""]
-    for title, body in entries:
+    for title, body, link in entries:
         line = f"• **{title}**"
         if body:
             line += f" — {body}"
+        if link:
+            line += f"  {link}"
         lines.append(line)
     lines.append("")
     lines.append(closer)
@@ -387,11 +414,12 @@ def _compose(
     selected = _select(hits)[:ANSWER_MAX_SOURCES]
     entries = []
     for chunk, _score in selected:
-        title = (chunk.get("metadata", {}) or {}).get("title") or ""
+        meta = chunk.get("metadata", {}) or {}
+        title = (meta.get("title") or "").strip()
         body = _truncate(_body_of(chunk), ANSWER_CHUNK_LIMIT)
         if not body:
             continue
-        entries.append((title.strip(), body))
+        entries.append((title, body, _link_for(meta)))
 
     if not entries:
         return (no_answer or fallback), []
@@ -405,15 +433,19 @@ def _compose(
     # A single strong match is quoted on its own rather than dressed up with an
     # introduction, which reads like a search result instead of an answer.
     if len(entries) == 1:
-        title, body = entries[0]
+        title, body, link = entries[0]
         text = f"**{title}**\n{body}" if title else body
+        if link:
+            text = f"{text}\n\n{link}"
         return text, quoted
 
     lines = ["Here's what our information says:", ""]
-    for title, body in entries:
+    for title, body, link in entries:
         if title:
             lines.append(f"**{title}**")
         lines.append(body)
+        if link:
+            lines.append(link)
         lines.append("")
     lines.append("Let me know if you'd like more detail on any of these.")
     return "\n".join(lines).rstrip(), quoted

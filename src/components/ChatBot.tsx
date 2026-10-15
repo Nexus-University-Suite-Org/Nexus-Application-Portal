@@ -17,9 +17,17 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import gsap from "gsap";
 import { cn } from "@/lib/utils";
 import { apiUrl } from "@/lib/apiUrl";
+import {
+  PROGRAMS_LISTING,
+  loadProgramLinks,
+  programIdFor,
+  programPath,
+  sourcePath,
+} from "@/lib/programLinks";
 import { useSiteSettings, parseJsonSetting } from "@/hooks/useSiteSettings";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import {
@@ -769,6 +777,8 @@ const ResultCard = ({ result, onRerun }: { result: WizardResult; onRerun?: () =>
         <ul className="space-y-2">
           {result.recommendations.map((r, rankIndex) => {
             const uceLine = uceLineOf(r.program);
+            const programId = programIdFor(r.program.programCode, r.program.programName);
+            const href = programId ? programPath(programId) : PROGRAMS_LISTING;
             return (
               <li key={r.program.programCode} className="rounded-xl border border-border p-3 space-y-1.5">
                 <div className="flex items-start justify-between gap-2">
@@ -855,6 +865,12 @@ const ResultCard = ({ result, onRerun }: { result: WizardResult; onRerun?: () =>
                     <span className="text-foreground/70">UCE (O-Level):</span> {uceLine}
                   </p>
                 </div>
+                <Link
+                  to={href}
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:underline"
+                >
+                  Read more <span aria-hidden="true">→</span>
+                </Link>
               </li>
             );
           })}
@@ -932,6 +948,20 @@ const ChatBot = () => {
   const resizeStartRef = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
   const isMobile = useIsMobile();
   const [showResizeHint, setShowResizeHint] = useState(false);
+  const [, setProgramLinksVersion] = useState(0);
+
+  // Join the NAD catalogue (ranked by the wizard) to the site's /programs/:id
+  // pages so recommendations deep-link when possible; the resolver falls back
+  // to the listing page when the join misses, so this never blocks rendering.
+  useEffect(() => {
+    let active = true;
+    loadProgramLinks().then(() => {
+      if (active) setProgramLinksVersion((v) => v + 1);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Remember the user's chosen chat window size across sessions.
   useEffect(() => {
@@ -1207,7 +1237,7 @@ const ChatBot = () => {
 
     try {
       const recommendations = await recommendFor(input);
-      const top = recommendations.slice(0, 8);
+      const top = recommendations.slice(0, 4);
       const best = recommendations[0];
 
       const result: WizardResult = {
@@ -1224,13 +1254,29 @@ const ChatBot = () => {
 
       const intro =
         top.length > 0
-          ? "Here's what I calculated from your grades. A-Level principals are weighted by each programme's Essential (×3), Relevant (×2) and Desirable (×1) subjects; subsidiaries add a flat +1; O-Level is a separate best-8 lump (max 2.4) and never counts as a programme subject. I compared you against every active NAD programme using its published cut-off — programmes whose cut-off is still on the old raw scale are flagged rather than assumed."
+          ? "Here are your top 4 best-fit programmes. I calculate admission weights and recommend courses from your subjects and grades — that's exactly what I did below. A-Level principals are weighted by each programme's Essential (×3), Relevant (×2) and Desirable (×1) subjects; subsidiaries add a flat +1; O-Level is a separate best-8 lump (max 2.4) and never counts as a programme subject. I compared you against every active NAD programme using its published cut-off — programmes whose cut-off is still on the old raw scale are flagged rather than assumed. Tap \u201cRead more\u201d to open a programme, or ask me to go deeper on any course."
           : "I couldn't load the current programme list right now. Please try again in a moment.";
+
+      const resultSuggestions: Suggestion[] =
+        top.length > 0
+          ? [
+              { label: "How do I apply?", query: "How do I apply for admission?" },
+              { label: "Entry requirements", query: "What are the entry requirements?" },
+              { label: "Fees & scholarships", query: "What are the tuition fees and are there scholarships?" },
+              { label: "Recalculate my weight", query: "Calculate my admission weight" },
+            ]
+          : [];
 
       setMessages((prev) => [
         ...prev,
         { id: `${Date.now()}-u`, role: "user", content: `Here are my grades:\n${gradeSummary}` },
-        { id: `${Date.now()}-a`, role: "assistant", content: intro, result },
+        {
+          id: `${Date.now()}-a`,
+          role: "assistant",
+          content: intro,
+          result,
+          suggestions: resultSuggestions.length ? resultSuggestions : undefined,
+        },
       ]);
       setWizard(EMPTY_WIZARD);
       setHasInteracted(true);
@@ -1521,15 +1567,30 @@ const ChatBot = () => {
                             Sources
                           </p>
                           <ul className="space-y-0.5">
-                            {msg.sources.map((s, i) => (
-                              <li
-                                key={`${s.title}-${i}`}
-                                className="text-[11px] text-muted-foreground truncate"
-                                title={s.title}
-                              >
-                                {s.title}
-                              </li>
-                            ))}
+                            {msg.sources.map((s, i) => {
+                              const href = sourcePath(s.collection, s.entity_id);
+                              return (
+                                <li
+                                  key={`${s.title}-${i}`}
+                                  className="text-[11px] text-muted-foreground truncate"
+                                  title={s.title}
+                                >
+                                  {href ? (
+                                    <Link
+                                      to={href}
+                                      className="text-accent hover:underline inline-flex items-center gap-1 max-w-full"
+                                    >
+                                      <span className="truncate">{s.title}</span>
+                                      <span className="shrink-0" aria-hidden="true">
+                                        →
+                                      </span>
+                                    </Link>
+                                  ) : (
+                                    s.title
+                                  )}
+                                </li>
+                              );
+                            })}
                           </ul>
                         </div>
                       )}

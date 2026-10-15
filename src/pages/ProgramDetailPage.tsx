@@ -9,6 +9,7 @@ import {
   CheckCircle2, AlertCircle, FileText,
 } from "lucide-react";
 import aboutHero from "@/assets/about-hero.jpg";
+import { nadApiUrl } from "@/lib/apiUrl";
 import { fetchSchemesByProgram, type AdmissionScheme } from "@/lib/schemes";
 
 type Program = {
@@ -59,7 +60,7 @@ const ProgramDetailPage = () => {
     window.scrollTo(0, 0);
     if (!id) { setNotFound(true); setLoading(false); return; }
 
-    fetch(`/api/v1/programs/${id}`)
+    fetch(nadApiUrl(`public/programs/${id}`))
       .then(r => {
         if (!r.ok) throw new Error("not found");
         return r.json();

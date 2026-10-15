@@ -96,6 +96,25 @@ CONTENT_COLLECTIONS = [
 # university by default.
 PORTAL_NAME = os.getenv("PORTAL_NAME", "our university")
 
+# Public base URL of the site, used to append "read more" links to cited
+# sources in chat answers. Left empty by default so deployments that don't want
+# links (and the offline evaluation baseline, which diffs answer text) stay
+# unchanged. Set to e.g. "https://portal.example.com" to enable links.
+SITE_LINK_BASE = os.getenv("SITE_LINK_BASE", "").strip().rstrip("/")
+
+# Where each cited collection's "read more" link points. Programmes have a
+# per-record detail page (/programs/:id); the other collections link to their
+# listing page because the source metadata carries no slug.
+SOURCE_PATHS = {
+    "programs": "/programs/{id}",
+    "courses": "/programs",
+    "news": "/news",
+    "events": "/news",
+    "student_stories": "/stories",
+    "alumni": "/stories",
+    "quick_links": "/quick-links",
+}
+
 # Optional contact overrides. Contact details normally come from the CMS
 # (footer_email / footer_phone / footer_address in site-settings), which the
 # assistant reads via app.services.contact. Set CONTACT_* only for deployments
