@@ -4,7 +4,7 @@ import threading
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import admin, chat
+from app.api import admin, chat, study_plan
 from app.config import AUTO_TRAIN_ON_STARTUP
 from app.models.knowledge_base import kb_for
 from app.services.training import train_with_retries
@@ -26,6 +26,7 @@ app.add_middleware(
 
 app.include_router(chat.router, prefix="/api", tags=["chat"])
 app.include_router(admin.router, prefix="/api", tags=["admin"])
+app.include_router(study_plan.router, prefix="/api", tags=["study-plan"])
 
 
 @app.on_event("startup")
