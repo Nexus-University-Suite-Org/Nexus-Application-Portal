@@ -10,4 +10,8 @@ public interface MessageDraftRepository extends JpaRepository<MessageDraft, Long
     List<MessageDraft> findByUserIdOrderByUpdatedAtDesc(Long userId);
 
     Optional<MessageDraft> findByIdAndUserId(Long id, Long userId);
+
+    List<MessageDraft> findByTenantIdAndUserIdOrderByUpdatedAtDesc(Long tenantId, Long userId);
+
+    Optional<MessageDraft> findByIdAndUserIdAndTenantId(Long id, Long userId, Long tenantId);
 }

@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -14,8 +16,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class MessageService {
 
-    private static final Long DEMO_TENANT_ID = 1L;
-
     private final MessageRepository messageRepository;
     private final MessageAttachmentRepository attachmentRepository;
     private final MessageDraftRepository draftRepository;
@@ -29,7 +29,7 @@ public class MessageService {
     }
 
     public Message sendMessage(Message entity) {
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setCreatedAt(LocalDateTime.now());
         return messageRepository.save(entity);
     }
@@ -40,19 +40,19 @@ public class MessageService {
     }
 
     public Optional<Message> findById(Long id) {
-        return messageRepository.findById(id);
+        return messageRepository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId());
     }
 
     public List<Message> findInbox(Long userId) {
-        return messageRepository.findInbox(userId);
+        return messageRepository.findInboxForTenant(TenantContext.getCurrentTenantId(), userId);
     }
 
     public List<Message> findSent(Long userId) {
-        return messageRepository.findSent(userId);
+        return messageRepository.findSentForTenant(TenantContext.getCurrentTenantId(), userId);
     }
 
     public List<Message> findStarred(Long userId) {
-        return messageRepository.findStarred(userId);
+        return messageRepository.findStarredForTenant(TenantContext.getCurrentTenantId(), userId);
     }
 
     public List<MessageAttachment> findAttachments(Long messageId) {
@@ -64,11 +64,12 @@ public class MessageService {
     }
 
     public void deleteMessage(Long id) {
-        messageRepository.deleteById(id);
+        messageRepository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId())
+                .ifPresent(messageRepository::delete);
     }
 
     public MessageDraft saveDraft(MessageDraft draft) {
-        draft.setTenantId(DEMO_TENANT_ID);
+        draft.setTenantId(TenantContext.getCurrentTenantId());
         if (draft.getId() == null) {
             draft.setCreatedAt(LocalDateTime.now());
         }
@@ -77,14 +78,19 @@ public class MessageService {
     }
 
     public List<MessageDraft> findDrafts(Long userId) {
-        return draftRepository.findByUserIdOrderByUpdatedAtDesc(userId);
+        return draftRepository.findByTenantIdAndUserIdOrderByUpdatedAtDesc(
+                TenantContext.getCurrentTenantId(), userId);
     }
 
     public Optional<MessageDraft> findDraftByIdAndUserId(Long id, Long userId) {
-        return draftRepository.findByIdAndUserId(id, userId);
+        return draftRepository.findByIdAndUserIdAndTenantId(
+                id, userId, TenantContext.getCurrentTenantId());
     }
 
     public void deleteDraft(Long id) {
-        draftRepository.deleteById(id);
+        draftRepository.findById(id)
+                .filter(draft -> draft.getTenantId() == null
+                        || draft.getTenantId().equals(TenantContext.getCurrentTenantId()))
+                .ifPresent(draftRepository::delete);
     }
 }

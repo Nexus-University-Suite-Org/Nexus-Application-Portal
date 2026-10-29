@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.Optional;
 import org.nexus.napbackend.model.SiteSetting;
 import org.nexus.napbackend.repository.SiteSettingRepository;
+import org.nexus.napbackend.tenancy.TenantContext;
 import org.springframework.stereotype.Service;
 
 @Service
 public class SiteSettingService {
 
-    private static final Long DEMO_TENANT_ID = 1L;
     private final SiteSettingRepository repository;
     private final NewsletterNotificationService newsletterNotificationService;
 
@@ -21,23 +21,24 @@ public class SiteSettingService {
     }
 
     public SiteSetting create(SiteSetting entity) {
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setCreatedAt(LocalDateTime.now());
         entity.setUpdatedAt(LocalDateTime.now());
         return repository.save(entity);
     }
 
     public Optional<SiteSetting> findByKey(String settingKey) {
-        return repository.findByTenantIdAndSettingKey(DEMO_TENANT_ID, settingKey);
+        return repository.findByTenantIdAndSettingKey(TenantContext.getCurrentTenantId(), settingKey);
     }
 
     public List<SiteSetting> findAll() {
-        return repository.findByTenantIdOrderBySettingKey(DEMO_TENANT_ID);
+        return repository.findByTenantIdOrderBySettingKey(TenantContext.getCurrentTenantId());
     }
 
     public SiteSetting upsert(String settingKey, String settingValue) {
+        Long tenantId = TenantContext.getCurrentTenantId();
         SiteSetting saved;
-        Optional<SiteSetting> existing = repository.findByTenantIdAndSettingKey(DEMO_TENANT_ID, settingKey);
+        Optional<SiteSetting> existing = repository.findByTenantIdAndSettingKey(tenantId, settingKey);
         if (existing.isPresent()) {
             SiteSetting entity = existing.get();
             entity.setSettingValue(settingValue);
@@ -45,7 +46,7 @@ public class SiteSettingService {
             saved = repository.save(entity);
         } else {
             SiteSetting entity = new SiteSetting();
-            entity.setTenantId(DEMO_TENANT_ID);
+            entity.setTenantId(tenantId);
             entity.setSettingKey(settingKey);
             entity.setSettingValue(settingValue);
             entity.setCreatedAt(LocalDateTime.now());
@@ -68,6 +69,6 @@ public class SiteSettingService {
     }
 
     public void delete(String settingKey) {
-        repository.deleteByTenantIdAndSettingKey(DEMO_TENANT_ID, settingKey);
+        repository.deleteByTenantIdAndSettingKey(TenantContext.getCurrentTenantId(), settingKey);
     }
 }

@@ -9,6 +9,7 @@ import org.nexus.napbackend.model.AdmissionScheme;
 import org.nexus.napbackend.model.Program;
 import org.nexus.napbackend.repository.AdmissionSchemeRepository;
 import org.nexus.napbackend.repository.ProgramRepository;
+import org.nexus.napbackend.tenancy.TenantContext;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,6 +28,7 @@ public class AdmissionSchemeService {
     }
 
     public AdmissionScheme create(AdmissionScheme scheme) {
+        scheme.setTenantId(TenantContext.getCurrentTenantId());
         return repository.save(scheme);
     }
 
@@ -35,18 +37,21 @@ public class AdmissionSchemeService {
     }
 
     public List<AdmissionScheme> findAll() {
-        return repository.findAllByOrderByAppCloseDateAsc().stream().map(this::autoExpire).toList();
+        return repository.findByTenantIdOrderByAppCloseDateAsc(TenantContext.getCurrentTenantId())
+                .stream().map(this::autoExpire).toList();
     }
 
     public List<AdmissionScheme> findRunning() {
-        return repository.findByStatusInOrderByAppCloseDateAsc(List.of(OPEN, SCHEDULED)).stream()
+        return repository.findByTenantIdAndStatusInOrderByAppCloseDateAsc(
+                        TenantContext.getCurrentTenantId(), List.of(OPEN, SCHEDULED)).stream()
                 .map(this::autoExpire)
                 .filter(s -> OPEN.equals(s.getStatus()) || SCHEDULED.equals(s.getStatus()))
                 .toList();
     }
 
     public List<AdmissionScheme> findRunningByProgram(Long programId) {
-        return repository.findByPrograms_IdOrderByAppCloseDateAsc(programId).stream()
+        return repository.findByTenantIdAndPrograms_IdOrderByAppCloseDateAsc(
+                        TenantContext.getCurrentTenantId(), programId).stream()
                 .map(this::autoExpire)
                 .filter(s -> OPEN.equals(s.getStatus()) || SCHEDULED.equals(s.getStatus()))
                 .toList();

@@ -116,7 +116,7 @@
   }
 
   img {
-    border-radius: 20px;
+    border-radius: 0.5rem; /* was 20px globally */
   }
 
   button,
@@ -124,7 +124,7 @@
   input[type="button"],
   input[type="submit"],
   input[type="reset"] {
-    border-radius: 20px;
+    border-radius: 0.75rem; /* was var(--radius) */
   }
 }
 

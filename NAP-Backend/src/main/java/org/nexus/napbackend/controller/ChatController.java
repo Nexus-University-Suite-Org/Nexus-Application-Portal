@@ -3,6 +3,7 @@ package org.nexus.napbackend.controller;
 import jakarta.validation.Valid;
 import org.nexus.napbackend.dto.ChatRequest;
 import org.nexus.napbackend.service.ChatService;
+import org.nexus.napbackend.tenancy.TenantContext;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,7 +22,7 @@ public class ChatController {
 
     @PostMapping(value = {"/api/v1/chat", "/api/v1/chat/"}, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> chat(@Valid @RequestBody ChatRequest request) {
-        StreamingResponseBody stream = chatService.streamChat(request);
+        StreamingResponseBody stream = chatService.streamChat(request, TenantContext.currentRef());
         return ResponseEntity.ok()
                 .contentType(MediaType.TEXT_EVENT_STREAM)
                 .body(stream);
@@ -29,7 +30,7 @@ public class ChatController {
 
     @PostMapping(value = {"/api/chat", "/api/chat/"}, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> chatLegacy(@Valid @RequestBody ChatRequest request) {
-        StreamingResponseBody stream = chatService.streamChat(request);
+        StreamingResponseBody stream = chatService.streamChat(request, TenantContext.currentRef());
         return ResponseEntity.ok()
                 .contentType(MediaType.TEXT_EVENT_STREAM)
                 .body(stream);

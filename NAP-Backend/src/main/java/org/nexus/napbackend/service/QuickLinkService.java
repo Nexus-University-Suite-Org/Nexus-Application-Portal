@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -9,8 +11,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class QuickLinkService {
-
-    private static final Long DEMO_TENANT_ID = 1L;
     private final QuickLinkRepository repository;
 
     public QuickLinkService(QuickLinkRepository repository) {
@@ -18,7 +18,7 @@ public class QuickLinkService {
     }
 
     public QuickLink create(QuickLink entity) {
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setCreatedAt(LocalDateTime.now());
         return repository.save(entity);
     }
@@ -28,7 +28,7 @@ public class QuickLinkService {
     }
 
     public List<QuickLink> findAll() {
-        return repository.findAllByOrderByDisplayOrderAsc();
+        return repository.findAllByTenantIdOrderByDisplayOrderAsc(TenantContext.getCurrentTenantId());
     }
 
     public QuickLink update(Long id, QuickLink entity) {
@@ -42,7 +42,7 @@ public class QuickLinkService {
 
     public List<QuickLink> search(String query) {
         String lower = query.toLowerCase();
-        return repository.findAll().stream()
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId()).stream()
                 .filter(l -> (l.getTitle() != null && l.getTitle().toLowerCase().contains(lower))
                         || (l.getUrl() != null && l.getUrl().toLowerCase().contains(lower)))
                 .toList();

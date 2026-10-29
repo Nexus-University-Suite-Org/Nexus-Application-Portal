@@ -9,6 +9,13 @@ import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 gsap.registerPlugin(ScrollTrigger);
 
+const GALLERY_SETTING_KEYS = [
+  "gallery_hero_tagline",
+  "gallery_hero_heading_1",
+  "gallery_hero_heading_2",
+  "gallery_hero_description",
+];
+
 type Category = string;
 
 interface GalleryItem extends Record<string, unknown> {
@@ -74,18 +81,18 @@ const GalleryPage = () => {
     return () => window.removeEventListener("keydown", handler);
   }, [lightboxIndex, goNext, goPrev]);
 
+  const { settings } = useSiteSettings({ keys: GALLERY_SETTING_KEYS, scope: "/gallery" });
+
+  useEffect(() => {
+    if (settings.gallery_hero_tagline) setHeroTagline(settings.gallery_hero_tagline);
+    if (settings.gallery_hero_heading_1) setHeroHeading1(settings.gallery_hero_heading_1);
+    if (settings.gallery_hero_heading_2) setHeroHeading2(settings.gallery_hero_heading_2);
+    if (settings.gallery_hero_description) setHeroDescription(settings.gallery_hero_description);
+  }, [settings]);
+
   // Hero entrance
   useEffect(() => {
     window.scrollTo(0, 0);
-    fetch("/api/v1/content/site-settings")
-      .then(r => r.json())
-      .then((data: Record<string, string>) => {
-        if (data.gallery_hero_tagline) setHeroTagline(data.gallery_hero_tagline);
-        if (data.gallery_hero_heading_1) setHeroHeading1(data.gallery_hero_heading_1);
-        if (data.gallery_hero_heading_2) setHeroHeading2(data.gallery_hero_heading_2);
-        if (data.gallery_hero_description) setHeroDescription(data.gallery_hero_description);
-      })
-      .catch(() => {});
     const ctx = gsap.context(() => {
       gsap.fromTo(
         ".gallery-hero-text > *",

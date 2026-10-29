@@ -7,4 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface FacultyMemberRepository extends JpaRepository<FacultyMember, Long> {
 
     List<FacultyMember> findAllByOrderByDisplayOrderAsc();
+
+    List<FacultyMember> findAllByTenantIdOrderByDisplayOrderAsc(Long tenantId);
+
+    List<FacultyMember> findAllByTenantId(Long tenantId);
 }

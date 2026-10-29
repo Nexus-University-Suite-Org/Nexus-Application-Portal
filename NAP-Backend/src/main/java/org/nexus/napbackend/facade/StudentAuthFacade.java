@@ -3,6 +3,8 @@ package org.nexus.napbackend.facade;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import org.nexus.napbackend.dto.StudentLoginResponse;
+import org.nexus.napbackend.exception.NotAdmittedException;
+import org.nexus.napbackend.exception.UnauthorizedException;
 import org.nexus.napbackend.model.Application;
 import org.nexus.napbackend.model.Program;
 import org.nexus.napbackend.repository.ApplicationRepository;
@@ -21,6 +23,8 @@ import org.nexus.napbackend.service.IdentityGateway.IdentitySession;
 @Facade
 public class StudentAuthFacade {
 
+    private static final String ADMITTED = "ADMITTED";
+
     private final ApplicationRepository applicationRepository;
     private final ProgramRepository programRepository;
     private final IdentityGateway identityGateway;
@@ -35,6 +39,7 @@ public class StudentAuthFacade {
 
     @Transactional
     public StudentLoginResponse login(String email, String password) {
+<<<<<<< HEAD
         IdentitySession session = identityGateway.authenticate(
                 email, password, IdentityGateway.STUDENT_PORTAL_CLIENT);
         Application application = findApplicantByEmail(
@@ -51,12 +56,53 @@ public class StudentAuthFacade {
      */
     public void requestPasswordReset(String email) {
         identityGateway.requestPasswordReset(email);
+=======
+        Application application = findApplicantByEmail(email);
+        if (application.getPasswordHash() == null) {
+            throw new UnauthorizedException("No password set for this account. Please use forgot password.");
+        }
+        if (!passwordEncoder.matches(password, application.getPasswordHash())) {
+            throw new UnauthorizedException("Invalid email or password");
+        }
+
+        requireAdmitted(application);
+
+        String token = jwtUtil.generateToken(application.getId(), application.getEmail(), "STUDENT");
+        return new StudentLoginResponse(token, toUser(application), toProfile(application));
+    }
+
+    private void requireAdmitted(Application application) {
+        if (ADMITTED.equals(application.getStatus())) {
+            return;
+        }
+        String status = application.getStatus();
+        String reason = switch (status == null ? "" : status) {
+            case "REJECTED" -> "your application was not successful";
+            case "WAITLISTED" -> "you are on the waiting list";
+            case "DRAFT" -> "your application has not been submitted yet";
+            default -> "your application is still being reviewed";
+        };
+        throw new NotAdmittedException(
+                "The student portal opens once your admission is confirmed, but " + reason
+                        + ". Current application status: " + status + ".");
+    }
+
+    @Transactional
+    public StudentLoginResponse.StudentProfile resetPassword(String email, String newPassword) {
+        if (newPassword == null || newPassword.length() < 6) {
+            throw new RuntimeException("Password must be at least 6 characters");
+        }
+        Application application = findApplicantByEmail(email);
+        application.setPasswordHash(passwordEncoder.encode(newPassword));
+        applicationRepository.save(application);
+        return toProfile(application);
+>>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
     }
 
     private Application findApplicantByEmail(String email) {
         List<Application> applications = applicationRepository.findByEmailOrderByCreatedAtDesc(email);
         if (applications.isEmpty()) {
-            throw new RuntimeException("No application found for this email");
+            throw new UnauthorizedException("No application found for this email");
         }
         return applications.get(0);
     }
@@ -81,6 +127,8 @@ public class StudentAuthFacade {
         return new StudentLoginResponse.StudentProfile(
                 a.getId(),
                 a.getPrn(),
+                a.getStudentNumber(),
+                a.getRegistrationNumber(),
                 fullName(a),
                 a.getEmail(),
                 a.getPhoneNumber(),

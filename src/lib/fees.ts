@@ -1,7 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || "/api";
-
-const buildUrl = (path: string) =>
-  `${API_BASE_URL}${API_BASE_URL.endsWith("/") ? "" : "/"}${path}`;
+import { apiUrl } from "@/lib/apiUrl";
 
 export type FeeAssignment = {
   id: number;
@@ -11,6 +8,13 @@ export type FeeAssignment = {
   amount: number;
   description: string;
   createdAt: string;
+  // Fields actually returned by the deployed backend.
+  itemName?: string;
+  category?: string;
+  yearLevel?: string;
+  semester?: string;
+  currency?: string;
+  notes?: string;
 };
 
 export type StudentFee = {
@@ -48,7 +52,7 @@ export const getFeeAssignments = async (
   if (academicYear) params.set("academicYear", academicYear);
   const qs = params.toString();
   const response = await fetch(
-    buildUrl(`v1/fees${qs ? `?${qs}` : ""}`),
+    apiUrl(`fees${qs ? `?${qs}` : ""}`),
   );
   if (!response.ok) {
     const detail =
@@ -65,7 +69,7 @@ export const getStudentFees = async (
   const params = new URLSearchParams({ studentId: String(studentId) });
   if (status) params.set("status", status);
   const response = await fetch(
-    buildUrl(`v1/student-fees?${params}`),
+    apiUrl(`student-fees?${params}`),
   );
   if (!response.ok) {
     const detail =
@@ -82,7 +86,7 @@ export const recordPayment = async (
   reference: string,
 ): Promise<StudentFee> => {
   const response = await fetch(
-    buildUrl(`v1/student-fees/${feeId}/payments`),
+    apiUrl(`student-fees/${feeId}/payments`),
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

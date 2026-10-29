@@ -9,6 +9,7 @@ import org.nexus.napbackend.dto.NotificationCreateRequest;
 import org.nexus.napbackend.dto.NotificationResponse;
 import org.nexus.napbackend.facade.NotificationFacade;
 import org.nexus.napbackend.service.NotificationBroadcaster;
+import org.nexus.napbackend.tenancy.TenantContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +39,7 @@ public class NotificationController {
     @GetMapping(value = "/notifications/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream() {
         SseEmitter emitter = new SseEmitter(0L);
-        broadcaster.connect(emitter);
+        broadcaster.connect(emitter, TenantContext.getCurrentTenantId());
         return emitter;
     }
 

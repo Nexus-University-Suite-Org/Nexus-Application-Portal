@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import org.nexus.napbackend.dto.PartnershipDiscussionRequest;
@@ -11,8 +13,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class PartnershipDiscussionService {
 
-    private static final Long DEMO_TENANT_ID = 1L;
-
     private final PartnershipDiscussionRepository repository;
 
     public PartnershipDiscussionService(PartnershipDiscussionRepository repository) {
@@ -22,7 +22,7 @@ public class PartnershipDiscussionService {
     @Transactional
     public PartnershipDiscussionResponse submit(PartnershipDiscussionRequest request, String ipAddress) {
         PartnershipDiscussion entity = new PartnershipDiscussion();
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setOrganizationName(request.organization_name());
         entity.setContact_email(request.contact_email());
         entity.setContactPhone(request.contact_phone());

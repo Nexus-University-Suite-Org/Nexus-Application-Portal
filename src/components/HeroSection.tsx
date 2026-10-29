@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Heart, Users, ArrowRight } from "lucide-react";
+import { Heart, Users, ArrowRight, GraduationCap } from "lucide-react";
 import heroCampus from "@/assets/hero-campus.jpg";
 import { useContentCollection } from "@/hooks/useContentCollection";
 
@@ -39,6 +39,8 @@ const HeroSection = () => {
   const [heroHeading2, setHeroHeading2] = useState("& Vulnerable Youth");
   const [heroHeading3, setHeroHeading3] = useState("Through Practical Skills");
   const [heroSubtitle, setHeroSubtitle] = useState("We equip vulnerable youth and single mothers with vocational skills that enable them to earn sustainable livelihoods and build better futures.");
+  const [heroCtaApply, setHeroCtaApply] = useState("Apply Now");
+  const [heroCtaApplyVisible, setHeroCtaApplyVisible] = useState(true);
   const [heroCtaDonate, setHeroCtaDonate] = useState("Donate Now");
   const [heroCtaSponsor, setHeroCtaSponsor] = useState("Sponsor a Student");
   const [heroCtaDonateVisible, setHeroCtaDonateVisible] = useState(true);
@@ -66,6 +68,8 @@ const HeroSection = () => {
         if (data.hero_heading_2) setHeroHeading2(data.hero_heading_2);
         if (data.hero_heading_3) setHeroHeading3(data.hero_heading_3);
         if (data.hero_subtitle) setHeroSubtitle(data.hero_subtitle);
+        if (data.hero_cta_apply) setHeroCtaApply(data.hero_cta_apply);
+        if (data.hero_cta_apply_visible !== undefined) setHeroCtaApplyVisible(data.hero_cta_apply_visible !== 'false');
         if (data.hero_cta_donate) setHeroCtaDonate(data.hero_cta_donate);
         if (data.hero_cta_sponsor) setHeroCtaSponsor(data.hero_cta_sponsor);
         if (data.hero_cta_donate_visible !== undefined) setHeroCtaDonateVisible(data.hero_cta_donate_visible !== 'false');
@@ -198,7 +202,7 @@ const HeroSection = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-screen overflow-hidden flex flex-col"
+      className="relative min-h-[100svh] overflow-hidden flex flex-col"
     >
       {/* Hero Image */}
       <div ref={imageRef} className="absolute inset-0 -top-10">
@@ -213,65 +217,81 @@ const HeroSection = () => {
         ref={heroGlowRef}
         className="absolute left-1/2 top-1/2 z-[1] h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,hsl(var(--accent)/0.12)_0%,transparent_68%)] blur-3xl pointer-events-none"
       />
-      <div className="hero-orb absolute top-24 right-[8%] z-[1] h-28 w-28 rounded-full bg-accent/10 blur-2xl pointer-events-none" />
-      <div className="hero-orb absolute bottom-28 left-[7%] z-[1] h-24 w-24 rounded-full bg-white/15 blur-2xl pointer-events-none" />
+      <div className="hero-orb absolute top-20 right-[6%] z-[1] h-20 w-20 sm:h-28 sm:w-28 rounded-full bg-accent/10 blur-2xl pointer-events-none" />
+      <div className="hero-orb absolute bottom-24 left-[6%] z-[1] h-16 w-16 sm:h-24 sm:w-24 rounded-full bg-white/15 blur-2xl pointer-events-none" />
 
       {/* Hero Content */}
       <div
         ref={heroContentRef}
-        className="relative z-10 flex flex-col justify-end flex-1 px-8 md:px-16 pt-40 pb-16 md:pb-24"
+        className="relative z-10 flex flex-col justify-end flex-1 px-5 sm:px-8 lg:px-16 pt-28 sm:pt-40 pb-16 lg:pb-24"
       >
         <div className="max-w-5xl">
-          <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-6 flex items-center gap-2">
-            <Heart size={12} className="fill-accent" />
-            {heroTagline}
+          <p className="font-body text-[10px] sm:text-xs tracking-[0.2em] sm:tracking-[0.3em] uppercase text-white mb-4 sm:mb-6 flex items-center gap-2">
+            <Heart size={12} className="fill-white shrink-0" />
+            <span>{heroTagline}</span>
           </p>
           <h1
             ref={titleRef}
-            className="font-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-primary-foreground leading-[0.92] max-w-4xl opacity-0"
+            className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl text-white leading-[0.95] sm:leading-[0.92] max-w-4xl break-words opacity-0"
           >
             {heroHeading1}
             <br />
-            <em className="text-accent">{heroHeading2}</em>
+            <em className="text-white">{heroHeading2}</em>
             <br />
             {heroHeading3}
           </h1>
           <p
             ref={subtitleRef}
-            className="font-body mt-8 text-primary-foreground/75 max-w-xl text-lg leading-relaxed opacity-0"
+            className="font-body mt-6 sm:mt-8 text-white max-w-xl text-base sm:text-lg leading-relaxed opacity-0"
           >
             {heroSubtitle}
           </p>
 
           {/* CTA Buttons */}
-          <div ref={ctaRef} className="flex flex-wrap gap-4 mt-10 opacity-0">
+          <div
+            ref={ctaRef}
+            className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 mt-8 sm:mt-10 opacity-0"
+          >
+            {heroCtaApplyVisible && (
+              <button
+                onClick={() => navigate("/admissions/application/start")}
+                className="group flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 bg-accent text-white font-body text-xs sm:text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 hover:scale-105"
+              >
+                <GraduationCap size={16} className="shrink-0" />
+                {heroCtaApply}
+                <ArrowRight
+                  size={16}
+                  className="shrink-0 group-hover:translate-x-1 transition-transform duration-300"
+                />
+              </button>
+            )}
             {heroCtaDonateVisible && (
               <button
                 onClick={() => navigate("/donate")}
-                className="group flex items-center gap-2 px-8 py-4 bg-accent text-accent-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:bg-accent/90 hover:scale-105"
+                className="group flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 border border-primary-foreground/50 text-white font-body text-xs sm:text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-white"
               >
-                <Heart size={16} className="fill-current" />
+                <Heart size={16} className="shrink-0" />
                 {heroCtaDonate}
               </button>
             )}
             {heroCtaSponsorVisible && (
               <button
                 onClick={() => navigate("/donate#sponsor")}
-                className="group flex items-center gap-2 px-8 py-4 border border-primary-foreground/50 text-primary-foreground font-body text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-accent"
+                className="group flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 border border-primary-foreground/50 text-white font-body text-xs sm:text-sm tracking-[0.2em] uppercase rounded-[20px] transition-all duration-500 hover:border-accent hover:text-white"
               >
-                <Users size={16} />
+                <Users size={16} className="shrink-0" />
                 {heroCtaSponsor}
               </button>
             )}
             {heroCtaLearnMoreVisible && (
               <button
                 onClick={() => navigate("/about")}
-                className="group flex items-center gap-2 px-8 py-4 text-primary-foreground/70 font-body text-sm tracking-[0.2em] uppercase transition-all duration-500 hover:text-primary-foreground"
+                className="group flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 text-white font-body text-xs sm:text-sm tracking-[0.2em] uppercase transition-all duration-500 hover:text-white"
               >
                 {heroCtaLearnMore}
                 <ArrowRight
                   size={16}
-                  className="group-hover:translate-x-1 transition-transform duration-300"
+                  className="shrink-0 group-hover:translate-x-1 transition-transform duration-300"
                 />
               </button>
             )}
@@ -281,14 +301,14 @@ const HeroSection = () => {
         {/* Impact Stats Bar */}
         <div
           ref={statsRef}
-          className="mt-16 pt-8 border-t border-primary-foreground/20 grid grid-cols-2 md:grid-cols-4 gap-8 opacity-0"
+          className="mt-12 sm:mt-16 pt-6 sm:pt-8 border-t border-primary-foreground/20 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-8 sm:gap-8 opacity-0"
         >
           {heroStats.map((stat) => (
             <div key={stat.label} className="text-center md:text-left">
-              <p className="font-heading text-3xl md:text-4xl font-light text-accent">
+              <p className="font-heading text-2xl sm:text-3xl md:text-4xl font-light text-white">
                 {stat.value}
               </p>
-              <p className="font-body text-xs tracking-[0.2em] uppercase text-primary-foreground/60 mt-1">
+              <p className="font-body text-[10px] sm:text-xs tracking-[0.15em] sm:tracking-[0.2em] uppercase text-white mt-1">
                 {stat.label}
               </p>
             </div>
@@ -297,8 +317,8 @@ const HeroSection = () => {
       </div>
 
       {/* Scroll indicator */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 z-10">
-        <span className="font-body text-[10px] tracking-[0.3em] uppercase text-primary-foreground">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-2 opacity-50 z-10">
+        <span className="font-body text-[10px] tracking-[0.3em] uppercase text-white">
           Scroll
         </span>
         <div className="w-px h-8 bg-primary-foreground/50 animate-pulse" />

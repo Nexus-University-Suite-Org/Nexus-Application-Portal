@@ -32,7 +32,7 @@ const FloatingApplyButton = () => {
         pointerEvents: visible ? "auto" : "none",
       }}
     >
-      <Heart className="w-4 h-4" />
+      <Heart className="w-4 h-4" aria-hidden="true" />
       Donate Now
     </button>
   );

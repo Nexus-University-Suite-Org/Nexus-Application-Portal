@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import org.nexus.napbackend.model.Admin;
 import org.nexus.napbackend.repository.AdminRepository;
+import org.nexus.napbackend.tenancy.TenantContext;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -29,11 +30,19 @@ public class AdminService {
         return repository.save(admin);
     }
 
+    public Admin save(Admin admin) {
+        return repository.save(admin);
+    }
+
     public boolean existsByEmail(String email) {
         return repository.existsByEmail(email);
     }
 
     public List<Admin> findAll() {
-        return repository.findAll();
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId());
+    }
+
+    public List<Admin> findAllByTenant(Long tenantId) {
+        return repository.findAllByTenantId(tenantId);
     }
 }

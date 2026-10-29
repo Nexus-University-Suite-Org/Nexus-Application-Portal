@@ -9,6 +9,7 @@ import {
   CheckCircle2, AlertCircle, FileText,
 } from "lucide-react";
 import aboutHero from "@/assets/about-hero.jpg";
+import { nadApiUrl } from "@/lib/apiUrl";
 import { fetchSchemesByProgram, type AdmissionScheme } from "@/lib/schemes";
 
 type Program = {
@@ -16,7 +17,7 @@ type Program = {
   awardQualification: string; programDescription: string; programObjectives: string;
   learningOutcomes: string; careerOpportunities: string; status: string;
   facultySchool: string; department: string; programCoordinator: string; campus: string;
-  duration: number; durationUnit: string; numberOfYears: number; numberOfSemesters: number;
+  durationUnit: string; numberOfYears: number;
   semestersPerYear: number; totalCreditUnits: number; studyMode: string; academicCalendar: string;
   fees: string; admissionRequirements: string; curriculum: string; intakes: string;
   studyOptions: string; accreditation: string; documents: string;
@@ -59,7 +60,7 @@ const ProgramDetailPage = () => {
     window.scrollTo(0, 0);
     if (!id) { setNotFound(true); setLoading(false); return; }
 
-    fetch(`/api/v1/programs/${id}`)
+    fetch(nadApiUrl(`public/programs/${id}`))
       .then(r => {
         if (!r.ok) throw new Error("not found");
         return r.json();
@@ -130,8 +131,9 @@ const ProgramDetailPage = () => {
   const docs = parseJson<DocumentData[]>(program.documents, []);
 
   const quickFacts: { icon: React.ReactNode; label: string }[] = [];
-  if (program.duration > 0) quickFacts.push({ icon: <Clock size={14} />, label: `${program.duration} ${program.durationUnit || "years"}` });
-  if (program.numberOfYears > 0) quickFacts.push({ icon: <Calendar size={14} />, label: `${program.numberOfYears} years, ${program.numberOfSemesters} semesters` });
+  const totalSemesters = (program.numberOfYears || 0) * (program.semestersPerYear || 0);
+  if (program.numberOfYears > 0) quickFacts.push({ icon: <Clock size={14} />, label: `${program.numberOfYears} ${program.durationUnit || "years"}` });
+  if (totalSemesters > 0) quickFacts.push({ icon: <Calendar size={14} />, label: `${totalSemesters} semesters` });
   if (program.studyMode) quickFacts.push({ icon: <Building size={14} />, label: program.studyMode });
   if (feeInfo.total > 0) quickFacts.push({ icon: <Banknote size={14} />, label: `${feeInfo.currency} ${feeInfo.total.toLocaleString()}` });
   if (program.campus) quickFacts.push({ icon: <Globe size={14} />, label: program.campus });

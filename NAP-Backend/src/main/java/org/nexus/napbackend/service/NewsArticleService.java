@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -9,8 +11,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class NewsArticleService {
-
-    private static final Long DEMO_TENANT_ID = 1L;
     private final NewsArticleRepository repository;
 
     public NewsArticleService(NewsArticleRepository repository) {
@@ -18,7 +18,7 @@ public class NewsArticleService {
     }
 
     public NewsArticle create(NewsArticle entity) {
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setSlug(generateSlug(entity.getTitle()));
         entity.setCreatedAt(LocalDateTime.now());
         entity.setUpdatedAt(LocalDateTime.now());
@@ -33,14 +33,14 @@ public class NewsArticleService {
     }
 
     public List<NewsArticle> findAll() {
-        return repository.findAll();
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId());
     }
 
     public List<NewsArticle> findByCategory(String category) {
         if (category == null || category.isEmpty()) {
-            return repository.findAll();
+            return repository.findAllByTenantId(TenantContext.getCurrentTenantId());
         }
-        return repository.findAll().stream()
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId()).stream()
                 .filter(a -> category.equalsIgnoreCase(a.getCategory()))
                 .toList();
     }
@@ -60,7 +60,7 @@ public class NewsArticleService {
 
     public List<NewsArticle> search(String query) {
         String lower = query.toLowerCase();
-        return repository.findAll().stream()
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId()).stream()
                 .filter(a -> (a.getTitle() != null && a.getTitle().toLowerCase().contains(lower))
                         || (a.getExcerpt() != null && a.getExcerpt().toLowerCase().contains(lower))
                         || (a.getContent() != null && a.getContent().toLowerCase().contains(lower)))

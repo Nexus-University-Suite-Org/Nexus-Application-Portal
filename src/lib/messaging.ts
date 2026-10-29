@@ -1,7 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || "/api";
-
-const buildUrl = (path: string) =>
-  `${API_BASE_URL}${API_BASE_URL.endsWith("/") ? "" : "/"}${path}`;
+import { apiUrl } from "@/lib/apiUrl";
 
 export type Message = {
   id: number;
@@ -60,7 +57,7 @@ export const getMessages = async (
   view: "inbox" | "sent" | "starred" = "inbox",
 ): Promise<Message[]> => {
   const response = await fetch(
-    buildUrl(`v1/messages/${userId}?view=${view}`),
+    apiUrl(`messages/${userId}?view=${view}`),
   );
   if (!response.ok) {
     const detail = (await parseErrorDetail(response)) ?? "Failed to fetch messages";
@@ -73,7 +70,7 @@ export const getMessageById = async (
   userId: number,
   messageId: number,
 ): Promise<Message> => {
-  const response = await fetch(buildUrl(`v1/messages/${userId}/${messageId}`));
+  const response = await fetch(apiUrl(`messages/${userId}/${messageId}`));
   if (!response.ok) {
     const detail = (await parseErrorDetail(response)) ?? "Failed to fetch message";
     throw new Error(detail);
@@ -86,7 +83,7 @@ export const sendMessage = async (
   payload: SendMessageInput,
 ): Promise<Message> => {
   const response = await fetch(
-    buildUrl(`v1/messages/send?userId=${userId}`),
+    apiUrl(`messages/send?userId=${userId}`),
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -110,7 +107,7 @@ export const markRead = async (
   messageId: number,
 ): Promise<Message> => {
   const response = await fetch(
-    buildUrl(`v1/messages/${userId}/${messageId}/read`),
+    apiUrl(`messages/${userId}/${messageId}/read`),
     { method: "PUT" },
   );
   if (!response.ok) {
@@ -125,7 +122,7 @@ export const softDeleteMessage = async (
   messageId: number,
 ): Promise<void> => {
   const response = await fetch(
-    buildUrl(`v1/messages/${userId}/${messageId}/delete`),
+    apiUrl(`messages/${userId}/${messageId}/delete`),
     { method: "PUT" },
   );
   if (!response.ok) {
@@ -139,7 +136,7 @@ export const toggleStar = async (
   messageId: number,
 ): Promise<void> => {
   const response = await fetch(
-    buildUrl(`v1/messages/${userId}/${messageId}/star`),
+    apiUrl(`messages/${userId}/${messageId}/star`),
     { method: "PUT" },
   );
   if (!response.ok) {
@@ -153,7 +150,7 @@ export const toggleArchive = async (
   messageId: number,
 ): Promise<void> => {
   const response = await fetch(
-    buildUrl(`v1/messages/${userId}/${messageId}/archive`),
+    apiUrl(`messages/${userId}/${messageId}/archive`),
     { method: "PUT" },
   );
   if (!response.ok) {
@@ -163,7 +160,7 @@ export const toggleArchive = async (
 };
 
 export const getDrafts = async (userId: number): Promise<MessageDraft[]> => {
-  const response = await fetch(buildUrl(`v1/messages/drafts/${userId}`));
+  const response = await fetch(apiUrl(`messages/drafts/${userId}`));
   if (!response.ok) {
     const detail = (await parseErrorDetail(response)) ?? "Failed to fetch drafts";
     throw new Error(detail);
@@ -176,7 +173,7 @@ export const saveDraft = async (
   payload: SaveDraftInput,
 ): Promise<MessageDraft> => {
   const response = await fetch(
-    buildUrl(`v1/messages/drafts?userId=${userId}`),
+    apiUrl(`messages/drafts?userId=${userId}`),
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -199,7 +196,7 @@ export const deleteDraft = async (
   draftId: number,
 ): Promise<void> => {
   const response = await fetch(
-    buildUrl(`v1/messages/drafts/${userId}/${draftId}`),
+    apiUrl(`messages/drafts/${userId}/${draftId}`),
     { method: "DELETE" },
   );
   if (!response.ok) {

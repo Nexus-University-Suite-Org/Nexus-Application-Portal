@@ -1,7 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || "/api/v1";
-
-const buildUrl = (path: string) =>
-  `${API_BASE_URL}${API_BASE_URL.endsWith("/") ? "" : "/"}${path}`;
+import { apiUrl } from "@/lib/apiUrl";
 
 export type ContactPayload = {
   name: string;
@@ -126,7 +123,7 @@ export const submitContactSubmission = async (
 ): Promise<unknown> => {
   let response: Response;
   try {
-    response = await fetch(buildUrl("contact"), {
+    response = await fetch(apiUrl("contact"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -161,7 +158,7 @@ export const submitContactSubmission = async (
 export const submitApplicationSubmission = async (
   payload: ApplicationSubmissionInput,
 ): Promise<{ id: string }> => {
-  const url = buildUrl("applications");
+  const url = apiUrl("applications");
   console.log("[SUBMIT] POST", url);
   console.log("[SUBMIT] payload:", JSON.stringify(payload, null, 2));
   let response: Response;
@@ -208,7 +205,7 @@ export const submitPartnershipSubmission = async (
 ) => {
   let response: Response;
   try {
-    response = await fetch(buildUrl("partnership-discussions"), {
+    response = await fetch(apiUrl("partnership-discussions"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -8,9 +8,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+<<<<<<< HEAD
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.nexus.napbackend.configuration.NexusRoles;
+=======
+import org.nexus.napbackend.configuration.JwtUtil;
+>>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
 import org.nexus.napbackend.dto.AdminLoginRequest;
 import org.nexus.napbackend.dto.AdminLoginResponse;
 import org.nexus.napbackend.dto.ApplicationResponse;
@@ -21,8 +25,15 @@ import org.nexus.napbackend.exception.UnauthorizedException;
 import org.nexus.napbackend.mapper.ApplicationMapper;
 import org.nexus.napbackend.model.Application;
 import org.nexus.napbackend.repository.ApplicationRepository;
+<<<<<<< HEAD
 import org.nexus.napbackend.service.IdentityGateway;
 import org.nexus.napbackend.service.IdentityGateway.IdentitySession;
+=======
+import org.nexus.napbackend.service.AdminService;
+import org.nexus.napbackend.service.StudentNumberService;
+import org.nexus.napbackend.service.TenantService;
+import org.nexus.napbackend.tenancy.TenantContext;
+>>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -34,11 +45,31 @@ import org.springframework.stereotype.Service;
 public class AdminFacade {
 
     private final ApplicationRepository applicationRepository;
+<<<<<<< HEAD
     private final IdentityGateway identityGateway;
 
     public AdminFacade(ApplicationRepository applicationRepository, IdentityGateway identityGateway) {
         this.applicationRepository = applicationRepository;
         this.identityGateway = identityGateway;
+=======
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+    private final StudentNumberService studentNumberService;
+    private final TenantService tenantService;
+
+    public AdminFacade(AdminService adminService,
+                       ApplicationRepository applicationRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtUtil jwtUtil,
+                       StudentNumberService studentNumberService,
+                       TenantService tenantService) {
+        this.adminService = adminService;
+        this.applicationRepository = applicationRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+        this.studentNumberService = studentNumberService;
+        this.tenantService = tenantService;
+>>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
     }
 
     /**
@@ -59,6 +90,7 @@ public class AdminFacade {
         if (!entitled) {
             throw new UnauthorizedException("This account is not entitled to use this portal.");
         }
+<<<<<<< HEAD
         String name = session.name() == null || session.name().isBlank()
                 ? session.email() : session.name();
         return new AdminLoginResponse(session.token(), session.email(), name);
@@ -72,16 +104,69 @@ public class AdminFacade {
         String email = jwt.getClaimAsString("email");
         String name = jwt.getClaimAsString("name");
         return new AdminLoginResponse(null, email, name == null ? email : name);
+=======
+
+        if (admin.getTenantId() != null) {
+            tenantService.findById(admin.getTenantId())
+                    .filter(tenant -> Boolean.TRUE.equals(tenant.getActive()))
+                    .orElseThrow(() -> new UnauthorizedException(
+                            "This university's admin portal is currently disabled"));
+        }
+
+        String role = resolveRole(admin);
+        String token = jwtUtil.generateToken(admin.getId(), admin.getEmail(), role, admin.getTenantId());
+        return new AdminLoginResponse(
+                token, admin.getEmail(), admin.getFullName(), admin.getTenantId(), role);
+    }
+
+    @Transactional
+    public AdminLoginResponse me(Long adminId) {
+        Admin admin = adminService.findById(adminId)
+                .orElseThrow(() -> new UnauthorizedException("Admin not found"));
+        return new AdminLoginResponse(
+                null, admin.getEmail(), admin.getFullName(), admin.getTenantId(), resolveRole(admin));
+    }
+
+    private String resolveRole(Admin admin) {
+        String role = admin.getRole();
+        return role == null || role.isBlank() ? "ADMIN" : role;
+    }
+
+    @Transactional
+    public void changePassword(Long adminId, String currentPassword, String newPassword) {
+        Admin admin = adminService.findById(adminId)
+                .orElseThrow(() -> new UnauthorizedException("Admin not found"));
+
+        if (!passwordEncoder.matches(currentPassword, admin.getPasswordHash())) {
+            throw new UnauthorizedException("Current password is incorrect");
+        }
+        if (passwordEncoder.matches(newPassword, admin.getPasswordHash())) {
+            throw new IllegalArgumentException(
+                    "New password must be different from the current password");
+        }
+
+        admin.setPasswordHash(passwordEncoder.encode(newPassword));
+        adminService.save(admin);
+    }
+
+    @Transactional
+    public void resetPassword(Long adminId, String newPassword) {
+        Admin admin = adminService.findById(adminId)
+                .orElseThrow(() -> new IllegalArgumentException("Admin not found: " + adminId));
+        admin.setPasswordHash(passwordEncoder.encode(newPassword));
+        adminService.save(admin);
+>>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
     }
 
     @Transactional
     public DashboardStatsResponse getDashboardStats() {
-        long total = applicationRepository.count();
-        long pending = applicationRepository.countByStatus("SUBMITTED");
-        long admitted = applicationRepository.countByStatus("ADMITTED");
-        long rejected = applicationRepository.countByStatus("REJECTED");
-        long waitlisted = applicationRepository.countByStatus("WAITLISTED");
-        long draft = applicationRepository.countByStatus("DRAFT");
+        Long tenantId = TenantContext.getCurrentTenantId();
+        long total = applicationRepository.countByTenantId(tenantId);
+        long pending = applicationRepository.countByTenantIdAndStatus(tenantId, "SUBMITTED");
+        long admitted = applicationRepository.countByTenantIdAndStatus(tenantId, "ADMITTED");
+        long rejected = applicationRepository.countByTenantIdAndStatus(tenantId, "REJECTED");
+        long waitlisted = applicationRepository.countByTenantIdAndStatus(tenantId, "WAITLISTED");
+        long draft = applicationRepository.countByTenantIdAndStatus(tenantId, "DRAFT");
 
         Map<String, Long> monthlyTrend = new LinkedHashMap<>();
         LocalDateTime now = LocalDateTime.now();
@@ -90,7 +175,8 @@ public class AdminFacade {
             String key = month.format(DateTimeFormatter.ofPattern("MMM yyyy"));
             LocalDateTime startOfMonth = month.withDayOfMonth(1).atStartOfDay();
             LocalDateTime endOfMonth = month.withDayOfMonth(month.lengthOfMonth()).atTime(23, 59, 59);
-            long count = applicationRepository.countByCreatedAtBetween(startOfMonth, endOfMonth);
+            long count = applicationRepository.countByTenantIdAndCreatedAtBetween(
+                    tenantId, startOfMonth, endOfMonth);
             monthlyTrend.put(key, count);
         }
 
@@ -100,19 +186,21 @@ public class AdminFacade {
     @Transactional
     public PaginatedApplicationsResponse getApplications(String status, String search, int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Long tenantId = TenantContext.getCurrentTenantId();
 
         Page<Application> result;
 
         if (status != null && !status.isEmpty() && search != null && !search.isEmpty()) {
             String searchLower = "%" + search.toLowerCase() + "%";
-            result = applicationRepository.findByStatusAndSearch(status, searchLower, pageRequest);
+            result = applicationRepository.findByTenantIdAndStatusAndSearch(
+                    tenantId, status, searchLower, pageRequest);
         } else if (status != null && !status.isEmpty()) {
-            result = applicationRepository.findByStatusPaged(status, pageRequest);
+            result = applicationRepository.findByTenantIdAndStatusPaged(tenantId, status, pageRequest);
         } else if (search != null && !search.isEmpty()) {
             String searchLower = "%" + search.toLowerCase() + "%";
-            result = applicationRepository.findBySearch(searchLower, pageRequest);
+            result = applicationRepository.findByTenantIdAndSearch(tenantId, searchLower, pageRequest);
         } else {
-            result = applicationRepository.findAll(pageRequest);
+            result = applicationRepository.findByTenantId(tenantId, pageRequest);
         }
 
         List<ApplicationResponse> content = result.getContent().stream()
@@ -130,14 +218,16 @@ public class AdminFacade {
 
     @Transactional
     public ApplicationResponse getApplicationById(Long id) {
-        Application app = applicationRepository.findById(id)
+        Application app = applicationRepository
+                .findByIdAndTenantId(id, TenantContext.getCurrentTenantId())
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
         return ApplicationMapper.toDto(app);
     }
 
     @Transactional
     public ApplicationResponse reviewApplication(Long id, ReviewRequest request) {
-        Application app = applicationRepository.findById(id)
+        Application app = applicationRepository
+                .findByIdAndTenantId(id, TenantContext.getCurrentTenantId())
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
 
         if (!"SUBMITTED".equals(app.getStatus())) {
@@ -152,7 +242,7 @@ public class AdminFacade {
         switch (reviewStatus) {
             case "admitted" -> {
                 app.setStatus("ADMITTED");
-                generateStudentNumbers(app);
+                studentNumberService.assignIfAbsent(app);
             }
             case "rejected" -> app.setStatus("REJECTED");
             case "waitlisted" -> app.setStatus("WAITLISTED");
@@ -161,41 +251,5 @@ public class AdminFacade {
 
         Application updated = applicationRepository.save(app);
         return ApplicationMapper.toDto(updated);
-    }
-
-    private void generateStudentNumbers(Application app) {
-        int year = LocalDateTime.now().getYear();
-
-        String regPrefix = String.format("REG-%d-", year);
-        String nextReg = getNextSequence(regPrefix, app::getRegistrationNumber, app::setRegistrationNumber);
-
-        String stuPrefix = String.format("STU-%d-", year);
-        String nextStu = getNextSequence(stuPrefix, app::getStudentNumber, app::setStudentNumber);
-
-        app.setRegistrationNumber(nextReg);
-        app.setStudentNumber(nextStu);
-    }
-
-    private String getNextSequence(String prefix,
-                                   Supplier<String> currentGetter,
-                                   Consumer<String> currentSetter) {
-        List<Application> existing = applicationRepository.findAll().stream()
-                .filter(a -> {
-                    String val = currentGetter.get();
-                    return val != null && val.startsWith(prefix);
-                })
-                .toList();
-
-        int maxSeq = existing.stream()
-                .map(a -> currentGetter.get())
-                .filter(java.util.Objects::nonNull)
-                .map(val -> val.substring(prefix.length()))
-                .filter(s -> s.matches("\\d+"))
-                .mapToInt(Integer::parseInt)
-                .max()
-                .orElse(0);
-
-        int nextSeq = maxSeq + 1;
-        return String.format("%s%04d", prefix, nextSeq);
     }
 }

@@ -11,6 +11,7 @@ import {
   type ApplicationSubmissionInput,
 } from "@/lib/submissions";
 import { fetchRunningSchemes, type AdmissionScheme } from "@/lib/schemes";
+import { apiUrl, nadApiUrl } from "@/lib/apiUrl";
 
 const currentYear = new Date().getFullYear();
 
@@ -306,6 +307,8 @@ const oLevelSubjectOptions = [
 
 const uaceGradeOptions = ["A", "B", "C", "D", "E"];
 
+const uaceSubsidiaryGradeOptions = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
 const oLevelGradeOptions = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 const uacePrincipalGradeToPoints: Record<string, number> = {
@@ -322,6 +325,15 @@ const uaceSubsidiaryGradeToPoints: Record<string, number> = {
   C: 1,
   D: 1,
   E: 1,
+  "1": 1,
+  "2": 1,
+  "3": 1,
+  "4": 1,
+  "5": 1,
+  "6": 1,
+  "7": 0,
+  "8": 0,
+  "9": 0,
 };
 
 const certificateGradeOptions = [
@@ -646,9 +658,6 @@ const nationalityOptions = [
 ];
 
 // Email verification moves to the platform API (Spring Boot identity module).
-const OTP_API_BASE =
-  import.meta.env.VITE_API_BASE_URL?.trim() || "/api/v1";
-
 const APPLICATION_DRAFT_STORAGE_KEY = "application_start_draft_v1";
 const APPLICANT_ID_STORAGE_KEY = "nexus_applicant_id";
 
@@ -804,6 +813,8 @@ const ApplicationStartPage = () => {
   const guardianTypeRef = useRef<HTMLDivElement>(null);
   const [kinRelOpen, setKinRelOpen] = useState(false);
   const kinRelRef = useRef<HTMLDivElement>(null);
+  const formSectionRef = useRef<HTMLElement>(null);
+  const [scrollToErrorRequest, setScrollToErrorRequest] = useState(0);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -1076,7 +1087,7 @@ const ApplicationStartPage = () => {
   useEffect(() => {
     const fetchProgrammes = async () => {
       try {
-        const res = await fetch("/api/v1/programs");
+        const res = await fetch(nadApiUrl("public/programs"));
         if (res.ok) {
           const data = (await res.json()) as {
             programCode: string; programName: string; facultySchool: string; cutoffScore: number; status: string; programType: string;
@@ -1580,10 +1591,12 @@ const ApplicationStartPage = () => {
           nextErrors.uaceGeneralPaperGrade =
             "General Paper grade is required for UACE applicants.";
         } else if (
-          !uaceGradeOptions.includes(formData.uaceGeneralPaperGrade.trim())
+          !uaceSubsidiaryGradeOptions.includes(
+            formData.uaceGeneralPaperGrade.trim(),
+          )
         ) {
           nextErrors.uaceGeneralPaperGrade =
-            "General Paper grade must be between A and E.";
+            "General Paper grade must be between 1 and 9.";
         }
 
         if (!formData.uaceIctOrSubMathSubject.trim()) {
@@ -1595,10 +1608,12 @@ const ApplicationStartPage = () => {
           nextErrors.uaceIctOrSubMathGrade =
             "Grade for ICT/Subsidiary Mathematics is required.";
         } else if (
-          !uaceGradeOptions.includes(formData.uaceIctOrSubMathGrade.trim())
+          !uaceSubsidiaryGradeOptions.includes(
+            formData.uaceIctOrSubMathGrade.trim(),
+          )
         ) {
           nextErrors.uaceIctOrSubMathGrade =
-            "ICT/Subsidiary Mathematics grade must be between A and E.";
+            "ICT/Subsidiary Mathematics grade must be between 1 and 9.";
         }
       }
 
@@ -1724,7 +1739,39 @@ const ApplicationStartPage = () => {
     return 0;
   };
 
+  useEffect(() => {
+    if (scrollToErrorRequest === 0) return;
+    const container = formSectionRef.current;
+    if (!container) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      const errorNodes = Array.from(
+        container.querySelectorAll<HTMLElement>("p.text-destructive"),
+      ).filter((node) => node.offsetParent !== null);
+      const target = errorNodes[0];
+      if (!target) return;
+
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      const focusable = target.parentElement?.querySelector<HTMLElement>(
+        'input:not([type="file"]), select, textarea, [role="combobox"], button',
+      );
+      if (focusable) {
+        window.setTimeout(
+          () => focusable.focus({ preventScroll: true }),
+          400,
+        );
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [scrollToErrorRequest]);
+
   const handleNext = () => {
+    // Scroll to the first visible field showing a validation error. Runs after
+    // render so newly shown errors (and switched sub-steps) are in the DOM.
+    const scrollToFirstError = () =>
+      setScrollToErrorRequest((request) => request + 1);
+
     console.log("[NEXT] activeStep:", activeStep, "academicSubStep:", academicSubStep, "documentSubStep:", documentSubStep);
 
     if (activeStep === 2 && academicSubStep < academicStepLabels.length - 1) {
@@ -1735,6 +1782,7 @@ const ApplicationStartPage = () => {
       if (currentSubErrors.length > 0) {
         console.log("[NEXT] BLOCKED — current sub-step has errors:", currentSubErrors.map((k) => `${k}: ${allErrors[k]}`));
         setErrors((prev) => ({ ...prev, ...allErrors }));
+        scrollToFirstError();
         return;
       }
       setErrors((prev) => {
@@ -1753,20 +1801,24 @@ const ApplicationStartPage = () => {
       return;
     }
 
-    if (!validateStep(activeStep)) {
-      console.log("[NEXT] step", activeStep, "validation FAILED — errors:", Object.entries(errors).map(([k, v]) => `${k}: ${v}`));
+    // Validate once and keep the result. Reading `errors` after calling
+    // validateStep() would log the previous render's value, because
+    // setErrors() has not been applied to this closure yet.
+    const stepErrors = validateStepFields(activeStep);
+    setErrors(stepErrors);
+    const stepIsValid = Object.keys(stepErrors).length === 0;
+
+    if (!stepIsValid) {
+      console.log("[NEXT] step", activeStep, "validation FAILED — errors:", Object.entries(stepErrors).map(([k, v]) => `${k}: ${v}`));
       if (activeStep === 2) {
-        const stepErrors = validateStepFields(activeStep);
         console.log("[NEXT] jumping to failing academic sub-step:", findFirstFailingSubStep(stepErrors));
-        setErrors((prev) => ({ ...prev, ...stepErrors }));
         setAcademicSubStep(findFirstFailingSubStep(stepErrors));
       }
       if (activeStep === 3) {
-        const stepErrors = validateStepFields(activeStep);
         console.log("[NEXT] jumping to failing document sub-step:", findFirstFailingDocumentSubStep(stepErrors));
-        setErrors((prev) => ({ ...prev, ...stepErrors }));
         setDocumentSubStep(findFirstFailingDocumentSubStep(stepErrors));
       }
+      scrollToFirstError();
       return;
     }
 
@@ -1822,9 +1874,14 @@ const ApplicationStartPage = () => {
     ? "UGX 50,000 + bank/service charges (typically UGX 2,750-5,000)."
     : "USD 75 (or equivalent, e.g. UGX 281,250 in some schemes).";
   const handleSubmit = async () => {
-    const valid = validateStep(5);
-    console.log("[SUBMIT] validateStep(5) =", valid, "errors:", errors);
-    if (!valid) return;
+    const submitErrors = validateStepFields(5);
+    const valid = Object.keys(submitErrors).length === 0;
+    console.log("[SUBMIT] validateStep(5) =", valid, "errors:", Object.entries(submitErrors).map(([k, v]) => `${k}: ${v}`));
+    if (!valid) {
+      setErrors(submitErrors);
+      setScrollToErrorRequest((request) => request + 1);
+      return;
+    }
     setSubmittingApplication(true);
     setSubmissionStatus("");
     try {
@@ -2000,25 +2057,36 @@ const ApplicationStartPage = () => {
     setOtpVerified(false);
 
     try {
-      const res = await fetch(`${OTP_API_BASE}/auth/otp/send`, {
+      const res = await fetch(apiUrl("auth/otp/send"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
       const payload = (await res.json()) as {
         ok?: boolean;
+        emailSent?: boolean;
         message?: string;
         error?: string;
       };
 
+      setResendCooldown(60);
+
       if (!res.ok || !payload.ok) {
-        setOtpStatus(payload.error ?? "Failed to send OTP.");
+        setOtpStatus(payload.message ?? payload.error ?? "Failed to send OTP.");
+        return;
+      }
+
+      if (payload.emailSent === false) {
+        // The code was generated but the mail provider did not deliver it.
+        // Leave the input disabled so the applicant retries cleanly instead of
+        // waiting on an email that will never arrive.
+        setOtpSent(false);
+        setOtpStatus(payload.message ?? "We could not send the code. Please try again.");
         return;
       }
 
       setOtpSent(true);
       setOtpStatus(payload.message ?? "OTP sent. Check your email.");
-      setResendCooldown(60);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to send OTP.";
@@ -2041,7 +2109,7 @@ const ApplicationStartPage = () => {
     setOtpStatus("");
 
     try {
-      const res = await fetch(`${OTP_API_BASE}/auth/otp/verify`, {
+      const res = await fetch(apiUrl("auth/otp/verify"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp: code }),
@@ -2055,7 +2123,7 @@ const ApplicationStartPage = () => {
 
       if (!res.ok || !payload.ok || !payload.verified) {
         setOtpVerified(false);
-        setOtpStatus(payload.error ?? "Invalid OTP.");
+        setOtpStatus(payload.message ?? payload.error ?? "Invalid OTP.");
         return;
       }
 
@@ -2162,7 +2230,7 @@ const ApplicationStartPage = () => {
               </div>
             </aside>
 
-            <section className="border border-border rounded-[20px] md:rounded-[24px] p-4 sm:p-6 md:p-10 bg-background">
+            <section ref={formSectionRef} className="border border-border rounded-[20px] md:rounded-[24px] p-4 sm:p-6 md:p-10 bg-background">
               {submitted ? (
                 <div className="flex flex-col items-center text-center py-8 sm:py-12">
                   <div className="relative mb-8">
@@ -2437,7 +2505,7 @@ const ApplicationStartPage = () => {
                           {!otpVerified && (
                             <>
                               <div className="space-y-3">
-                                <div className="flex items-stretch gap-2">
+                                <div className="flex flex-wrap sm:flex-nowrap items-stretch gap-2">
                                   <input
                                     value={otpCode}
                                     onChange={(e) =>
@@ -2459,7 +2527,7 @@ const ApplicationStartPage = () => {
                                     type="button"
                                     onClick={handleVerifyOtp}
                                     disabled={!otpSent || verifyingOtp || otpCode.length < 4}
-                                    className="px-5 py-2.5 rounded-[10px] bg-accent text-accent-foreground font-body text-xs tracking-[0.16em] uppercase disabled:opacity-40 hover:bg-accent/90 transition-colors"
+                                    className="whitespace-nowrap flex-shrink-0 px-5 py-2.5 rounded-[10px] bg-accent text-accent-foreground font-body text-xs tracking-[0.16em] uppercase disabled:opacity-40 hover:bg-accent/90 transition-colors"
                                   >
                                     {verifyingOtp ? (
                                       <span className="flex items-center gap-2">
@@ -3085,266 +3153,7 @@ const ApplicationStartPage = () => {
                             </div>
                           </div>
 
-                          {shouldCaptureUceAndUace ? (
-                            <div className="space-y-4 border border-border rounded-[14px] p-4 bg-secondary/10">
-                              <p className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                UNEB Index Details
-                              </p>
-                              <div className="space-y-4 border border-border rounded-[12px] p-4 bg-background/50">
-                                <p className="font-body text-xs uppercase tracking-[0.2em] text-accent">
-                                  Section A: UACE Details
-                                </p>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div>
-                                    <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                      UACE Index Number
-                                    </label>
-                                    <input
-                                      value={formData.uaceIndexNumber}
-                                      onChange={(e) =>
-                                        updateField(
-                                          "uaceIndexNumber",
-                                          e.target.value,
-                                        )
-                                      }
-                                      className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                                      type="text"
-                                      placeholder="e.g. U0123/002"
-                                    />
-                                    {errors.uaceIndexNumber && (
-                                      <p className="text-xs text-destructive mt-2">
-                                        {errors.uaceIndexNumber}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <div>
-                                    <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                      UACE Year of Sitting
-                                    </label>
-                                    <input
-                                      value={formData.uaceYearOfSitting}
-                                      onChange={(e) =>
-                                        updateField(
-                                          "uaceYearOfSitting",
-                                          e.target.value
-                                            .replace(/\D/g, "")
-                                            .slice(0, 4),
-                                        )
-                                      }
-                                      className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                                      type="text"
-                                      inputMode="numeric"
-                                      placeholder="YYYY"
-                                    />
-                                    {errors.uaceYearOfSitting && (
-                                      <p className="text-xs text-destructive mt-2">
-                                        {errors.uaceYearOfSitting}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-
-                                <label className="inline-flex items-start gap-3 font-body text-sm text-foreground">
-                                  <input
-                                    type="checkbox"
-                                    checked={formData.hasSecondSittingUace}
-                                    onChange={(e) =>
-                                      updateField(
-                                        "hasSecondSittingUace",
-                                        e.target.checked,
-                                      )
-                                    }
-                                    className="mt-1"
-                                  />
-                                  I sat UACE in more than one sitting.
-                                </label>
-
-                                {formData.hasSecondSittingUace ? (
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                      <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                        Second Sitting UACE Index Number
-                                      </label>
-                                      <input
-                                        value={
-                                          formData.secondSittingUaceIndexNumber
-                                        }
-                                        onChange={(e) =>
-                                          updateField(
-                                            "secondSittingUaceIndexNumber",
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                                        type="text"
-                                      />
-                                      {errors.secondSittingUaceIndexNumber && (
-                                        <p className="text-xs text-destructive mt-2">
-                                          {errors.secondSittingUaceIndexNumber}
-                                        </p>
-                                      )}
-                                    </div>
-                                    <div>
-                                      <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                        Second Sitting UACE Year
-                                      </label>
-                                      <input
-                                        value={
-                                          formData.secondSittingUaceYearOfSitting
-                                        }
-                                        onChange={(e) =>
-                                          updateField(
-                                            "secondSittingUaceYearOfSitting",
-                                            e.target.value
-                                              .replace(/\D/g, "")
-                                              .slice(0, 4),
-                                          )
-                                        }
-                                        className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                                        type="text"
-                                        inputMode="numeric"
-                                        placeholder="YYYY"
-                                      />
-                                      {errors.secondSittingUaceYearOfSitting && (
-                                        <p className="text-xs text-destructive mt-2">
-                                          {
-                                            errors.secondSittingUaceYearOfSitting
-                                          }
-                                        </p>
-                                      )}
-                                    </div>
-                                  </div>
-                                ) : null}
-                              </div>
-
-                              <div className="space-y-4 border border-border rounded-[12px] p-4 bg-background/50">
-                                <p className="font-body text-xs uppercase tracking-[0.2em] text-accent">
-                                  Section B: UCE Details
-                                </p>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div>
-                                    <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                      UCE Index Number
-                                    </label>
-                                    <input
-                                      value={formData.uceIndexNumber}
-                                      onChange={(e) =>
-                                        updateField(
-                                          "uceIndexNumber",
-                                          e.target.value,
-                                        )
-                                      }
-                                      className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                                      type="text"
-                                      placeholder="e.g. U0123/001"
-                                    />
-                                    {errors.uceIndexNumber && (
-                                      <p className="text-xs text-destructive mt-2">
-                                        {errors.uceIndexNumber}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <div>
-                                    <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                      UCE Year of Sitting
-                                    </label>
-                                    <input
-                                      value={formData.uceYearOfSitting}
-                                      onChange={(e) =>
-                                        updateField(
-                                          "uceYearOfSitting",
-                                          e.target.value
-                                            .replace(/\D/g, "")
-                                            .slice(0, 4),
-                                        )
-                                      }
-                                      className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                                      type="text"
-                                      inputMode="numeric"
-                                      placeholder="YYYY"
-                                    />
-                                    {errors.uceYearOfSitting && (
-                                      <p className="text-xs text-destructive mt-2">
-                                        {errors.uceYearOfSitting}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-
-                                <label className="inline-flex items-start gap-3 font-body text-sm text-foreground">
-                                  <input
-                                    type="checkbox"
-                                    checked={formData.hasSecondSittingUce}
-                                    onChange={(e) =>
-                                      updateField(
-                                        "hasSecondSittingUce",
-                                        e.target.checked,
-                                      )
-                                    }
-                                    className="mt-1"
-                                  />
-                                  I sat UCE in more than one sitting.
-                                </label>
-
-                                {formData.hasSecondSittingUce ? (
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                      <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                        Second Sitting UCE Index Number
-                                      </label>
-                                      <input
-                                        value={
-                                          formData.secondSittingUceIndexNumber
-                                        }
-                                        onChange={(e) =>
-                                          updateField(
-                                            "secondSittingUceIndexNumber",
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                                        type="text"
-                                      />
-                                      {errors.secondSittingUceIndexNumber && (
-                                        <p className="text-xs text-destructive mt-2">
-                                          {errors.secondSittingUceIndexNumber}
-                                        </p>
-                                      )}
-                                    </div>
-                                    <div>
-                                      <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                                        Second Sitting UCE Year
-                                      </label>
-                                      <input
-                                        value={
-                                          formData.secondSittingUceYearOfSitting
-                                        }
-                                        onChange={(e) =>
-                                          updateField(
-                                            "secondSittingUceYearOfSitting",
-                                            e.target.value
-                                              .replace(/\D/g, "")
-                                              .slice(0, 4),
-                                          )
-                                        }
-                                        className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
-                                        type="text"
-                                        inputMode="numeric"
-                                        placeholder="YYYY"
-                                      />
-                                      {errors.secondSittingUceYearOfSitting && (
-                                        <p className="text-xs text-destructive mt-2">
-                                          {errors.secondSittingUceYearOfSitting}
-                                        </p>
-                                      )}
-                                    </div>
-                                  </div>
-                                ) : null}
-                              </div>
-                            </div>
-                          ) : null}
 
                           <div className="space-y-4">
                             <p className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -3481,6 +3290,138 @@ const ApplicationStartPage = () => {
                             academicSubStep === 1 ? "space-y-4" : "hidden"
                           }
                         >
+                          {shouldCaptureUceAndUace ? (
+                            <div className="space-y-4 border border-border rounded-[14px] p-4 bg-secondary/10">
+                              <p className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                UNEB Index Details
+                              </p>
+                              <div className="space-y-4 border border-border rounded-[12px] p-4 bg-background/50">
+                                <p className="font-body text-xs uppercase tracking-[0.2em] text-accent">
+                                  UCE Details
+                                </p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                      UCE Index Number
+                                    </label>
+                                    <input
+                                      value={formData.uceIndexNumber}
+                                      onChange={(e) =>
+                                        updateField(
+                                          "uceIndexNumber",
+                                          e.target.value,
+                                        )
+                                      }
+                                      className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                                      type="text"
+                                      placeholder="e.g. U0123/001"
+                                    />
+                                    {errors.uceIndexNumber && (
+                                      <p className="text-xs text-destructive mt-2">
+                                        {errors.uceIndexNumber}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                      UCE Year of Sitting
+                                    </label>
+                                    <input
+                                      value={formData.uceYearOfSitting}
+                                      onChange={(e) =>
+                                        updateField(
+                                          "uceYearOfSitting",
+                                          e.target.value
+                                            .replace(/\D/g, "")
+                                            .slice(0, 4),
+                                        )
+                                      }
+                                      className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                                      type="text"
+                                      inputMode="numeric"
+                                      placeholder="YYYY"
+                                    />
+                                    {errors.uceYearOfSitting && (
+                                      <p className="text-xs text-destructive mt-2">
+                                        {errors.uceYearOfSitting}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <label className="inline-flex items-start gap-3 font-body text-sm text-foreground">
+                                  <input
+                                    type="checkbox"
+                                    checked={formData.hasSecondSittingUce}
+                                    onChange={(e) =>
+                                      updateField(
+                                        "hasSecondSittingUce",
+                                        e.target.checked,
+                                      )
+                                    }
+                                    className="mt-1"
+                                  />
+                                  I sat UCE in more than one sitting.
+                                </label>
+
+                                {formData.hasSecondSittingUce ? (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                      <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                        Second Sitting UCE Index Number
+                                      </label>
+                                      <input
+                                        value={
+                                          formData.secondSittingUceIndexNumber
+                                        }
+                                        onChange={(e) =>
+                                          updateField(
+                                            "secondSittingUceIndexNumber",
+                                            e.target.value,
+                                          )
+                                        }
+                                        className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                                        type="text"
+                                      />
+                                      {errors.secondSittingUceIndexNumber && (
+                                        <p className="text-xs text-destructive mt-2">
+                                          {errors.secondSittingUceIndexNumber}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <div>
+                                      <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                        Second Sitting UCE Year
+                                      </label>
+                                      <input
+                                        value={
+                                          formData.secondSittingUceYearOfSitting
+                                        }
+                                        onChange={(e) =>
+                                          updateField(
+                                            "secondSittingUceYearOfSitting",
+                                            e.target.value
+                                              .replace(/\D/g, "")
+                                              .slice(0, 4),
+                                          )
+                                        }
+                                        className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                                        type="text"
+                                        inputMode="numeric"
+                                        placeholder="YYYY"
+                                      />
+                                      {errors.secondSittingUceYearOfSitting && (
+                                        <p className="text-xs text-destructive mt-2">
+                                          {errors.secondSittingUceYearOfSitting}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+                          ) : null}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -3708,6 +3649,140 @@ const ApplicationStartPage = () => {
                             academicSubStep === 2 ? "space-y-4" : "hidden"
                           }
                         >
+                          {shouldCaptureUceAndUace ? (
+                            <div className="space-y-4 border border-border rounded-[14px] p-4 bg-secondary/10">
+                              <p className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                UNEB Index Details
+                              </p>
+                              <div className="space-y-4 border border-border rounded-[12px] p-4 bg-background/50">
+                                <p className="font-body text-xs uppercase tracking-[0.2em] text-accent">
+                                  UACE Details
+                                </p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                      UACE Index Number
+                                    </label>
+                                    <input
+                                      value={formData.uaceIndexNumber}
+                                      onChange={(e) =>
+                                        updateField(
+                                          "uaceIndexNumber",
+                                          e.target.value,
+                                        )
+                                      }
+                                      className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                                      type="text"
+                                      placeholder="e.g. U0123/002"
+                                    />
+                                    {errors.uaceIndexNumber && (
+                                      <p className="text-xs text-destructive mt-2">
+                                        {errors.uaceIndexNumber}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                      UACE Year of Sitting
+                                    </label>
+                                    <input
+                                      value={formData.uaceYearOfSitting}
+                                      onChange={(e) =>
+                                        updateField(
+                                          "uaceYearOfSitting",
+                                          e.target.value
+                                            .replace(/\D/g, "")
+                                            .slice(0, 4),
+                                        )
+                                      }
+                                      className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                                      type="text"
+                                      inputMode="numeric"
+                                      placeholder="YYYY"
+                                    />
+                                    {errors.uaceYearOfSitting && (
+                                      <p className="text-xs text-destructive mt-2">
+                                        {errors.uaceYearOfSitting}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <label className="inline-flex items-start gap-3 font-body text-sm text-foreground">
+                                  <input
+                                    type="checkbox"
+                                    checked={formData.hasSecondSittingUace}
+                                    onChange={(e) =>
+                                      updateField(
+                                        "hasSecondSittingUace",
+                                        e.target.checked,
+                                      )
+                                    }
+                                    className="mt-1"
+                                  />
+                                  I sat UACE in more than one sitting.
+                                </label>
+
+                                {formData.hasSecondSittingUace ? (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                      <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                        Second Sitting UACE Index Number
+                                      </label>
+                                      <input
+                                        value={
+                                          formData.secondSittingUaceIndexNumber
+                                        }
+                                        onChange={(e) =>
+                                          updateField(
+                                            "secondSittingUaceIndexNumber",
+                                            e.target.value,
+                                          )
+                                        }
+                                        className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                                        type="text"
+                                      />
+                                      {errors.secondSittingUaceIndexNumber && (
+                                        <p className="text-xs text-destructive mt-2">
+                                          {errors.secondSittingUaceIndexNumber}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <div>
+                                      <label className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                        Second Sitting UACE Year
+                                      </label>
+                                      <input
+                                        value={
+                                          formData.secondSittingUaceYearOfSitting
+                                        }
+                                        onChange={(e) =>
+                                          updateField(
+                                            "secondSittingUaceYearOfSitting",
+                                            e.target.value
+                                              .replace(/\D/g, "")
+                                              .slice(0, 4),
+                                          )
+                                        }
+                                        className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
+                                        type="text"
+                                        inputMode="numeric"
+                                        placeholder="YYYY"
+                                      />
+                                      {errors.secondSittingUaceYearOfSitting && (
+                                        <p className="text-xs text-destructive mt-2">
+                                          {
+                                            errors.secondSittingUaceYearOfSitting
+                                          }
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+                          ) : null}
                           <div className="space-y-6 border border-border rounded-[14px] p-4 bg-secondary/10">
                               <p className="font-body text-xs uppercase tracking-[0.2em] text-muted-foreground">
                                 UACE / A-Level Details
@@ -3809,7 +3884,7 @@ const ApplicationStartPage = () => {
                                     className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
                                   >
                                     <option value="">Select grade</option>
-                                    {uaceGradeOptions.map((grade) => (
+                                    {uaceSubsidiaryGradeOptions.map((grade) => (
                                       <option key={`gp-${grade}`} value={grade}>
                                         {grade}
                                       </option>
@@ -3863,14 +3938,16 @@ const ApplicationStartPage = () => {
                                       className="mt-2 w-full border border-border rounded-[12px] px-4 py-3 bg-transparent font-body text-sm"
                                     >
                                       <option value="">Select grade</option>
-                                      {uaceGradeOptions.map((grade) => (
-                                        <option
-                                          key={`sub-${grade}`}
-                                          value={grade}
-                                        >
-                                          {grade}
-                                        </option>
-                                      ))}
+                                      {uaceSubsidiaryGradeOptions.map(
+                                        (grade) => (
+                                          <option
+                                            key={`sub-${grade}`}
+                                            value={grade}
+                                          >
+                                            {grade}
+                                          </option>
+                                        ),
+                                      )}
                                     </select>
                                     {errors.uaceIctOrSubMathGrade && (
                                       <p className="text-xs text-destructive mt-2">

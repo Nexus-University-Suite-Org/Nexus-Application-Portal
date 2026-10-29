@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import org.nexus.napbackend.model.NewsletterSubscription;
 import org.nexus.napbackend.repository.NewsletterSubscriptionRepository;
+import org.nexus.napbackend.tenancy.TenantContext;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,12 +18,13 @@ public class NewsletterSubscriptionService {
     }
 
     public NewsletterSubscription subscribe(String email) {
-        Optional<NewsletterSubscription> existing = repository.findByEmail(email);
+        Long tenantId = TenantContext.getCurrentTenantId();
+        Optional<NewsletterSubscription> existing = repository.findByTenantIdAndEmail(tenantId, email);
         if (existing.isPresent()) {
             return existing.get();
         }
         NewsletterSubscription sub = new NewsletterSubscription();
-        sub.setTenantId(1L);
+        sub.setTenantId(tenantId);
         sub.setEmail(email);
         sub.setDoubleOptIn(false);
         sub.setCreatedAt(LocalDateTime.now());
@@ -30,14 +32,15 @@ public class NewsletterSubscriptionService {
     }
 
     public List<NewsletterSubscription> findAll() {
-        return repository.findAll();
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId());
     }
 
     public Optional<NewsletterSubscription> findById(Long id) {
-        return repository.findById(id);
+        return repository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId());
     }
 
     public void deleteById(Long id) {
-        repository.deleteById(id);
+        repository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId())
+                .ifPresent(repository::delete);
     }
 }

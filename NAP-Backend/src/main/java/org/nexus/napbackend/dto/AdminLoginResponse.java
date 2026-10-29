@@ -3,6 +3,8 @@ package org.nexus.napbackend.dto;
 public record AdminLoginResponse(
         String token,
         String email,
-        String fullName
+        String fullName,
+        Long tenantId,
+        String role
 ) {
 }

@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.util.List;
 import java.util.Optional;
 import org.nexus.napbackend.model.Course;
@@ -8,8 +10,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CourseService {
-
-    private static final Long DEMO_TENANT_ID = 1L;
     private final CourseRepository repository;
 
     public CourseService(CourseRepository repository) {
@@ -17,27 +17,28 @@ public class CourseService {
     }
 
     public List<Course> findAll() {
-        return repository.findAll();
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId());
     }
 
     public Optional<Course> findById(Long id) {
-        return repository.findById(id);
+        return repository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId());
     }
 
     public Optional<Course> findByName(String name) {
-        return repository.findByNameIgnoreCase(name);
+        return repository.findByTenantIdAndNameIgnoreCase(TenantContext.getCurrentTenantId(), name);
     }
 
     public Optional<Course> findByCode(String code) {
-        return repository.findByCodeIgnoreCase(code);
+        return repository.findByTenantIdAndCodeIgnoreCase(TenantContext.getCurrentTenantId(), code);
     }
 
     public Course create(Course course) {
-        course.setTenantId(DEMO_TENANT_ID);
+        course.setTenantId(TenantContext.getCurrentTenantId());
         return repository.save(course);
     }
 
     public boolean existsByCode(String code) {
-        return repository.existsByCodeIgnoreCase(code);
+        return repository.existsByTenantIdAndCodeIgnoreCase(
+                TenantContext.getCurrentTenantId(), code);
     }
 }

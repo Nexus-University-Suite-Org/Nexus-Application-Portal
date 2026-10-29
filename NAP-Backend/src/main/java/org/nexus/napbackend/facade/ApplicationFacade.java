@@ -14,6 +14,7 @@ import org.nexus.napbackend.model.Program;
 import org.nexus.napbackend.service.ApplicationService;
 import org.nexus.napbackend.service.NotificationService;
 import org.nexus.napbackend.service.ProgramService;
+import org.nexus.napbackend.service.StudentNumberService;
 import org.nexus.napbackend.service.WeightingService;
 import org.nexus.napbackend.scoring.AdmissionSchemeResolver;
 import org.nexus.napbackend.scoring.ScoringService;
@@ -25,21 +26,33 @@ public class ApplicationFacade {
     private final ProgramService programService;
     private final WeightingService weightingService;
     private final NotificationService notificationService;
+<<<<<<< HEAD
     private final ScoringService scoringService;
     private final AdmissionSchemeResolver schemeResolver;
+=======
+    private final StudentNumberService studentNumberService;
+>>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
 
     public ApplicationFacade(ApplicationService service,
                              ProgramService programService,
                              WeightingService weightingService,
                              NotificationService notificationService,
+<<<<<<< HEAD
                              ScoringService scoringService,
                              AdmissionSchemeResolver schemeResolver) {
+=======
+                             StudentNumberService studentNumberService) {
+>>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
         this.service = service;
         this.programService = programService;
         this.weightingService = weightingService;
         this.notificationService = notificationService;
+<<<<<<< HEAD
         this.scoringService = scoringService;
         this.schemeResolver = schemeResolver;
+=======
+        this.studentNumberService = studentNumberService;
+>>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
     }
 
     @Transactional
@@ -94,6 +107,7 @@ public class ApplicationFacade {
             entity.setStatus("ADMITTED");
             String assigned = weightingService.findAssignedProgramme(entity, programmes, scheme);
             entity.setAssignedProgramme(assigned);
+            studentNumberService.assignIfAbsent(entity);
             try {
                 var results = new com.fasterxml.jackson.databind.ObjectMapper()
                         .readValue(qualificationResultsJson, new com.fasterxml.jackson.core.type.TypeReference<List<org.nexus.napbackend.dto.QualificationResult>>() {});

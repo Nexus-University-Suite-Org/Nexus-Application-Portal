@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { BookOpen, ChevronDown, Heart, ArrowRight, Clock, Banknote } from "lucide-react";
 import aboutHero from "@/assets/about-hero.jpg";
+import { nadApiUrl } from "@/lib/apiUrl";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,14 +14,9 @@ type Program = {
   id: number; programName: string; programCode: string; programType: string;
   awardQualification: string; programDescription: string; shortDescription: string;
   fullDescription: string; status: string; facultySchool: string; department: string;
-  duration: number; durationUnit: string; numberOfYears: number; numberOfSemesters: number;
+  durationUnit: string; numberOfYears: number; semestersPerYear: number;
   studyMode: string; academicCalendar: string; campus: string;
   fees: string; curriculum: string; cutoffScore?: number;
-};
-
-type ProgramCategory = {
-  id: number; name: string; description: string; displayOrder: number;
-  programs: { id: number; programName: string; programCode: string; programType: string }[];
 };
 
 type Course = { code: string; name: string; credits: number; type: string };
@@ -48,6 +44,28 @@ const AWARD_LABELS: Record<string, string> = {
   OTHER: "Other Programmes",
 };
 
+const PROGRAM_TYPE_ALIASES: Record<string, string> = {
+  UNDERGRADUATE: "BACHELOR",
+  "BACHELOR'S": "BACHELOR",
+  POSTGRADUATE: "MASTER",
+  "MASTER'S": "MASTER",
+  DOCTORAL: "PHD",
+  DOCTORATE: "PHD",
+};
+
+function awardBucket(program: Program): string {
+  const raw = (program.programType || "").trim().toUpperCase();
+  if (raw in AWARD_LABELS) return raw;
+  if (PROGRAM_TYPE_ALIASES[raw]) return PROGRAM_TYPE_ALIASES[raw];
+  const award = (program.awardQualification || "").toLowerCase();
+  if (award.startsWith("bachelor")) return "BACHELOR";
+  if (award.startsWith("master")) return "MASTER";
+  if (award.startsWith("doctor")) return "PHD";
+  if (award.includes("diploma")) return "DIPLOMA";
+  if (award.includes("certificate")) return "CERTIFICATE";
+  return "OTHER";
+}
+
 const ProgramsPage = () => {
   const navigate = useNavigate();
   const cardsRef = useRef<HTMLDivElement>(null);
@@ -61,9 +79,7 @@ const ProgramsPage = () => {
   const [sectionDescription, setSectionDescription] = useState("Click on any program to see skills, career outcomes, and how long it takes to complete.");
 
   const [programs, setPrograms] = useState<Program[]>([]);
-  const [categories, setCategories] = useState<ProgramCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [uncategorizedPrograms, setUncategorizedPrograms] = useState<Program[]>([]);
   const [heroImage, setHeroImage] = useState<string>(aboutHero);
 
   useEffect(() => {
@@ -86,16 +102,10 @@ const ProgramsPage = () => {
       })
       .catch(() => {});
 
-    Promise.all([
-      fetch("/api/v1/programs").then(r => r.json()),
-      fetch("/api/v1/programs/categories").then(r => r.json()),
-    ])
-      .then(([progs, cats]) => {
-        const activeProgs = (progs as Program[]).filter(p => p.status === "Active");
-        setPrograms(activeProgs);
-        setCategories(cats as ProgramCategory[]);
-        const categorizedIds = new Set((cats as ProgramCategory[]).flatMap(c => c.programs.map(p => p.id)));
-        setUncategorizedPrograms(activeProgs.filter(p => !categorizedIds.has(p.id)));
+    fetch(nadApiUrl("public/programs"))
+      .then(r => r.json())
+      .then((progs: Program[]) => {
+        setPrograms(progs.filter(p => p.status === "Active"));
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
@@ -136,10 +146,7 @@ const ProgramsPage = () => {
   const groupedByType = useMemo(() => {
     const groups: Record<string, Program[]> = {};
     for (const p of programs) {
-      const t = ((p.programType || "OTHER").toUpperCase() in AWARD_LABELS
-        ? (p.programType || "OTHER").toUpperCase()
-        : "OTHER");
-      (groups[t] = groups[t] || []).push(p);
+      (groups[awardBucket(p)] = groups[awardBucket(p)] || []).push(p);
     }
     return groups;
   }, [programs]);
@@ -190,33 +197,6 @@ const ProgramsPage = () => {
             </div>
           );
         })}
-
-        {uncategorizedPrograms.length > 0 && (
-          <div className="mb-12">
-            <h3 className="font-heading text-2xl font-light text-foreground mb-6">All Programs</h3>
-            <div className="space-y-4">
-              {uncategorizedPrograms.map(p => (
-                <ProgramCard key={p.id} program={p} onClick={() => navigate(`/programs/${p.id}`)} feeInfo={getTotalFees(p)} stats={getCurriculumStats(p)} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {categories.map(cat => {
-          const catPrograms = cat.programs.map(cp => programs.find(p => p.id === cp.id)).filter(Boolean) as Program[];
-          if (catPrograms.length === 0) return null;
-          return (
-            <div key={cat.id} className="mb-12">
-              <h3 className="font-heading text-2xl font-light text-foreground mb-2">{cat.name}</h3>
-              {cat.description && <p className="font-body text-sm text-muted-foreground mb-6">{cat.description}</p>}
-              <div className="space-y-4">
-                {catPrograms.map(p => (
-                  <ProgramCard key={p.id} program={p} onClick={() => navigate(`/programs/${p.id}`)} feeInfo={getTotalFees(p)} stats={getCurriculumStats(p)} />
-                ))}
-              </div>
-            </div>
-          );
-        })}
       </div>
 
       {/* CTA */}
@@ -250,7 +230,7 @@ function ProgramCard({ program, onClick, feeInfo, stats }: { program: Program; o
           </div>
           <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
             {program.programType && <span className="text-accent">{program.programType}</span>}
-            {program.duration > 0 && <span className="flex items-center gap-1"><Clock size={12} /> {program.duration} {program.durationUnit || "years"}</span>}
+            {program.numberOfYears > 0 && <span className="flex items-center gap-1"><Clock size={12} /> {program.numberOfYears} {program.durationUnit || "years"}</span>}
             {stats.totalCredits > 0 && <span>{stats.totalCredits} credits</span>}
             {program.studyMode && <span>{program.studyMode}</span>}
             {typeof program.cutoffScore === 'number' && <span className="flex items-center gap-1 font-semibold text-foreground">Cutoff: {program.cutoffScore}</span>}

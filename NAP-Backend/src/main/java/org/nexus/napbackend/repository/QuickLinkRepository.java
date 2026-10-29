@@ -7,4 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface QuickLinkRepository extends JpaRepository<QuickLink, Long> {
 
     List<QuickLink> findAllByOrderByDisplayOrderAsc();
+
+    List<QuickLink> findAllByTenantIdOrderByDisplayOrderAsc(Long tenantId);
+
+    List<QuickLink> findAllByTenantId(Long tenantId);
 }

@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -18,7 +20,6 @@ import org.springframework.stereotype.Service;
 public class ContactService {
 
     private static final Logger log = LoggerFactory.getLogger(ContactService.class);
-    private static final long DEMO_TENANT_ID = 1L;
     private static final DateTimeFormatter RECEIVED_AT_FORMAT =
             DateTimeFormatter.ofPattern("EEEE, d MMMM uuuu 'at' HH:mm").withLocale(java.util.Locale.ENGLISH);
 
@@ -38,7 +39,7 @@ public class ContactService {
     @Transactional
     public ContactResponse register(ContactRequest request, String ipAddress) {
         ContactSubmission submission = new ContactSubmission();
-        submission.setTenantId(DEMO_TENANT_ID);
+        submission.setTenantId(TenantContext.getCurrentTenantId());
         submission.setName(request.name().trim());
         submission.setEmail(request.email().trim());
         submission.setSubject(request.subject() == null || request.subject().isBlank()

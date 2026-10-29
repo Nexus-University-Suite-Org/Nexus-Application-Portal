@@ -11,12 +11,22 @@ import { useContentCollection } from "@/hooks/useContentCollection";
 gsap.registerPlugin(ScrollTrigger);
 
 type ScholarshipDoc = {
-  id: string;
-  name: string;
-  amount?: number;
-  currency?: string;
-  eligibility_criteria?: string;
-  level?: string;
+  id: number;
+  title: string;
+  description?: string;
+  eligibility?: string;
+  deadline?: string;
+};
+
+const formatDeadline = (value?: string) => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 };
 
 const ScholarshipsPage = () => {
@@ -33,40 +43,38 @@ const ScholarshipsPage = () => {
   const scholarshipData =
     scholarshipDocs.length > 0
       ? scholarshipDocs.map((item) => ({
-          name: item.name,
-          amount:
-            typeof item.amount === "number"
-              ? `${item.currency || "$"}${item.amount.toLocaleString()}`
-              : "Varies",
+          id: String(item.id),
+          name: item.title,
           criteria:
-            item.eligibility_criteria ||
+            item.eligibility ||
+            item.description ||
             "See scholarship details for eligibility and requirements.",
-          count: item.level ? `${item.level} level` : "Open category",
+          deadline: formatDeadline(item.deadline),
         }))
       : [];
 
-  const totalAmount = scholarshipDocs.reduce(
-    (sum, item) => sum + (typeof item.amount === "number" ? item.amount : 0),
-    0,
-  );
+  const deadlines = scholarshipDocs
+    .map((item) => item.deadline)
+    .filter((value): value is string => Boolean(value))
+    .map((value) => new Date(value))
+    .filter((date) => !Number.isNaN(date.getTime()))
+    .sort((a, b) => a.getTime() - b.getTime());
+
   const dynamicStats = [
     {
-      label: "Total Scholarships",
-      value:
-        totalAmount > 0
-          ? `$${Math.round(totalAmount).toLocaleString()}`
-          : "—",
-      desc: "Recorded in database",
+      label: "Next Deadline",
+      value: deadlines.length > 0 ? formatDeadline(deadlines[0].toISOString()) ?? "—" : "—",
+      desc: "Earliest application closing date",
     },
     {
-      label: "Coverage",
+      label: "Total Scholarships",
       value: scholarshipDocs.length > 0 ? `${scholarshipDocs.length}` : "—",
       desc: "Available scholarship records",
     },
     {
-      label: "Award Options",
-      value: scholarshipDocs.length > 0 ? `${scholarshipDocs.length}` : "—",
-      desc: "Different scholarship types",
+      label: "Open for Applications",
+      value: deadlines.length > 0 ? `${deadlines.length}` : "—",
+      desc: "Scholarships with a published deadline",
     },
   ];
 
@@ -220,7 +228,7 @@ const ScholarshipsPage = () => {
             </p>
           ) : (
             scholarshipData.map((scholarship) => (
-            <div key={scholarship.name} className="scholarship-card opacity-0">
+            <div key={scholarship.id} className="scholarship-card opacity-0">
               <div className="group card-hover h-full p-8 rounded-[24px] border border-border/50 bg-gradient-to-br from-secondary/20 to-background hover:border-accent/40 transition-all duration-500">
                 <Award
                   size={32}
@@ -232,15 +240,6 @@ const ScholarshipsPage = () => {
 
                 <div className="space-y-4 mb-6">
                   <div className="pb-4 border-b border-border/50">
-                    <p className="font-body text-xs text-accent font-semibold tracking-widest uppercase mb-1">
-                      Award Amount
-                    </p>
-                    <p className="font-heading text-xl font-light text-foreground">
-                      {scholarship.amount}
-                    </p>
-                  </div>
-
-                  <div className="pb-4 border-b border-border/50">
                     <p className="font-body text-xs text-muted-foreground tracking-widest uppercase mb-1">
                       Selection Criteria
                     </p>
@@ -249,14 +248,16 @@ const ScholarshipsPage = () => {
                     </p>
                   </div>
 
-                  <div>
-                    <p className="font-body text-xs text-accent font-semibold tracking-widest uppercase mb-1">
-                      Annual Awards
-                    </p>
-                    <p className="font-body text-sm text-foreground">
-                      {scholarship.count}
-                    </p>
-                  </div>
+                  {scholarship.deadline && (
+                    <div>
+                      <p className="font-body text-xs text-accent font-semibold tracking-widest uppercase mb-1">
+                        Application Deadline
+                      </p>
+                      <p className="font-body text-sm text-foreground">
+                        {scholarship.deadline}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <Link

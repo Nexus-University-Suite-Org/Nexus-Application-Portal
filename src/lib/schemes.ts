@@ -1,7 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || "/api/v1";
-
-const buildUrl = (path: string) =>
-  `${API_BASE_URL}${API_BASE_URL.endsWith("/") ? "" : "/"}${path}`;
+import { apiUrl } from "@/lib/apiUrl";
 
 export type SchemeProgram = {
   id: number;
@@ -79,7 +76,7 @@ const parseErrorDetail = async (response: Response) => {
 };
 
 export const fetchRunningSchemes = async (): Promise<AdmissionScheme[]> => {
-  const response = await fetch(buildUrl("schemes/running"));
+  const response = await fetch(apiUrl("schemes/running"));
   if (!response.ok) {
     throw new Error(
       (await parseErrorDetail(response)) ?? "Could not load running admissions.",
@@ -91,7 +88,7 @@ export const fetchRunningSchemes = async (): Promise<AdmissionScheme[]> => {
 export const fetchSchemesByProgram = async (
   programId: number,
 ): Promise<AdmissionScheme[]> => {
-  const response = await fetch(buildUrl(`schemes?programId=${programId}`));
+  const response = await fetch(apiUrl(`schemes?programId=${programId}`));
   if (!response.ok) {
     throw new Error(
       (await parseErrorDetail(response)) ?? "Could not load admission schemes.",

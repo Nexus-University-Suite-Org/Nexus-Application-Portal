@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.util.List;
 import java.util.Optional;
 import org.nexus.napbackend.model.Enrollment;
@@ -8,8 +10,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class EnrollmentService {
-
-    private static final Long DEMO_TENANT_ID = 1L;
     private final EnrollmentRepository repository;
 
     public EnrollmentService(EnrollmentRepository repository) {
@@ -17,28 +17,31 @@ public class EnrollmentService {
     }
 
     public List<Enrollment> findByStudentId(String studentId) {
-        return repository.findByStudentIdOrderByEnrolledAtDesc(studentId);
+        return repository.findByTenantIdAndStudentIdOrderByEnrolledAtDesc(
+                TenantContext.getCurrentTenantId(), studentId);
     }
 
     public Optional<Enrollment> findById(Long id) {
-        return repository.findById(id);
+        return repository.findByIdAndTenantId(id, TenantContext.getCurrentTenantId());
     }
 
     public Optional<Enrollment> findByStudentAndCourseUnit(String studentId, Long courseUnitId) {
-        return repository.findByStudentIdAndCourseUnitId(studentId, courseUnitId);
+        return repository.findByTenantIdAndStudentIdAndCourseUnitId(
+                TenantContext.getCurrentTenantId(), studentId, courseUnitId);
     }
 
     public boolean existsByStudentAndCourseUnit(String studentId, Long courseUnitId) {
-        return repository.existsByStudentIdAndCourseUnitId(studentId, courseUnitId);
+        return repository.existsByTenantIdAndStudentIdAndCourseUnitId(
+                TenantContext.getCurrentTenantId(), studentId, courseUnitId);
     }
 
     public Enrollment create(Enrollment enrollment) {
-        enrollment.setTenantId(DEMO_TENANT_ID);
+        enrollment.setTenantId(TenantContext.getCurrentTenantId());
         return repository.save(enrollment);
     }
 
     public List<Enrollment> createAll(List<Enrollment> enrollments) {
-        enrollments.forEach(e -> e.setTenantId(DEMO_TENANT_ID));
+        enrollments.forEach(e -> e.setTenantId(TenantContext.getCurrentTenantId()));
         return repository.saveAll(enrollments);
     }
 

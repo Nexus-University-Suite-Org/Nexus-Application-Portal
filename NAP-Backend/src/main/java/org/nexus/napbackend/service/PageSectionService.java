@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -9,8 +11,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class PageSectionService {
-
-    private static final Long DEMO_TENANT_ID = 1L;
     private final PageSectionRepository repository;
 
     public PageSectionService(PageSectionRepository repository) {
@@ -18,7 +18,7 @@ public class PageSectionService {
     }
 
     public PageSection create(PageSection entity) {
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setCreatedAt(LocalDateTime.now());
         entity.setUpdatedAt(LocalDateTime.now());
         return repository.save(entity);
@@ -29,14 +29,14 @@ public class PageSectionService {
     }
 
     public List<PageSection> findAll() {
-        return repository.findAllByOrderByCreatedAtDesc();
+        return repository.findAllByTenantIdOrderByCreatedAtDesc(TenantContext.getCurrentTenantId());
     }
 
     public List<PageSection> findByPageKey(String pageKey) {
         if (pageKey == null || pageKey.isEmpty()) {
-            return repository.findAllByOrderByCreatedAtDesc();
+            return repository.findAllByTenantIdOrderByCreatedAtDesc(TenantContext.getCurrentTenantId());
         }
-        return repository.findByPageKeyOrderByCreatedAtDesc(pageKey);
+        return repository.findByTenantIdAndPageKeyOrderByCreatedAtDesc(TenantContext.getCurrentTenantId(), pageKey);
     }
 
     public PageSection update(Long id, PageSection entity) {
@@ -51,7 +51,7 @@ public class PageSectionService {
 
     public List<PageSection> search(String query) {
         String lower = query.toLowerCase();
-        return repository.findAll().stream()
+        return repository.findAllByTenantId(TenantContext.getCurrentTenantId()).stream()
                 .filter(s -> (s.getTitle() != null && s.getTitle().toLowerCase().contains(lower))
                         || (s.getSubtitle() != null && s.getSubtitle().toLowerCase().contains(lower))
                         || (s.getBody() != null && s.getBody().toLowerCase().contains(lower))

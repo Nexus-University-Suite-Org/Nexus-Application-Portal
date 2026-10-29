@@ -43,6 +43,7 @@ public class GlobalExceptionHandler {
         return withMessage(problem, ex.getMessage());
     }
 
+<<<<<<< HEAD
     @ExceptionHandler(IdentityUnavailableException.class)
     public ProblemDetail handleIdentityUnavailable(IdentityUnavailableException ex) {
         log.warn("Nexus Identity is unavailable: {}", ex.getMessage());
@@ -51,6 +52,22 @@ public class GlobalExceptionHandler {
                 "Sign-in is temporarily unavailable. Please try again in a moment.");
         problem.setTitle("Identity service unavailable");
         return withMessage(problem, problem.getDetail());
+=======
+    @ExceptionHandler(NotAdmittedException.class)
+    public ProblemDetail handleNotAdmitted(NotAdmittedException ex) {
+        log.debug("Admission gate rejected portal login: {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        problem.setTitle("Not admitted");
+        return withMessage(problem, ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
+        log.debug("Invalid request argument: {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Invalid request");
+        return withMessage(problem, ex.getMessage());
+>>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
     }
 
     @ExceptionHandler(Exception.class)

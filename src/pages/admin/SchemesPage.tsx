@@ -53,6 +53,7 @@ interface ProgramOption {
   programCode: string;
   programType: string;
   facultySchool: string;
+  status: string;
 }
 
 const EMPTY_FORM = {

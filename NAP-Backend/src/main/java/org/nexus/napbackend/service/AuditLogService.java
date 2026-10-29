@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import org.nexus.napbackend.model.AuditLog;
@@ -9,8 +11,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuditLogService {
 
-    private static final Long DEMO_TENANT_ID = 1L;
-
     private final AuditLogRepository repository;
 
     public AuditLogService(AuditLogRepository repository) {
@@ -18,24 +18,28 @@ public class AuditLogService {
     }
 
     public AuditLog create(AuditLog entity) {
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setCreatedAt(LocalDateTime.now());
         return repository.save(entity);
     }
 
     public List<AuditLog> findRecent(int limit) {
-        return repository.findTop100ByOrderByCreatedAtDesc();
+        return repository.findTop100ByTenantIdOrderByCreatedAtDesc(
+                TenantContext.getCurrentTenantId());
     }
 
     public List<AuditLog> findByEntity(String entity) {
-        return repository.findByEntityOrderByCreatedAtDesc(entity);
+        return repository.findByTenantIdAndEntityOrderByCreatedAtDesc(
+                TenantContext.getCurrentTenantId(), entity);
     }
 
     public List<AuditLog> findByUserId(Long userId) {
-        return repository.findByUserIdOrderByCreatedAtDesc(userId);
+        return repository.findByTenantIdAndUserIdOrderByCreatedAtDesc(
+                TenantContext.getCurrentTenantId(), userId);
     }
 
     public List<AuditLog> findByDateRange(LocalDateTime start, LocalDateTime end) {
-        return repository.findByCreatedAtBetweenOrderByCreatedAtDesc(start, end);
+        return repository.findByTenantIdAndCreatedAtBetweenOrderByCreatedAtDesc(
+                TenantContext.getCurrentTenantId(), start, end);
     }
 }

@@ -7,4 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface AlumniRepository extends JpaRepository<Alumni, Long> {
 
     List<Alumni> findAllByOrderByCreatedAtDesc();
+
+    List<Alumni> findAllByTenantIdOrderByCreatedAtDesc(Long tenantId);
+
+    List<Alumni> findAllByTenantId(Long tenantId);
 }

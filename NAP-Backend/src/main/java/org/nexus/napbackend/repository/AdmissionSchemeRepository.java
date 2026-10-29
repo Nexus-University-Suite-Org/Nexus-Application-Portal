@@ -9,7 +9,13 @@ public interface AdmissionSchemeRepository extends JpaRepository<AdmissionScheme
 
     List<AdmissionScheme> findAllByOrderByAppCloseDateAsc();
 
+    List<AdmissionScheme> findByTenantIdOrderByAppCloseDateAsc(Long tenantId);
+
     List<AdmissionScheme> findByStatusInOrderByAppCloseDateAsc(Collection<String> statuses);
 
+    List<AdmissionScheme> findByTenantIdAndStatusInOrderByAppCloseDateAsc(Long tenantId, Collection<String> statuses);
+
     List<AdmissionScheme> findByPrograms_IdOrderByAppCloseDateAsc(Long programId);
+
+    List<AdmissionScheme> findByTenantIdAndPrograms_IdOrderByAppCloseDateAsc(Long tenantId, Long programId);
 }

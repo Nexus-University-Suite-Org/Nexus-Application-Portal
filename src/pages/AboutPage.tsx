@@ -7,6 +7,31 @@ import Footer from "@/components/Footer";
 import aboutHero from "@/assets/about-hero.jpg";
 import { Heart, ArrowRight } from "lucide-react";
 import { useSpotlightCards, useParallax } from "@/hooks/useScrollReveal";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+
+/** Every CMS key this page reads. Absence is reported in the debug overlay. */
+const ABOUT_SETTING_KEYS = [
+  "about_story_label",
+  "about_story_heading_1",
+  "about_story_heading_2",
+  "about_story_paragraph",
+  "about_founding_label",
+  "about_founding_heading",
+  "about_founding_story",
+  "about_mission_label",
+  "about_mission_text",
+  "about_vision_label",
+  "about_vision_text",
+  "about_values_label",
+  "about_values_heading",
+  "about_programs_btn",
+  "about_cta_label",
+  "about_cta_heading",
+  "about_cta_donate_btn",
+  "about_cta_partner_btn",
+  "about_values",
+  "about_hero_image",
+];
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -22,12 +47,12 @@ const AboutPage = () => {
   const [headingLine1, setHeadingLine1] = useState("Built on Hope,");
   const [headingLine2, setHeadingLine2] = useState("Powered by Purpose");
   const [storyParagraph, setStoryParagraph] = useState(
-    "We started with one belief: that every person — regardless of circumstance — deserves the chance to build a dignified life through skills and hard work."
+    "We started with one belief: that every person â€” regardless of circumstance â€” deserves the chance to build a dignified life through skills and hard work."
   );
   const [foundingLabel, setFoundingLabel] = useState("Our Founding Story");
   const [foundingHeading, setFoundingHeading] = useState("Why We Started");
   const [foundingStory, setFoundingStory] = useState(
-    "Our institute was founded after witnessing firsthand the cycle of poverty trapping single mothers and vulnerable youth in our community — not because of lack of ability, but lack of opportunity and skills.\n\nThe founder, a community leader and educator, believed that practical vocational training — not charity — was the most dignified path to self-sufficiency. A small rented space, three sewing machines, and twelve students became the beginning of something far greater.\n\nToday, hundreds of graduates are running their own businesses, supporting their families, and transforming their communities — one skill at a time."
+    "Our institute was founded after witnessing firsthand the cycle of poverty trapping single mothers and vulnerable youth in our community â€” not because of lack of ability, but lack of opportunity and skills.\n\nThe founder, a community leader and educator, believed that practical vocational training â€” not charity â€” was the most dignified path to self-sufficiency. A small rented space, three sewing machines, and twelve students became the beginning of something far greater.\n\nToday, hundreds of graduates are running their own businesses, supporting their families, and transforming their communities â€” one skill at a time."
   );
   const [missionLabel, setMissionLabel] = useState("Our Mission");
   const [missionText, setMissionText] = useState("\u201cTo equip vulnerable youth and single mothers with practical vocational skills that enable them to earn sustainable livelihoods.\u201d");
@@ -53,55 +78,50 @@ const AboutPage = () => {
   useSpotlightCards(valuesRef);
   useParallax(pageRef);
 
+  const { settings } = useSiteSettings({ keys: ABOUT_SETTING_KEYS, scope: "/about" });
+
   useEffect(() => {
-    fetch("/api/v1/content/site-settings")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch");
-        return res.json();
-      })
-      .then((data: Record<string, string>) => {
-        if (data.about_story_label) setStoryLabel(data.about_story_label);
-        if (data.about_story_heading_1) setHeadingLine1(data.about_story_heading_1);
-        if (data.about_story_heading_2) setHeadingLine2(data.about_story_heading_2);
-        if (data.about_story_paragraph) setStoryParagraph(data.about_story_paragraph);
-        if (data.about_founding_label) setFoundingLabel(data.about_founding_label);
-        if (data.about_founding_heading) setFoundingHeading(data.about_founding_heading);
-        if (data.about_founding_story) setFoundingStory(data.about_founding_story);
-        if (data.about_mission_label) setMissionLabel(data.about_mission_label);
-        if (data.about_mission_text) setMissionText(data.about_mission_text);
-        if (data.about_vision_label) setVisionLabel(data.about_vision_label);
-        if (data.about_vision_text) setVisionText(data.about_vision_text);
-        if (data.about_values_label) setValuesLabel(data.about_values_label);
-        if (data.about_values_heading) setValuesHeading(data.about_values_heading);
-        if (data.about_programs_btn) setProgramsBtn(data.about_programs_btn);
-        if (data.about_cta_label) setCtaLabel(data.about_cta_label);
-        if (data.about_cta_heading) setCtaHeading(data.about_cta_heading);
-        if (data.about_cta_donate_btn) setCtaDonateBtn(data.about_cta_donate_btn);
-        if (data.about_cta_partner_btn) setCtaPartnerBtn(data.about_cta_partner_btn);
-        if (data.about_values) {
-          try {
-            const parsed = JSON.parse(data.about_values);
-            if (Array.isArray(parsed) && parsed.length > 0) setValues(parsed);
-          } catch { /* keep fallback */ }
-        }
-        if (data.about_hero_image) {
-          setHeroImage(data.about_hero_image);
-          new Image().src = data.about_hero_image;
-        }
-      })
-      .catch(() => {});
-  }, []);
+    const data = settings;
+    if (data.about_story_label) setStoryLabel(data.about_story_label);
+    if (data.about_story_heading_1) setHeadingLine1(data.about_story_heading_1);
+    if (data.about_story_heading_2) setHeadingLine2(data.about_story_heading_2);
+    if (data.about_story_paragraph) setStoryParagraph(data.about_story_paragraph);
+    if (data.about_founding_label) setFoundingLabel(data.about_founding_label);
+    if (data.about_founding_heading) setFoundingHeading(data.about_founding_heading);
+    if (data.about_founding_story) setFoundingStory(data.about_founding_story);
+    if (data.about_mission_label) setMissionLabel(data.about_mission_label);
+    if (data.about_mission_text) setMissionText(data.about_mission_text);
+    if (data.about_vision_label) setVisionLabel(data.about_vision_label);
+    if (data.about_vision_text) setVisionText(data.about_vision_text);
+    if (data.about_values_label) setValuesLabel(data.about_values_label);
+    if (data.about_values_heading) setValuesHeading(data.about_values_heading);
+    if (data.about_programs_btn) setProgramsBtn(data.about_programs_btn);
+    if (data.about_cta_label) setCtaLabel(data.about_cta_label);
+    if (data.about_cta_heading) setCtaHeading(data.about_cta_heading);
+    if (data.about_cta_donate_btn) setCtaDonateBtn(data.about_cta_donate_btn);
+    if (data.about_cta_partner_btn) setCtaPartnerBtn(data.about_cta_partner_btn);
+    if (data.about_values) {
+      try {
+        const parsed = JSON.parse(data.about_values);
+        if (Array.isArray(parsed) && parsed.length > 0) setValues(parsed);
+      } catch { /* keep fallback */ }
+    }
+    if (data.about_hero_image) {
+      setHeroImage(data.about_hero_image);
+      new Image().src = data.about_hero_image;
+    }
+  }, [settings]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     const ctx = gsap.context(() => {
-      // Hero text — cascading reveal
+      // Hero text â€” cascading reveal
       gsap.fromTo(".about-hero-text > *",
         { y: 80, opacity: 0, clipPath: "inset(100% 0% 0% 0%)" },
         { y: 0, opacity: 1, clipPath: "inset(0% 0% 0% 0%)", duration: 1.3, stagger: 0.18, ease: "power3.out", delay: 0.3 }
       );
 
-      // Hero image — cinematic zoom-in
+      // Hero image â€” cinematic zoom-in
       if (imageRef.current) {
         gsap.fromTo(imageRef.current,
           { scale: 1.3, opacity: 0 },
@@ -109,7 +129,7 @@ const AboutPage = () => {
         );
       }
 
-      // Founder section — slide from left
+      // Founder section â€” slide from left
       if (founderRef.current) {
         gsap.fromTo(founderRef.current.querySelectorAll(".founder-anim"),
           { x: -50, opacity: 0 },
@@ -121,7 +141,7 @@ const AboutPage = () => {
           }
         );
 
-        // Mission/Vision cards — slide from right
+        // Mission/Vision cards â€” slide from right
         gsap.fromTo(founderRef.current.querySelectorAll(".mission-card"),
           { x: 60, opacity: 0, scale: 0.92 },
           {
@@ -206,7 +226,7 @@ const AboutPage = () => {
             </button>
           </div>
           <div className="space-y-6">
-            <div className="mission-card opacity-0 p-10 bg-primary text-primary-foreground rounded-[20px] magnetic-card">
+            <div className="mission-card opacity-0 p-6 md:p-10 bg-primary text-primary-foreground rounded-[20px] magnetic-card overflow-hidden min-w-0">
               <p className="font-body text-xs tracking-[0.3em] uppercase text-accent mb-4">{missionLabel}</p>
               <p className="font-heading text-2xl md:text-3xl font-light text-primary-foreground leading-relaxed">
                 {missionText}

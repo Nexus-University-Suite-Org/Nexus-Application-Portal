@@ -11,8 +11,18 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 gsap.registerPlugin(ScrollTrigger);
+
+const FOOTER_SETTING_KEYS = [
+  "portal_name",
+  "footer_mission",
+  "footer_email",
+  "footer_phone",
+  "footer_whatsapp_cta",
+  "footer_address",
+];
 
 const quickLinks = [
   { label: "Home", href: "/" },
@@ -68,33 +78,16 @@ const Footer = () => {
       .catch(() => {});
   }, []);
 
+  const { settings } = useSiteSettings({ keys: FOOTER_SETTING_KEYS, scope: "Footer" });
+
   useEffect(() => {
-    console.log("[Footer] fetching site-settings from", "/api/v1/content/site-settings");
-    fetch("/api/v1/content/site-settings")
-      .then((res) => {
-        console.log("[Footer] site-settings response status:", res.status);
-        if (!res.ok) throw new Error("Failed to fetch");
-        return res.json();
-      })
-      .then((data: Record<string, string>) => {
-        console.log("[Footer] site-settings raw data:", data);
-        console.log("[Footer] portal_name from API:", data.portal_name);
-        if (data.portal_name) {
-          console.log("[Footer] setting portalName to:", data.portal_name);
-          setPortalName(data.portal_name);
-        } else {
-          console.log("[Footer] portal_name is empty/falsy, keeping default");
-        }
-        if (data.footer_mission) setOrganizationMission(data.footer_mission);
-        if (data.footer_email) setOrganizationEmail(data.footer_email);
-        if (data.footer_phone) setOrganizationPhone(data.footer_phone);
-        if (data.footer_whatsapp_cta) setOrganizationWhatsappCta(data.footer_whatsapp_cta);
-        if (data.footer_address) setOrganizationAddress(data.footer_address);
-      })
-      .catch((err) => {
-        console.error("[Footer] failed to fetch site-settings:", err);
-      });
-  }, []);
+    if (settings.portal_name) setPortalName(settings.portal_name);
+    if (settings.footer_mission) setOrganizationMission(settings.footer_mission);
+    if (settings.footer_email) setOrganizationEmail(settings.footer_email);
+    if (settings.footer_phone) setOrganizationPhone(settings.footer_phone);
+    if (settings.footer_whatsapp_cta) setOrganizationWhatsappCta(settings.footer_whatsapp_cta);
+    if (settings.footer_address) setOrganizationAddress(settings.footer_address);
+  }, [settings]);
 
   useEffect(() => {
     const ctx = gsap.context(() => {

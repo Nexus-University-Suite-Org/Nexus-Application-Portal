@@ -7,4 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface StudentStoryRepository extends JpaRepository<StudentStory, Long> {
 
     List<StudentStory> findAllByOrderByCreatedAtDesc();
+
+    List<StudentStory> findAllByTenantIdOrderByCreatedAtDesc(Long tenantId);
+
+    List<StudentStory> findAllByTenantId(Long tenantId);
 }

@@ -1,8 +1,10 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.Random;
+import java.security.SecureRandom;
 import org.nexus.napbackend.model.OtpCode;
 import org.nexus.napbackend.repository.OtpRepository;
 import org.slf4j.Logger;
@@ -13,22 +15,22 @@ import org.springframework.stereotype.Service;
 public class OtpService {
 
     private static final Logger log = LoggerFactory.getLogger(OtpService.class);
-
-    private static final Long DEMO_TENANT_ID = 1L;
     private static final int OTP_LENGTH = 4;
     private static final int MAX_ATTEMPTS = 5;
     private static final int COOLDOWN_SECONDS = 60;
     private static final int EXPIRY_MINUTES = 10;
 
     private final OtpRepository repository;
-    private final Random random = new Random();
+    private final SecureRandom random = new SecureRandom();
 
     public OtpService(OtpRepository repository) {
         this.repository = repository;
     }
 
     public OtpCode generateOtp(String email, String purpose) {
-        Optional<OtpCode> existing = repository.findTopByEmailAndPurposeAndUsedFalseOrderByCreatedAtDesc(email, purpose);
+        Optional<OtpCode> existing = repository
+                .findTopByTenantIdAndEmailAndPurposeAndUsedFalseOrderByCreatedAtDesc(
+                        TenantContext.getCurrentTenantId(), email, purpose);
         if (existing.isPresent()) {
             OtpCode lastOtp = existing.get();
             if (lastOtp.getCreatedAt().plusSeconds(COOLDOWN_SECONDS).isAfter(LocalDateTime.now())) {
@@ -37,10 +39,10 @@ public class OtpService {
         }
 
         String code = String.format("%0" + OTP_LENGTH + "d", random.nextInt(10000));
-        log.info("Generated OTP={} for email={}", code, email);
+        log.info("Generated OTP for email={} purpose={}", email, purpose);
 
         OtpCode otp = new OtpCode();
-        otp.setTenantId(DEMO_TENANT_ID);
+        otp.setTenantId(TenantContext.getCurrentTenantId());
         otp.setEmail(email);
         otp.setCode(code);
         otp.setPurpose(purpose);
@@ -52,7 +54,9 @@ public class OtpService {
     }
 
     public OtpVerificationResult verifyOtp(String email, String code, String purpose) {
-        Optional<OtpCode> optionalOtp = repository.findTopByEmailAndPurposeAndUsedFalseOrderByCreatedAtDesc(email, purpose);
+        Optional<OtpCode> optionalOtp = repository
+                .findTopByTenantIdAndEmailAndPurposeAndUsedFalseOrderByCreatedAtDesc(
+                        TenantContext.getCurrentTenantId(), email, purpose);
 
         if (optionalOtp.isEmpty()) {
             throw new OtpException("NOT_FOUND", "No active OTP found for this email", 404);

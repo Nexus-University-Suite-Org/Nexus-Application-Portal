@@ -29,7 +29,11 @@ public class StudentStory {
     @Column(nullable = false, length = 500)
     private String slug;
 
+<<<<<<< HEAD
     @Column(nullable = false, columnDefinition = "TEXT")
+=======
+    @Column(nullable = false, columnDefinition = "text")
+>>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
     private String content;
 
     @Column(name = "student_name", length = 300)

@@ -16,4 +16,16 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     boolean existsByStudentIdAndCourseUnitId(String studentId, Long courseUnitId);
 
     long countByStudentIdAndStatus(String studentId, String status);
+
+    List<Enrollment> findByTenantIdAndStudentIdOrderByEnrolledAtDesc(Long tenantId, String studentId);
+
+    Optional<Enrollment> findByIdAndTenantId(Long id, Long tenantId);
+
+    Optional<Enrollment> findByTenantIdAndStudentIdAndCourseUnitId(
+            Long tenantId, String studentId, Long courseUnitId);
+
+    boolean existsByTenantIdAndStudentIdAndCourseUnitId(
+            Long tenantId, String studentId, Long courseUnitId);
+
+    long countByTenantIdAndStudentIdAndStatus(Long tenantId, String studentId, String status);
 }

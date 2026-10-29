@@ -1,5 +1,7 @@
 package org.nexus.napbackend.service;
 
+import org.nexus.napbackend.tenancy.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -9,8 +11,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class GalleryItemService {
-
-    private static final Long DEMO_TENANT_ID = 1L;
     private final GalleryItemRepository repository;
 
     public GalleryItemService(GalleryItemRepository repository) {
@@ -18,7 +18,7 @@ public class GalleryItemService {
     }
 
     public GalleryItem create(GalleryItem entity) {
-        entity.setTenantId(DEMO_TENANT_ID);
+        entity.setTenantId(TenantContext.getCurrentTenantId());
         entity.setCreatedAt(LocalDateTime.now());
         return repository.save(entity);
     }
@@ -28,14 +28,14 @@ public class GalleryItemService {
     }
 
     public List<GalleryItem> findAll() {
-        return repository.findAllByOrderByCreatedAtDesc();
+        return repository.findAllByTenantIdOrderByCreatedAtDesc(TenantContext.getCurrentTenantId());
     }
 
     public List<GalleryItem> findByCategory(String category) {
         if (category == null || category.isEmpty()) {
-            return repository.findAllByOrderByCreatedAtDesc();
+            return repository.findAllByTenantIdOrderByCreatedAtDesc(TenantContext.getCurrentTenantId());
         }
-        return repository.findAllByOrderByCreatedAtDesc().stream()
+        return repository.findAllByTenantIdOrderByCreatedAtDesc(TenantContext.getCurrentTenantId()).stream()
                 .filter(item -> category.equalsIgnoreCase(item.getCategory()))
                 .toList();
     }
@@ -51,7 +51,7 @@ public class GalleryItemService {
 
     public List<GalleryItem> search(String query) {
         String lower = query.toLowerCase();
-        return repository.findAllByOrderByCreatedAtDesc().stream()
+        return repository.findAllByTenantIdOrderByCreatedAtDesc(TenantContext.getCurrentTenantId()).stream()
                 .filter(item -> (item.getSrc() != null && item.getSrc().toLowerCase().contains(lower))
                         || (item.getAlt() != null && item.getAlt().toLowerCase().contains(lower))
                         || (item.getCaption() != null && item.getCaption().toLowerCase().contains(lower)))
