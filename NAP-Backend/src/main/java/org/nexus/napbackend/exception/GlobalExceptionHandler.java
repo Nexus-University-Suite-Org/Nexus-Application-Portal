@@ -43,6 +43,16 @@ public class GlobalExceptionHandler {
         return withMessage(problem, ex.getMessage());
     }
 
+    @ExceptionHandler(IdentityUnavailableException.class)
+    public ProblemDetail handleIdentityUnavailable(IdentityUnavailableException ex) {
+        log.warn("Nexus Identity is unavailable: {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "Sign-in is temporarily unavailable. Please try again in a moment.");
+        problem.setTitle("Identity service unavailable");
+        return withMessage(problem, problem.getDetail());
+    }
+
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleUnexpected(Exception ex) {
         log.error("Unhandled exception: {}", ex.getMessage(), ex);

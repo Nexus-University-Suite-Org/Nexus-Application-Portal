@@ -3,18 +3,18 @@ package org.nexus.napbackend.controller;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
-import org.nexus.napbackend.configuration.JwtAuthFilter;
 import org.nexus.napbackend.dto.AdminLoginRequest;
 import org.nexus.napbackend.dto.AdminLoginResponse;
 import org.nexus.napbackend.dto.ApplicationResponse;
 import org.nexus.napbackend.dto.DashboardStatsResponse;
 import org.nexus.napbackend.dto.PaginatedApplicationsResponse;
 import org.nexus.napbackend.dto.ReviewRequest;
+import org.nexus.napbackend.exception.UnauthorizedException;
 import org.nexus.napbackend.facade.AdminFacade;
-import org.nexus.napbackend.model.Admin;
 import org.nexus.napbackend.service.AdminService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,10 +42,11 @@ public class AdminController {
     }
 
     @GetMapping("/auth/me")
-    public ResponseEntity<AdminLoginResponse> me(Authentication authentication) {
-        JwtAuthFilter.AdminPrincipal principal = (JwtAuthFilter.AdminPrincipal) authentication.getPrincipal();
-        AdminLoginResponse response = new AdminLoginResponse(null, principal.email(), null);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<AdminLoginResponse> me(@AuthenticationPrincipal Jwt jwt) {
+        if (jwt == null) {
+            throw new UnauthorizedException("Not signed in");
+        }
+        return ResponseEntity.ok(adminFacade.me(jwt));
     }
 
     @GetMapping("/users")

@@ -1,28 +1,19 @@
-import { Navigate } from "react-router-dom";
-import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import { Outlet } from "react-router-dom";
+import { RequireAuth } from "@/lib/nexus-auth";
+import { ADMIN_ROLES } from "@/contexts/AdminAuthContext";
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
-
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated, loading } = useAdminAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="font-body text-sm tracking-[0.2em] uppercase text-muted-foreground">
-          Loading...
-        </p>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/admin/login" replace />;
-  }
-
-  return <>{children}</>;
-};
+/**
+ * Layout guard for the back office.
+ *
+ * `RequireAuth` sends anonymous visitors to Nexus Identity with the current URL
+ * as the return target, and shows an access-denied card when the account lacks
+ * one of the admissions roles. Keeping it as a layout route means every admin
+ * page inherits the same check and deep links survive the round-trip.
+ */
+const ProtectedRoute = () => (
+  <RequireAuth roles={[...ADMIN_ROLES]}>
+    <Outlet />
+  </RequireAuth>
+);
 
 export default ProtectedRoute;

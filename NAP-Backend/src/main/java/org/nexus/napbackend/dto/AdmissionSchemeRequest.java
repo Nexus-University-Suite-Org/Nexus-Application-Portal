@@ -18,5 +18,9 @@ public record AdmissionSchemeRequest(
         String preferredStartDate,
         BigDecimal serviceFee,
         String status,
+        Double oLevelWeight,
+        Double aLevelWeight,
+        Integer bestOfOLevel,
+        String passGradeThreshold,
         List<Long> programIds
 ) {}

@@ -2,55 +2,55 @@ package org.nexus.napbackend.facade;
 
 import jakarta.transaction.Transactional;
 import java.util.List;
-import org.nexus.napbackend.configuration.JwtUtil;
 import org.nexus.napbackend.dto.StudentLoginResponse;
 import org.nexus.napbackend.model.Application;
 import org.nexus.napbackend.model.Program;
 import org.nexus.napbackend.repository.ApplicationRepository;
 import org.nexus.napbackend.repository.ProgramRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.nexus.napbackend.service.IdentityGateway;
+import org.nexus.napbackend.service.IdentityGateway.IdentitySession;
 
+/**
+ * Applicant-facing authentication.
+ *
+ * <p>Passwords live in Nexus Identity now. NAP still owns the application record
+ * — programme choices, status, faculty — so after the identity service confirms
+ * the credentials this facade joins the account back to its newest application
+ * by email and returns that profile alongside the identity-issued token.
+ */
 @Facade
 public class StudentAuthFacade {
 
     private final ApplicationRepository applicationRepository;
     private final ProgramRepository programRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    private final IdentityGateway identityGateway;
 
     public StudentAuthFacade(ApplicationRepository applicationRepository,
                              ProgramRepository programRepository,
-                             PasswordEncoder passwordEncoder,
-                             JwtUtil jwtUtil) {
+                             IdentityGateway identityGateway) {
         this.applicationRepository = applicationRepository;
         this.programRepository = programRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
+        this.identityGateway = identityGateway;
     }
 
     @Transactional
     public StudentLoginResponse login(String email, String password) {
-        Application application = findApplicantByEmail(email);
-        if (application.getPasswordHash() == null) {
-            throw new RuntimeException("No password set for this account. Please use forgot password.");
-        }
-        if (!passwordEncoder.matches(password, application.getPasswordHash())) {
-            throw new RuntimeException("Invalid email or password");
-        }
-
-        String token = jwtUtil.generateToken(application.getId(), application.getEmail(), "STUDENT");
-        return new StudentLoginResponse(token, toUser(application), toProfile(application));
+        IdentitySession session = identityGateway.authenticate(
+                email, password, IdentityGateway.STUDENT_PORTAL_CLIENT);
+        Application application = findApplicantByEmail(
+                session.email() == null || session.email().isBlank() ? email : session.email());
+        return new StudentLoginResponse(session.token(), toUser(application), toProfile(application));
     }
 
-    @Transactional
-    public StudentLoginResponse.StudentProfile resetPassword(String email, String newPassword) {
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new RuntimeException("Password must be at least 6 characters");
-        }
-        Application application = findApplicantByEmail(email);
-        application.setPasswordHash(passwordEncoder.encode(newPassword));
-        applicationRepository.save(application);
-        return toProfile(application);
+    /**
+     * Starts a password reset through the identity service.
+     *
+     * <p>This replaced an endpoint that accepted an email and a new password
+     * from anyone, which let a caller take over any account. It now only asks
+     * the identity service to mail a single-use link.
+     */
+    public void requestPasswordReset(String email) {
+        identityGateway.requestPasswordReset(email);
     }
 
     private Application findApplicantByEmail(String email) {

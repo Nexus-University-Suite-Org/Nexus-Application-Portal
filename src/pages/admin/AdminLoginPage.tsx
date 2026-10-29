@@ -1,74 +1,67 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
+/**
+ * Entry point for the back office.
+ *
+ * Sign-in itself happens on the Nexus Identity origin; there is no password
+ * form here any more. The page starts the redirect immediately and doubles as
+ * the "not entitled" screen for signed-in accounts without an admissions role.
+ */
 const AdminLoginPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { login } = useAdminAuth();
-  const navigate = useNavigate();
+  const { status, user, login, logout } = useAdminAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      await login(email, password);
-      navigate("/admin/dashboard");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (status === "anonymous") {
+      void login("/admin/dashboard");
     }
-  };
+  }, [status, login]);
+
+  const notEntitled = status === "authenticated";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="font-heading text-3xl">Admin Portal</CardTitle>
-          <CardDescription>Sign in to manage the Nexus Application Portal</CardDescription>
+          <CardDescription>
+            {notEntitled
+              ? "This account cannot access the back office."
+              : "Taking you to the university sign-in page…"}
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-lg">
-                {error}
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="admin@nexus.edu"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
-            </Button>
-          </form>
+        <CardContent className="space-y-4 text-center text-sm text-muted-foreground">
+          {notEntitled ? (
+            <>
+              <p>
+                You are signed in as <strong>{user?.email}</strong>, but this
+                area requires an admissions or administrator role.
+              </p>
+              <Button className="w-full" onClick={logout}>
+                Sign in with a different account
+              </Button>
+            </>
+          ) : (
+            <p>
+              If nothing happens,{" "}
+              <button
+                type="button"
+                className="underline underline-offset-4 hover:text-foreground"
+                onClick={() => void login("/admin/dashboard")}
+              >
+                continue to sign in
+              </button>
+              .
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

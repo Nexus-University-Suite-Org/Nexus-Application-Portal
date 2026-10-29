@@ -37,6 +37,8 @@ public record ProgramRequest(
         Boolean featured,
         Integer displayOrder,
         Double cutoffScore,
+        Double cutoffIndex,
+        String essentialMinimumGrade,
         String essentialSubjects,
         String relevantSubjects,
         String desirableSubjects,

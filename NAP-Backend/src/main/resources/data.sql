@@ -213,16 +213,16 @@ INSERT INTO news_articles (tenant_id, title, slug, excerpt, content, category, i
 -- EVENTS
 -- ============================================
 INSERT INTO cms_events (tenant_id, title, description, event_date, image_url, published, created_at, updated_at) VALUES
-(1, 'Open Day 2026', 'Join us for campus tours, faculty meetings, and program information sessions.', NOW() + INTERVAL '30 days', '/api/v1/content/events/open-day.jpg', true, NOW(), NOW());
+(1, 'Open Day 2026', 'Join us for campus tours, faculty meetings, and program information sessions.', NOW() + INTERVAL '30' DAY, '/api/v1/content/events/open-day.jpg', true, NOW(), NOW());
 
 INSERT INTO cms_events (tenant_id, title, description, event_date, image_url, published, created_at, updated_at) VALUES
-(1, 'Research Symposium 2026', 'Annual research symposium featuring keynote speakers from industry and academia.', NOW() + INTERVAL '45 days', '/api/v1/content/events/symposium.jpg', true, NOW(), NOW());
+(1, 'Research Symposium 2026', 'Annual research symposium featuring keynote speakers from industry and academia.', NOW() + INTERVAL '45' DAY, '/api/v1/content/events/symposium.jpg', true, NOW(), NOW());
 
 INSERT INTO cms_events (tenant_id, title, description, event_date, image_url, published, created_at, updated_at) VALUES
-(1, 'International Culture Week', 'Celebrate diversity with performances, food, and cultural exhibitions from around the world.', NOW() + INTERVAL '60 days', '/api/v1/content/events/culture-week.jpg', true, NOW(), NOW());
+(1, 'International Culture Week', 'Celebrate diversity with performances, food, and cultural exhibitions from around the world.', NOW() + INTERVAL '60' DAY, '/api/v1/content/events/culture-week.jpg', true, NOW(), NOW());
 
 INSERT INTO cms_events (tenant_id, title, description, event_date, image_url, published, created_at, updated_at) VALUES
-(1, 'Alumni Homecoming', 'Annual alumni reunion with networking sessions, campus tours, and gala dinner.', NOW() + INTERVAL '90 days', '/api/v1/content/events/homecoming.jpg', true, NOW(), NOW());
+(1, 'Alumni Homecoming', 'Annual alumni reunion with networking sessions, campus tours, and gala dinner.', NOW() + INTERVAL '90' DAY, '/api/v1/content/events/homecoming.jpg', true, NOW(), NOW());
 
 -- ============================================
 -- FAQs
@@ -304,19 +304,19 @@ INSERT INTO scholarships (tenant_id, title, description, eligibility, deadline, 
 (1, 'Merit-Based Excellence Scholarship',
  'Full tuition scholarship for outstanding academic performers. Covers tuition, accommodation, and a monthly stipend.',
  'Minimum A-Level aggregate of 10 points. Must be a first-year applicant.',
- NOW() + INTERVAL '60 days', NOW());
+ NOW() + INTERVAL '60' DAY, NOW());
 
 INSERT INTO scholarships (tenant_id, title, description, eligibility, deadline, created_at) VALUES
 (1, 'Community Service Scholarship',
  'Partial scholarship for students demonstrating exceptional community service commitment. Covers 50% of tuition.',
  'Evidence of sustained community service involvement. Personal statement required.',
- NOW() + INTERVAL '45 days', NOW());
+ NOW() + INTERVAL '45' DAY, NOW());
 
 INSERT INTO scholarships (tenant_id, title, description, eligibility, deadline, created_at) VALUES
 (1, 'STEM Women Scholarship',
  'Scholarship for women pursuing STEM programs. Covers full tuition and provides mentorship.',
  'Female applicants to STEM programs. Minimum B- average at A-Level.',
- NOW() + INTERVAL '30 days', NOW());
+ NOW() + INTERVAL '30' DAY, NOW());
 
 -- ============================================
 -- STUDENT STORIES

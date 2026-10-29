@@ -8,12 +8,15 @@ import org.nexus.napbackend.dto.ApplicationResponse;
 import org.nexus.napbackend.dto.NotificationCreateRequest;
 import org.nexus.napbackend.mapper.ApplicationMapper;
 import org.nexus.napbackend.mapper.NotificationMapper;
+import org.nexus.napbackend.model.AdmissionScheme;
 import org.nexus.napbackend.model.Application;
 import org.nexus.napbackend.model.Program;
 import org.nexus.napbackend.service.ApplicationService;
 import org.nexus.napbackend.service.NotificationService;
 import org.nexus.napbackend.service.ProgramService;
 import org.nexus.napbackend.service.WeightingService;
+import org.nexus.napbackend.scoring.AdmissionSchemeResolver;
+import org.nexus.napbackend.scoring.ScoringService;
 
 @Facade
 public class ApplicationFacade {
@@ -22,15 +25,21 @@ public class ApplicationFacade {
     private final ProgramService programService;
     private final WeightingService weightingService;
     private final NotificationService notificationService;
+    private final ScoringService scoringService;
+    private final AdmissionSchemeResolver schemeResolver;
 
     public ApplicationFacade(ApplicationService service,
                              ProgramService programService,
                              WeightingService weightingService,
-                             NotificationService notificationService) {
+                             NotificationService notificationService,
+                             ScoringService scoringService,
+                             AdmissionSchemeResolver schemeResolver) {
         this.service = service;
         this.programService = programService;
         this.weightingService = weightingService;
         this.notificationService = notificationService;
+        this.scoringService = scoringService;
+        this.schemeResolver = schemeResolver;
     }
 
     @Transactional
@@ -52,6 +61,15 @@ public class ApplicationFacade {
         }
         entity.setStatus("SUBMITTED");
         entity.setSubmittedAt(LocalDateTime.now());
+
+        // Score at submission, not at review. Submitting is the point at which the
+        // applicant's own record stops changing, so this is the only moment the
+        // index is stable; scoring later lets an officer edit a result first and
+        // quietly change the decision. Review then re-derives the display values
+        // from the same inputs without writing a second set of decision rows.
+        AdmissionScheme scheme = schemeResolver.resolve(entity).orElse(null);
+        scoringService.evaluateAndRecord(entity, programService.findAll(), scheme);
+
         Application updated = service.update(entity);
         return ApplicationMapper.toDto(updated);
     }
@@ -68,12 +86,13 @@ public class ApplicationFacade {
         entity.setReviewedAt(LocalDateTime.now());
 
         List<Program> programmes = programService.findAll();
-        String qualificationResultsJson = weightingService.evaluateAllChoices(entity, programmes);
+        AdmissionScheme scheme = schemeResolver.resolve(entity).orElse(null);
+        String qualificationResultsJson = weightingService.evaluateAllChoices(entity, programmes, scheme);
         entity.setQualificationResults(qualificationResultsJson);
 
         if ("admitted".equals(reviewStatus.toLowerCase())) {
             entity.setStatus("ADMITTED");
-            String assigned = weightingService.findAssignedProgramme(entity, programmes);
+            String assigned = weightingService.findAssignedProgramme(entity, programmes, scheme);
             entity.setAssignedProgramme(assigned);
             try {
                 var results = new com.fasterxml.jackson.databind.ObjectMapper()
@@ -86,6 +105,8 @@ public class ApplicationFacade {
         } else if ("waitlisted".equals(reviewStatus.toLowerCase())) {
             entity.setStatus("WAITLISTED");
         }
+
+        scoringService.recordHumanOutcome(entity.getId(), reviewStatus);
 
         String resolvedStatus = entity.getStatus();
         String notificationType = switch (resolvedStatus) {

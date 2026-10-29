@@ -138,6 +138,22 @@ public class Program {
     @Column(name = "cutoff_score")
     private Double cutoffScore = 0.0;
 
+    /**
+     * Pass mark on the 0-100 admission index. Null means the programme has no
+     * configured threshold, which forces every applicant to REVIEW rather than
+     * admitting them. The legacy {@link #cutoffScore} is retained untouched and
+     * is never reinterpreted onto the new scale, because its units differ.
+     */
+    @Column(name = "cutoff_index")
+    private Double cutoffIndex;
+
+    /**
+     * Minimum UACE grade required in an essential subject. Newly introduced and
+     * unvalidated, so failing it routes to review rather than rejection.
+     */
+    @Column(name = "essential_min_grade", length = 10)
+    private String essentialMinimumGrade = "C";
+
     @Column(name = "essential_subjects", columnDefinition = "text")
     private String essentialSubjects;
 

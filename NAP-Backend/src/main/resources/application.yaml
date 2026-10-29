@@ -105,11 +105,45 @@ nap:
   gemini:
     api-key: ${GEMINI_API_KEY:}
     model: ${GEMINI_MODEL:gemini-3.6-flash}
-  jwt:
-    secret: ${JWT_SECRET:}
-    expiration-hours: ${JWT_EXPIRATION_HOURS:24}
   storage:
     upload-dir: ${UPLOAD_DIR:uploads}
+  admission:
+    scoring:
+      # Which engine's answer is the decision of record. It changes what an officer
+      # sees, and nothing else about the request path.
+      #
+      # LEGACY  - the pre-revision threshold comparison decides. This is a true
+      #           no-op, kept so the new thresholds can be introduced without a
+      #           behaviour change and rolled back instantly if they are wrong.
+      # SHADOW  - behaves exactly like LEGACY to the applicant and the officer,
+      #           but the new engine also scores and stores its opinion.
+      # ENFORCE - the new engine decides.
+      #
+      # Every mode writes a row to admission_decisions, so the calibration set
+      # starts filling immediately instead of waiting for a shadow run. The
+      # outcome stored there is always the decision that actually stood; the new
+      # engine's index, gates and data-quality flags are stored beside it.
+      #
+      # Leave this at LEGACY until the committee has seen the shadow comparison
+      # and agreed a cutoffIndex per programme. A missing cutoffIndex sends
+      # applicants to manual review rather than admitting or rejecting them.
+      mode: ${ADMISSION_SCORING_MODE:LEGACY}
+
+# Nexus Identity (the university-wide SSO provider). This service no longer mints
+# its own tokens: it validates RS256 access tokens against the identity JWKS and
+# forwards legacy login requests to the identity service during the migration.
+nexus:
+  identity:
+    issuer: ${IDENTITY_ISSUER:http://localhost:9000}
+    # Kept separate from the issuer because a container may reach the identity
+    # service over a private hostname while browsers use the public one.
+    base-url: ${IDENTITY_BASE_URL:${IDENTITY_ISSUER:http://localhost:9000}}
+    # Only needed while the transitional login endpoints are still enabled.
+    bootstrap-secret: ${IDENTITY_BOOTSTRAP_SECRET:}
+    # Token audiences this API accepts. The claim is the OAuth client id.
+    audiences: ${IDENTITY_ALLOWED_AUDIENCES:nexus-application-portal,nexus-admissions-dashboard,nexus-student-portal,nexus-registrar,nexus-lecturer,nexus-admissions-service}
+    connect-timeout: ${IDENTITY_CONNECT_TIMEOUT:2s}
+    read-timeout: ${IDENTITY_READ_TIMEOUT:5s}
 
 logging:
   level:

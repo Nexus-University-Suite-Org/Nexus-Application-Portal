@@ -24,6 +24,14 @@ public final class AdmissionSchemeMapper {
         entity.setPreferredStartDate(request.preferredStartDate());
         entity.setServiceFee(request.serviceFee());
         entity.setStatus(request.status() != null ? request.status() : "CLOSED");
+        // Left null on the request so the entity default stands. Treating an
+        // omitted weight as zero would silently drop a component of the index.
+        if (request.oLevelWeight() != null) entity.setOLevelWeight(request.oLevelWeight());
+        if (request.aLevelWeight() != null) entity.setALevelWeight(request.aLevelWeight());
+        if (request.bestOfOLevel() != null) entity.setBestOfOLevel(request.bestOfOLevel());
+        if (request.passGradeThreshold() != null && !request.passGradeThreshold().isBlank()) {
+            entity.setPassGradeThreshold(request.passGradeThreshold().trim());
+        }
     }
 
     public static AdmissionSchemeResponse toDto(AdmissionScheme entity) {
@@ -62,7 +70,11 @@ public final class AdmissionSchemeMapper {
                 entity.getCreatedBy(),
                 entity.getCreatedAt(),
                 entity.getUpdatedBy(),
-                entity.getUpdatedAt());
+                entity.getUpdatedAt(),
+                entity.getOLevelWeight(),
+                entity.getALevelWeight(),
+                entity.getBestOfOLevel(),
+                entity.getPassGradeThreshold());
     }
 
     public static void setPrograms(AdmissionScheme entity, java.util.Set<Program> programs) {

@@ -10,6 +10,14 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+/**
+ * Creates the first local administrator row from environment variables.
+ *
+ * <p>Sign-in itself now belongs to Nexus Identity. The row is kept because the
+ * admin directory in the back office still reads from this table, and because
+ * the migration import reuses the stored bcrypt hash, so the seeded password
+ * keeps working once the account is imported.
+ */
 @Component
 public class DataSeeder implements CommandLineRunner {
 

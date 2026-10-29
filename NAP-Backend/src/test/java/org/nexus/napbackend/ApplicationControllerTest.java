@@ -106,7 +106,7 @@ class ApplicationControllerTest {
 
         mockMvc.perform(put("/api/v1/applications/" + id + "/review?status=admitted&notes=Good grades"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.reviewStatus").value("admitted"))
+                .andExpect(jsonPath("$.reviewStatus").value("ADMITTED"))
                 .andExpect(jsonPath("$.status").value("ADMITTED"));
     }
 

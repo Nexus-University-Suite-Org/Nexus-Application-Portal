@@ -5,6 +5,7 @@ import java.security.Principal;
 import java.util.List;
 import org.nexus.napbackend.dto.ProgramRequest;
 import org.nexus.napbackend.dto.ProgramResponse;
+import org.nexus.napbackend.dto.SelectionResponse;
 import org.nexus.napbackend.facade.ProgramFacade;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -79,13 +80,16 @@ public class AdminProgramController {
             @PathVariable Long categoryId) {
         facade.assignCategory(programId, categoryId);
         return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping("/{programId}/categories/{categoryId}")
+    }    @DeleteMapping("/{programId}/categories/{categoryId}")
     public ResponseEntity<Void> removeCategory(
             @PathVariable Long programId,
             @PathVariable Long categoryId) {
         facade.removeCategory(programId, categoryId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/selection")
+    public ResponseEntity<SelectionResponse> selection(@PathVariable Long id) {
+        return ResponseEntity.ok(facade.select(id));
     }
 }

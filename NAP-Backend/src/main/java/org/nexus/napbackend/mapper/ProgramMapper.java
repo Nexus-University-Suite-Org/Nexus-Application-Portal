@@ -45,6 +45,8 @@ public final class ProgramMapper {
         entity.setFeatured(request.featured() != null ? request.featured() : false);
         entity.setDisplayOrder(request.displayOrder() != null ? request.displayOrder() : 0);
         entity.setCutoffScore(request.cutoffScore() != null ? request.cutoffScore() : 0.0);
+        entity.setCutoffIndex(request.cutoffIndex());
+        if (request.essentialMinimumGrade() != null) entity.setEssentialMinimumGrade(request.essentialMinimumGrade());
         entity.setEssentialSubjects(request.essentialSubjects());
         entity.setRelevantSubjects(request.relevantSubjects());
         entity.setDesirableSubjects(request.desirableSubjects());
@@ -96,6 +98,8 @@ public final class ProgramMapper {
                 entity.getUpdatedAt(),
                 categoryNames,
                 entity.getCutoffScore(),
+                entity.getCutoffIndex(),
+                entity.getEssentialMinimumGrade(),
                 entity.getEssentialSubjects(),
                 entity.getRelevantSubjects(),
                 entity.getDesirableSubjects(),
@@ -140,6 +144,8 @@ public final class ProgramMapper {
         if (request.featured() != null) entity.setFeatured(request.featured());
         if (request.displayOrder() != null) entity.setDisplayOrder(request.displayOrder());
         if (request.cutoffScore() != null) entity.setCutoffScore(request.cutoffScore());
+        if (request.cutoffIndex() != null) entity.setCutoffIndex(request.cutoffIndex());
+        if (request.essentialMinimumGrade() != null) entity.setEssentialMinimumGrade(request.essentialMinimumGrade());
         if (request.essentialSubjects() != null) entity.setEssentialSubjects(request.essentialSubjects());
         if (request.relevantSubjects() != null) entity.setRelevantSubjects(request.relevantSubjects());
         if (request.desirableSubjects() != null) entity.setDesirableSubjects(request.desirableSubjects());

@@ -44,6 +44,8 @@ public record ProgramResponse(
         LocalDateTime updatedAt,
         List<String> categoryNames,
         Double cutoffScore,
+        Double cutoffIndex,
+        String essentialMinimumGrade,
         String essentialSubjects,
         String relevantSubjects,
         String desirableSubjects,

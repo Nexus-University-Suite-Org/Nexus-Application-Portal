@@ -1,130 +1,80 @@
 package org.nexus.napbackend.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import org.nexus.napbackend.dto.QualificationResult;
-import org.nexus.napbackend.dto.QualificationResult.SubjectScore;
+import org.nexus.napbackend.model.AdmissionScheme;
 import org.nexus.napbackend.model.Application;
 import org.nexus.napbackend.model.Program;
+import org.nexus.napbackend.scoring.AdmissionOutcome;
+import org.nexus.napbackend.scoring.QualificationEvaluation;
+import org.nexus.napbackend.scoring.ScoringMode;
+import org.nexus.napbackend.scoring.ScoringService;
 import org.springframework.stereotype.Service;
 
+/**
+ * Adapter that keeps the pre-existing public surface working while the scoring
+ * itself lives in the {@code scoring} package.
+ *
+ * <p>This class no longer decides anything. Three behaviours of the original
+ * implementation were defective and have been replaced by
+ * {@link ScoringService}:
+ *
+ * <ul>
+ *   <li>The 1.5 point female applicant bonus. Gender is not read by the new
+ *       scoring engine at all, and must not become a learned coefficient later
+ *       either.</li>
+ *   <li>{@code catch (Exception) { return 0; }} on subject parsing, which turned a
+ *       malformed record into a score of zero and a confident "below cutoff"
+ *       rejection. Unreadable input now forces a review.</li>
+ *   <li>{@code adjustedScore >= cutoffScore} against a cutoff that defaults to
+ *       0.0, which admitted every applicant to any programme whose threshold had
+ *       not been set. A missing threshold now means review.</li>
+ * </ul>
+ *
+ * <p>Which of those fixes an applicant actually sees is decided by
+ * {@link ScoringService} according to the configured mode. Until the committee
+ * agrees the new thresholds, the deployment stays in {@code LEGACY} and this
+ * adapter returns the original arithmetic, so the fixes are available but inert.
+ */
 @Service
 public class WeightingService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ScoringService scoringService;
 
-    public double calculateOLevelWeight(String oLevelSubjectsJson) {
-        try {
-            List<SubjectGrade> subjects = parseSubjects(oLevelSubjectsJson);
-            return subjects.stream()
-                    .map(this::oLevelPoints)
-                    .sorted(Comparator.reverseOrder())
-                    .limit(8)
-                    .mapToDouble(Double::doubleValue)
-                    .sum();
-        } catch (Exception e) {
-            return 0;
-        }
+    public WeightingService(ScoringService scoringService) {
+        this.scoringService = scoringService;
     }
 
-    public double calculateALevelWeight(String uaceSubjectsJson, Program programme) {
-        try {
-            List<SubjectGrade> subjects = parseSubjects(uaceSubjectsJson);
-            List<String> essential = parseSubjectList(programme.getEssentialSubjects());
-            List<String> relevant = parseSubjectList(programme.getRelevantSubjects());
-            List<String> desirable = parseSubjectList(programme.getDesirableSubjects());
-
-            double total = 0;
-            for (SubjectGrade sg : subjects) {
-                String subject = sg.subject();
-                String grade = sg.grade();
-                double gradePoints = aLevelGradePoints(grade);
-                double weight;
-
-                if (essential.stream().anyMatch(s -> s.equalsIgnoreCase(subject))) {
-                    weight = 3.0;
-                } else if (relevant.stream().anyMatch(s -> s.equalsIgnoreCase(subject))) {
-                    weight = 2.0;
-                } else if (desirable.stream().anyMatch(s -> s.equalsIgnoreCase(subject))) {
-                    weight = 1.0;
-                } else {
-                    weight = 0.5;
-                }
-                total += gradePoints * weight;
-            }
-            return total;
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    private static final double GENDER_BONUS = 1.5;
-
+    /**
+     * Produces the legacy wire shape for one programme, delegating the mode
+     * decision to {@link ScoringService#qualificationResult}.
+     */
     public QualificationResult evaluateQualification(Application app, Program programme) {
-        double oLevelScore = calculateOLevelWeight(app.getOLevelSubjects());
-        double aLevelScore = calculateALevelWeight(app.getUacePrincipalSubjects(), programme);
-        double totalScore = oLevelScore + aLevelScore;
+        return evaluateQualification(app, programme, null);
+    }
 
-        boolean isFemale = "Female".equalsIgnoreCase(app.getGender());
-        double adjustedScore = isFemale ? totalScore + GENDER_BONUS : totalScore;
-        boolean qualified = adjustedScore >= programme.getCutoffScore();
-
-        List<SubjectScore> breakdown = new ArrayList<>();
-        try {
-            List<SubjectGrade> uaceSubjects = parseSubjects(app.getUacePrincipalSubjects());
-            List<String> essential = parseSubjectList(programme.getEssentialSubjects());
-            List<String> relevant = parseSubjectList(programme.getRelevantSubjects());
-            List<String> desirable = parseSubjectList(programme.getDesirableSubjects());
-
-            for (SubjectGrade sg : uaceSubjects) {
-                double gradePoints = aLevelGradePoints(sg.grade());
-                String category;
-                double weight;
-                if (essential.stream().anyMatch(s -> s.equalsIgnoreCase(sg.subject()))) {
-                    category = "Essential"; weight = 3.0;
-                } else if (relevant.stream().anyMatch(s -> s.equalsIgnoreCase(sg.subject()))) {
-                    category = "Relevant"; weight = 2.0;
-                } else if (desirable.stream().anyMatch(s -> s.equalsIgnoreCase(sg.subject()))) {
-                    category = "Desirable"; weight = 1.0;
-                } else {
-                    category = "Other"; weight = 0.5;
-                }
-                breakdown.add(new SubjectScore(sg.subject(), sg.grade(), category, gradePoints, weight, gradePoints * weight));
-            }
-        } catch (Exception ignored) {}
-
-        String reason;
-        if (qualified) {
-            reason = "Score " + String.format("%.1f", totalScore)
-                    + (isFemale ? " + " + String.format("%.1f", GENDER_BONUS) + " female applicant bonus = " + String.format("%.1f", adjustedScore) : "")
-                    + " meets cutoff of " + String.format("%.1f", programme.getCutoffScore());
-        } else {
-            reason = "Score " + String.format("%.1f", totalScore)
-                    + (isFemale ? " + " + String.format("%.1f", GENDER_BONUS) + " female applicant bonus = " + String.format("%.1f", adjustedScore) : "")
-                    + " is below cutoff of " + String.format("%.1f", programme.getCutoffScore());
+    /** As above, with the applicant's scheme so scheme-level policy can apply. */
+    public QualificationResult evaluateQualification(Application app, Program programme, AdmissionScheme scheme) {
+        if (programme == null) {
+            return null;
         }
-
-        return new QualificationResult(
-                programme.getProgramCode(), programme.getProgramName(), qualified,
-                totalScore, adjustedScore, isFemale,
-                programme.getCutoffScore(),
-                oLevelScore, aLevelScore, breakdown, reason
-        );
+        return scoringService.qualificationResult(app, programme, scheme);
     }
 
     public String evaluateAllChoices(Application app, List<Program> programmes) {
+        return evaluateAllChoices(app, programmes, null);
+    }
+
+    public String evaluateAllChoices(Application app, List<Program> programmes, AdmissionScheme scheme) {
         List<QualificationResult> results = new ArrayList<>();
-        String[] choices = {app.getProgramChoice1(), app.getProgramChoice2(), app.getProgramChoice3(), app.getProgramChoice4()};
-        for (String choice : choices) {
-            if (choice == null || choice.isBlank()) continue;
-            programmes.stream()
-                    .filter(p -> p.getProgramCode() != null && (p.getProgramCode().equalsIgnoreCase(choice) || p.getProgramName().equalsIgnoreCase(choice)))
-                    .findFirst()
-                    .ifPresent(programme -> results.add(evaluateQualification(app, programme)));
+        for (Program programme : programmes) {
+            QualificationResult result = evaluateQualification(app, programme, scheme);
+            if (result != null) {
+                results.add(result);
+            }
         }
         try {
             return objectMapper.writeValueAsString(results);
@@ -133,70 +83,48 @@ public class WeightingService {
         }
     }
 
+    /**
+     * Returns the first chosen programme the active engine admitted, or null when
+     * none qualifies.
+     *
+     * <p>Auto-assignment follows the mode too. A legacy run auto-assigns on the
+     * old threshold, because that is what it always did. An enforcing run only
+     * auto-assigns a real {@link AdmissionOutcome#ADMIT}, and deliberately leaves
+     * an applicant needing review unassigned, because an assignment is a decision
+     * of record and must be made by a person.
+     */
     public String findAssignedProgramme(Application app, List<Program> programmes) {
-        String[] choices = {app.getProgramChoice1(), app.getProgramChoice2(), app.getProgramChoice3(), app.getProgramChoice4()};
+        return findAssignedProgramme(app, programmes, null);
+    }
+
+    public String findAssignedProgramme(Application app, List<Program> programmes, AdmissionScheme scheme) {
+        String[] choices = {
+                app.getProgramChoice1(), app.getProgramChoice2(),
+                app.getProgramChoice3(), app.getProgramChoice4()
+        };
         for (String choice : choices) {
-            if (choice == null || choice.isBlank()) continue;
+            if (choice == null || choice.isBlank()) {
+                continue;
+            }
             for (Program programme : programmes) {
-                if (programme.getProgramCode() != null && (programme.getProgramCode().equalsIgnoreCase(choice) || programme.getProgramName().equalsIgnoreCase(choice))) {
-                    QualificationResult result = evaluateQualification(app, programme);
-                    if (result.qualified()) {
-                        return programme.getProgramCode();
-                    }
+                if (programme == null || programme.getProgramCode() == null) {
+                    continue;
+                }
+                boolean matches = programme.getProgramCode().equalsIgnoreCase(choice)
+                        || (programme.getProgramName() != null
+                            && programme.getProgramName().equalsIgnoreCase(choice));
+                if (matches && isAutoAssignable(app, programme, scheme)) {
+                    return programme.getProgramCode();
                 }
             }
         }
         return null;
     }
 
-    private double oLevelPoints(SubjectGrade sg) {
-        String grade = sg.grade().toUpperCase().trim();
-        if (grade.startsWith("D1") || grade.startsWith("D2") || grade.equals("1") || grade.equals("2")) return 0.3;
-        if (grade.startsWith("C") || grade.equals("3") || grade.equals("4") || grade.equals("5") || grade.equals("6")) return 0.2;
-        if (grade.startsWith("P") || grade.equals("7") || grade.equals("8")) return 0.1;
-        return 0;
-    }
-
-    private double aLevelGradePoints(String grade) {
-        if (grade == null) return 0;
-        String g = grade.toUpperCase().trim();
-        return switch (g) {
-            case "A" -> 6.0;
-            case "B" -> 5.0;
-            case "C" -> 4.0;
-            case "D" -> 3.0;
-            case "E" -> 2.0;
-            case "O" -> 1.0;
-            case "F" -> 0.0;
-            default -> {
-                try {
-                    int num = Integer.parseInt(g);
-                    yield Math.max(0, 6 - (num - 1));
-                } catch (NumberFormatException e) {
-                    yield 0;
-                }
-            }
-        };
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<SubjectGrade> parseSubjects(String json) {
-        if (json == null || json.isBlank()) return List.of();
-        try {
-            return objectMapper.readValue(json, new TypeReference<>() {});
-        } catch (Exception e) {
-            return List.of();
+    private boolean isAutoAssignable(Application app, Program programme, AdmissionScheme scheme) {
+        if (scoringService.mode() == ScoringMode.ENFORCE) {
+            return scoringService.outcomeOf(app, programme, scheme) == AdmissionOutcome.ADMIT;
         }
+        return evaluateQualification(app, programme, scheme).qualified();
     }
-
-    private List<String> parseSubjectList(String json) {
-        if (json == null || json.isBlank()) return List.of();
-        try {
-            return objectMapper.readValue(json, new TypeReference<>() {});
-        } catch (Exception e) {
-            return Arrays.stream(json.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
-        }
-    }
-
-    public record SubjectGrade(String subject, String grade) {}
 }

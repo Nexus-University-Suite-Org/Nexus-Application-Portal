@@ -45,11 +45,11 @@ const columns: Column<Application>[] = [
     render: (item) => (
       <Badge
         variant={
-          item.reviewStatus === "admitted"
+          item.reviewStatus?.toUpperCase() === "ADMITTED"
             ? "default"
-            : item.reviewStatus === "rejected"
+            : item.reviewStatus?.toUpperCase() === "REJECTED"
             ? "destructive"
-            : item.reviewStatus === "waitlisted"
+            : item.reviewStatus?.toUpperCase() === "WAITLISTED"
             ? "secondary"
             : "outline"
         }

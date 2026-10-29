@@ -2,13 +2,14 @@ package org.nexus.napbackend.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record ApplicationCreateRequest(
-        String firstName,
-        String lastName,
+        @NotBlank String firstName,
+        @NotBlank String lastName,
         String otherNames,
-        String email,
+        @NotBlank String email,
         @JsonProperty("phone") String phoneNumber,
         String gender,
         String dateOfBirth,

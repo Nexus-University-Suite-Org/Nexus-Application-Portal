@@ -5,7 +5,6 @@ import java.util.Map;
 import org.nexus.napbackend.dto.StudentLoginRequest;
 import org.nexus.napbackend.dto.StudentLoginResponse;
 import org.nexus.napbackend.facade.StudentAuthFacade;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,15 +29,13 @@ public class StudentAuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody Map<String, String> body) {
         String email = body.get("email");
-        String newPassword = body.get("newPassword");
         if (email == null || email.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("ok", false, "message", "Email is required"));
         }
-        try {
-            StudentLoginResponse.StudentProfile profile = studentAuthFacade.resetPassword(email, newPassword);
-            return ResponseEntity.ok(Map.of("ok", true, "message", "Password updated", "email", profile.email()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("ok", false, "message", e.getMessage()));
-        }
+        // Always the same answer, whether or not the address exists.
+        studentAuthFacade.requestPasswordReset(email);
+        return ResponseEntity.ok(Map.of(
+                "ok", true,
+                "message", "If that address has an account, a reset link is on its way."));
     }
 }

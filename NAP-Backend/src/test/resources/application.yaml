@@ -1,4 +1,43 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:napdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    # NON_KEYWORDS: `year` is a reserved word in H2 2.x but a normal column in
+    # PostgreSQL, and CourseUnit maps a `year` property.
+    url: jdbc:h2:mem:napdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;NON_KEYWORDS=YEAR
     driver-class-name: org.h2.Driver
+  # This file shadows src/main/resources/application.yaml on the test classpath,
+  # so Flyway defaults back to enabled here. V11 seeds the `admins` table, which
+  # no migration creates, which failed every context load. Production runs with
+  # Flyway off and Hibernate building the schema, so mirror that here.
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: update
+    # data.sql inserts into `tenants` and the CMS tables, so it has to run after
+    # Hibernate has created them.
+    defer-datasource-initialization: true
+    open-in-view: false
+  # NewsletterMailService needs a JavaMailSender; MailSenderAutoConfiguration backs
+  # off when spring.mail.host is blank.
+  mail:
+    host: localhost
+    port: 3025
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+# Nexus Identity is not running during tests; the decoder only fetches the JWKS
+# lazily, and MockMvc injects an authenticated Jwt for the admin tests.
+nexus:
+  identity:
+    issuer: http://localhost:9000
+    base-url: http://localhost:9000
+    bootstrap-secret: ""
+
+nap:
+  storage:
+    secret: nap-test-only-storage-key-do-not-use-anywhere-real
+    expiration-hours: 24

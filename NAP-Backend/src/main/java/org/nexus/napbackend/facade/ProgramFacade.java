@@ -4,8 +4,12 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import org.nexus.napbackend.dto.ProgramRequest;
 import org.nexus.napbackend.dto.ProgramResponse;
+import org.nexus.napbackend.dto.SelectionResponse;
+import org.nexus.napbackend.dto.SelectionResponse.RankedApplicant;
 import org.nexus.napbackend.mapper.ProgramMapper;
 import org.nexus.napbackend.model.Program;
+import org.nexus.napbackend.scoring.CapacityAllocationService;
+import org.nexus.napbackend.scoring.ProgrammeSelector;
 import org.nexus.napbackend.service.ProgramCategoryService;
 import org.nexus.napbackend.service.ProgramService;
 import org.springframework.stereotype.Component;
@@ -15,10 +19,14 @@ public class ProgramFacade {
 
     private final ProgramService programService;
     private final ProgramCategoryService categoryService;
+    private final CapacityAllocationService capacityAllocationService;
 
-    public ProgramFacade(ProgramService programService, ProgramCategoryService categoryService) {
+    public ProgramFacade(ProgramService programService,
+                         ProgramCategoryService categoryService,
+                         CapacityAllocationService capacityAllocationService) {
         this.programService = programService;
         this.categoryService = categoryService;
+        this.capacityAllocationService = capacityAllocationService;
     }
 
     @Transactional
@@ -87,6 +95,37 @@ public class ProgramFacade {
     @Transactional
     public void removeCategory(Long programId, Long categoryId) {
         categoryService.removeProgramFromCategory(categoryId, programId);
+    }
+
+    /**
+     * Ranks the scored pool for a programme against its capacity.
+     *
+     * <p>Read-only. It reports what the rules would allocate; it does not commit
+     * offers, because releasing a place is a human decision and writing offers
+     * from a preview would let a GET mutate enrolment.
+     */
+    @Transactional
+    public SelectionResponse select(Long id) {
+        Program entity = programService.findById(id)
+                .orElseThrow(() -> new RuntimeException("Program not found"));
+        ProgrammeSelector.Selection selection = capacityAllocationService.allocate(entity);
+
+        return new SelectionResponse(
+                entity.getProgramCode(),
+                selection.capacity(),
+                selection.offered().size(),
+                selection.waitlisted().size(),
+                selection.notEligible().size(),
+                selection.offered().stream().map(ProgramFacade::toRanked).toList(),
+                selection.waitlisted().stream().map(ProgramFacade::toRanked).toList());
+    }
+
+    private static RankedApplicant toRanked(ProgrammeSelector.Offered offered) {
+        return new RankedApplicant(
+                offered.rank(),
+                offered.candidate().applicationId(),
+                offered.candidate().admissionIndex(),
+                offered.candidate().outcome().name());
     }
 
     private ProgramResponse toDto(Program entity) {

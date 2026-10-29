@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import org.nexus.napbackend.configuration.JwtUtil;
+import org.nexus.napbackend.configuration.NexusRoles;
 import org.nexus.napbackend.dto.AdminLoginRequest;
 import org.nexus.napbackend.dto.AdminLoginResponse;
 import org.nexus.napbackend.dto.ApplicationResponse;
@@ -19,53 +19,59 @@ import org.nexus.napbackend.dto.PaginatedApplicationsResponse;
 import org.nexus.napbackend.dto.ReviewRequest;
 import org.nexus.napbackend.exception.UnauthorizedException;
 import org.nexus.napbackend.mapper.ApplicationMapper;
-import org.nexus.napbackend.model.Admin;
 import org.nexus.napbackend.model.Application;
 import org.nexus.napbackend.repository.ApplicationRepository;
-import org.nexus.napbackend.service.AdminService;
+import org.nexus.napbackend.service.IdentityGateway;
+import org.nexus.napbackend.service.IdentityGateway.IdentitySession;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AdminFacade {
 
-    private final AdminService adminService;
     private final ApplicationRepository applicationRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    private final IdentityGateway identityGateway;
 
-    public AdminFacade(AdminService adminService,
-                       ApplicationRepository applicationRepository,
-                       PasswordEncoder passwordEncoder,
-                       JwtUtil jwtUtil) {
-        this.adminService = adminService;
+    public AdminFacade(ApplicationRepository applicationRepository, IdentityGateway identityGateway) {
         this.applicationRepository = applicationRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
+        this.identityGateway = identityGateway;
     }
 
+    /**
+     * Transitional login shim.
+     *
+     * <p>Credentials and the resulting token both come from Nexus Identity. The
+     * local {@code admins} table is no longer an authority on who may sign in.
+     */
     @Transactional
     public AdminLoginResponse login(AdminLoginRequest request) {
-        Admin admin = adminService.findByEmail(request.email())
-                .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
-
-        if (!passwordEncoder.matches(request.password(), admin.getPasswordHash())) {
-            throw new UnauthorizedException("Invalid email or password");
+        IdentitySession session = identityGateway.authenticate(
+                request.email(), request.password(), IdentityGateway.APPLICATION_PORTAL_CLIENT);
+        // The app-portal client also accepts applicants and students. Without this
+        // check they would get a "successful" login carrying a token that every
+        // admin route then rejects, which is a confusing half-signed-in state.
+        boolean entitled = session.roles() != null
+                && session.roles().stream().anyMatch(NexusRoles.ADMIN::contains);
+        if (!entitled) {
+            throw new UnauthorizedException("This account is not entitled to use this portal.");
         }
-
-        String token = jwtUtil.generateToken(admin.getId(), admin.getEmail());
-        return new AdminLoginResponse(token, admin.getEmail(), admin.getFullName());
+        String name = session.name() == null || session.name().isBlank()
+                ? session.email() : session.name();
+        return new AdminLoginResponse(session.token(), session.email(), name);
     }
 
-    @Transactional
-    public AdminLoginResponse me(Long adminId) {
-        Admin admin = adminService.findById(adminId)
-                .orElseThrow(() -> new UnauthorizedException("Admin not found"));
-        return new AdminLoginResponse(null, admin.getEmail(), admin.getFullName());
+    /** Reads the profile straight from the validated access token. */
+    public AdminLoginResponse me(Jwt jwt) {
+        if (jwt == null) {
+            throw new UnauthorizedException("Not signed in");
+        }
+        String email = jwt.getClaimAsString("email");
+        String name = jwt.getClaimAsString("name");
+        return new AdminLoginResponse(null, email, name == null ? email : name);
     }
 
     @Transactional

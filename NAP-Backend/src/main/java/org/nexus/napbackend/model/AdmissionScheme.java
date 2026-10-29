@@ -64,6 +64,28 @@ public class AdmissionScheme {
     @Column(nullable = false, length = 20)
     private String status = "CLOSED";
 
+    /**
+     * Percentage of the admission index drawn from O-level results. A-level
+     * weight is treated as the remainder, so the two always sum to 100.
+     */
+    @Column(name = "o_level_weight")
+    private Double oLevelWeight = 40.0;
+
+    @Column(name = "a_level_weight")
+    private Double aLevelWeight = 60.0;
+
+    /** How many best O-level subjects contribute to the aggregate. */
+    @Column(name = "best_of_o_level")
+    private Integer bestOfOLevel = 8;
+
+    /**
+     * Grade label counting as an O-level pass for the minimum-passes gate.
+     * Unvalidated default, and configurable here so the committee can correct it
+     * without a code change.
+     */
+    @Column(name = "pass_grade_threshold", length = 10)
+    private String passGradeThreshold = "C6";
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "admission_scheme_programs",

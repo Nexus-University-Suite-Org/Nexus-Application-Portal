@@ -24,7 +24,11 @@ public record AdmissionSchemeResponse(
         String createdBy,
         LocalDateTime createdAt,
         String updatedBy,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        Double oLevelWeight,
+        Double aLevelWeight,
+        Integer bestOfOLevel,
+        String passGradeThreshold
 ) {
 
     public record ProgramSummary(Long id, String programName, String programCode, String programType) {}
