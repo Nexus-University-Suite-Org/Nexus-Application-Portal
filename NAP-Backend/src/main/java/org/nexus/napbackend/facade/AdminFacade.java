@@ -7,14 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-<<<<<<< HEAD
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import org.nexus.napbackend.configuration.NexusRoles;
-=======
-import org.nexus.napbackend.configuration.JwtUtil;
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
 import org.nexus.napbackend.dto.AdminLoginRequest;
 import org.nexus.napbackend.dto.AdminLoginResponse;
 import org.nexus.napbackend.dto.ApplicationResponse;
@@ -24,52 +17,40 @@ import org.nexus.napbackend.dto.ReviewRequest;
 import org.nexus.napbackend.exception.UnauthorizedException;
 import org.nexus.napbackend.mapper.ApplicationMapper;
 import org.nexus.napbackend.model.Application;
+import org.nexus.napbackend.model.Admin;
 import org.nexus.napbackend.repository.ApplicationRepository;
-<<<<<<< HEAD
+import org.nexus.napbackend.service.AdminService;
 import org.nexus.napbackend.service.IdentityGateway;
 import org.nexus.napbackend.service.IdentityGateway.IdentitySession;
-=======
-import org.nexus.napbackend.service.AdminService;
 import org.nexus.napbackend.service.StudentNumberService;
-import org.nexus.napbackend.service.TenantService;
 import org.nexus.napbackend.tenancy.TenantContext;
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AdminFacade {
 
     private final ApplicationRepository applicationRepository;
-<<<<<<< HEAD
     private final IdentityGateway identityGateway;
+    private final AdminService adminService;
+    private final PasswordEncoder passwordEncoder;
+    private final StudentNumberService studentNumberService;
 
-    public AdminFacade(ApplicationRepository applicationRepository, IdentityGateway identityGateway) {
+    public AdminFacade(ApplicationRepository applicationRepository,
+                       IdentityGateway identityGateway,
+                       AdminService adminService,
+                       PasswordEncoder passwordEncoder,
+                       StudentNumberService studentNumberService) {
         this.applicationRepository = applicationRepository;
         this.identityGateway = identityGateway;
-=======
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-    private final StudentNumberService studentNumberService;
-    private final TenantService tenantService;
-
-    public AdminFacade(AdminService adminService,
-                       ApplicationRepository applicationRepository,
-                       PasswordEncoder passwordEncoder,
-                       JwtUtil jwtUtil,
-                       StudentNumberService studentNumberService,
-                       TenantService tenantService) {
         this.adminService = adminService;
-        this.applicationRepository = applicationRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
         this.studentNumberService = studentNumberService;
-        this.tenantService = tenantService;
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
     }
 
     /**
@@ -90,10 +71,10 @@ public class AdminFacade {
         if (!entitled) {
             throw new UnauthorizedException("This account is not entitled to use this portal.");
         }
-<<<<<<< HEAD
         String name = session.name() == null || session.name().isBlank()
                 ? session.email() : session.name();
-        return new AdminLoginResponse(session.token(), session.email(), name);
+        String role = session.roles().stream().findFirst().orElse(null);
+        return new AdminLoginResponse(session.token(), session.email(), name, null, role);
     }
 
     /** Reads the profile straight from the validated access token. */
@@ -103,50 +84,16 @@ public class AdminFacade {
         }
         String email = jwt.getClaimAsString("email");
         String name = jwt.getClaimAsString("name");
-        return new AdminLoginResponse(null, email, name == null ? email : name);
-=======
-
-        if (admin.getTenantId() != null) {
-            tenantService.findById(admin.getTenantId())
-                    .filter(tenant -> Boolean.TRUE.equals(tenant.getActive()))
-                    .orElseThrow(() -> new UnauthorizedException(
-                            "This university's admin portal is currently disabled"));
-        }
-
-        String role = resolveRole(admin);
-        String token = jwtUtil.generateToken(admin.getId(), admin.getEmail(), role, admin.getTenantId());
-        return new AdminLoginResponse(
-                token, admin.getEmail(), admin.getFullName(), admin.getTenantId(), role);
+        List<String> roles = jwt.getClaimAsStringList("roles");
+        String role = roles == null ? null : roles.stream().findFirst().orElse(null);
+        return new AdminLoginResponse(null, email, name == null ? email : name, null, role);
     }
 
-    @Transactional
-    public AdminLoginResponse me(Long adminId) {
-        Admin admin = adminService.findById(adminId)
-                .orElseThrow(() -> new UnauthorizedException("Admin not found"));
-        return new AdminLoginResponse(
-                null, admin.getEmail(), admin.getFullName(), admin.getTenantId(), resolveRole(admin));
-    }
-
-    private String resolveRole(Admin admin) {
-        String role = admin.getRole();
-        return role == null || role.isBlank() ? "ADMIN" : role;
-    }
-
-    @Transactional
-    public void changePassword(Long adminId, String currentPassword, String newPassword) {
-        Admin admin = adminService.findById(adminId)
-                .orElseThrow(() -> new UnauthorizedException("Admin not found"));
-
-        if (!passwordEncoder.matches(currentPassword, admin.getPasswordHash())) {
-            throw new UnauthorizedException("Current password is incorrect");
+    public void requestPasswordReset(Jwt jwt) {
+        if (jwt == null) {
+            throw new UnauthorizedException("Not signed in");
         }
-        if (passwordEncoder.matches(newPassword, admin.getPasswordHash())) {
-            throw new IllegalArgumentException(
-                    "New password must be different from the current password");
-        }
-
-        admin.setPasswordHash(passwordEncoder.encode(newPassword));
-        adminService.save(admin);
+        identityGateway.requestPasswordReset(jwt.getClaimAsString("email"));
     }
 
     @Transactional
@@ -155,7 +102,6 @@ public class AdminFacade {
                 .orElseThrow(() -> new IllegalArgumentException("Admin not found: " + adminId));
         admin.setPasswordHash(passwordEncoder.encode(newPassword));
         adminService.save(admin);
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
     }
 
     @Transactional

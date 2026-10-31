@@ -15,6 +15,7 @@ import org.nexus.napbackend.model.Program;
 import org.nexus.napbackend.repository.AdmissionDecisionRepository;
 import org.nexus.napbackend.repository.ApplicationRepository;
 import org.nexus.napbackend.repository.ProgramRepository;
+import org.nexus.napbackend.tenancy.TenantContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -53,6 +54,7 @@ class AdmissionDecisionPersistenceTest {
 
     private Program seedProgramme(String code) {
         Program programme = new Program();
+        programme.setTenantId(TenantContext.DEFAULT_TENANT_ID);
         programme.setProgramCode(code);
         programme.setProgramName("Persistence Test Programme " + code);
         programme.setProgramType("Bachelor");
@@ -173,4 +175,3 @@ class AdmissionDecisionPersistenceTest {
                 .isEmpty();
     }
 }
-

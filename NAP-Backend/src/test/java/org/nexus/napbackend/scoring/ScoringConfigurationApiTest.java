@@ -27,7 +27,7 @@ class ScoringConfigurationApiTest {
     /**
      * Builds a request carrying only the two fields under test.
      *
-     * <p>{@code ProgramRequest} is a 42-component record, so the arguments are
+     * <p>{@code ProgramRequest} is a 40-component record, so the arguments are
      * grouped by the field ranges they fill and the ones that matter are named.
      */
     private static ProgramRequest programRequest(Double cutoffIndex, String essentialMinimumGrade) {
@@ -39,7 +39,7 @@ class ScoringConfigurationApiTest {
                 null, null, null, null, null, null,         // duration..totalCreditUnits
                 null, null, null, null, null,               // studyMode..curriculum
                 null, null, null, null, null,               // intakes..imageUrl
-                null, null, null, null,                     // shortDescription..displayOrder
+                null, null,                                 // featured..displayOrder
                 25.0,                                       // cutoffScore
                 cutoffIndex,                                // cutoffIndex
                 essentialMinimumGrade,                      // essentialMinimumGrade

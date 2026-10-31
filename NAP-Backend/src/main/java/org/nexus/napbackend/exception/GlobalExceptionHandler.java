@@ -10,6 +10,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -43,7 +44,14 @@ public class GlobalExceptionHandler {
         return withMessage(problem, ex.getMessage());
     }
 
-<<<<<<< HEAD
+    @ExceptionHandler(ResponseStatusException.class)
+    public ProblemDetail handleResponseStatus(ResponseStatusException ex) {
+        String detail = ex.getReason() == null ? "Request failed" : ex.getReason();
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatusCode(), detail);
+        problem.setTitle(ex.getStatusCode().toString());
+        return withMessage(problem, detail);
+    }
+
     @ExceptionHandler(IdentityUnavailableException.class)
     public ProblemDetail handleIdentityUnavailable(IdentityUnavailableException ex) {
         log.warn("Nexus Identity is unavailable: {}", ex.getMessage());
@@ -52,7 +60,8 @@ public class GlobalExceptionHandler {
                 "Sign-in is temporarily unavailable. Please try again in a moment.");
         problem.setTitle("Identity service unavailable");
         return withMessage(problem, problem.getDetail());
-=======
+    }
+
     @ExceptionHandler(NotAdmittedException.class)
     public ProblemDetail handleNotAdmitted(NotAdmittedException ex) {
         log.debug("Admission gate rejected portal login: {}", ex.getMessage());
@@ -67,7 +76,6 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setTitle("Invalid request");
         return withMessage(problem, ex.getMessage());
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
     }
 
     @ExceptionHandler(Exception.class)

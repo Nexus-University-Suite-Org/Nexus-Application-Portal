@@ -32,11 +32,7 @@ public class NewsArticle {
     @Column(length = 1000)
     private String excerpt;
 
-<<<<<<< HEAD
     @Column(nullable = false, columnDefinition = "TEXT")
-=======
-    @Column(nullable = false, columnDefinition = "text")
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
     private String content;
 
     @Column(length = 100)

@@ -26,33 +26,24 @@ public class ApplicationFacade {
     private final ProgramService programService;
     private final WeightingService weightingService;
     private final NotificationService notificationService;
-<<<<<<< HEAD
     private final ScoringService scoringService;
     private final AdmissionSchemeResolver schemeResolver;
-=======
     private final StudentNumberService studentNumberService;
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
 
     public ApplicationFacade(ApplicationService service,
                              ProgramService programService,
                              WeightingService weightingService,
                              NotificationService notificationService,
-<<<<<<< HEAD
                              ScoringService scoringService,
-                             AdmissionSchemeResolver schemeResolver) {
-=======
+                             AdmissionSchemeResolver schemeResolver,
                              StudentNumberService studentNumberService) {
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
         this.service = service;
         this.programService = programService;
         this.weightingService = weightingService;
         this.notificationService = notificationService;
-<<<<<<< HEAD
         this.scoringService = scoringService;
         this.schemeResolver = schemeResolver;
-=======
         this.studentNumberService = studentNumberService;
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
     }
 
     @Transactional

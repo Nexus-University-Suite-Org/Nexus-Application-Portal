@@ -39,12 +39,18 @@ public class StudentAuthFacade {
 
     @Transactional
     public StudentLoginResponse login(String email, String password) {
-<<<<<<< HEAD
         IdentitySession session = identityGateway.authenticate(
                 email, password, IdentityGateway.STUDENT_PORTAL_CLIENT);
         Application application = findApplicantByEmail(
                 session.email() == null || session.email().isBlank() ? email : session.email());
+        requireAdmitted(application);
         return new StudentLoginResponse(session.token(), toUser(application), toProfile(application));
+    }
+
+    @Transactional
+    public StudentLoginResponse profileForSso(String email) {
+        Application application = findApplicantByEmail(email);
+        return new StudentLoginResponse(null, toUser(application), toProfile(application));
     }
 
     /**
@@ -56,19 +62,6 @@ public class StudentAuthFacade {
      */
     public void requestPasswordReset(String email) {
         identityGateway.requestPasswordReset(email);
-=======
-        Application application = findApplicantByEmail(email);
-        if (application.getPasswordHash() == null) {
-            throw new UnauthorizedException("No password set for this account. Please use forgot password.");
-        }
-        if (!passwordEncoder.matches(password, application.getPasswordHash())) {
-            throw new UnauthorizedException("Invalid email or password");
-        }
-
-        requireAdmitted(application);
-
-        String token = jwtUtil.generateToken(application.getId(), application.getEmail(), "STUDENT");
-        return new StudentLoginResponse(token, toUser(application), toProfile(application));
     }
 
     private void requireAdmitted(Application application) {
@@ -87,20 +80,9 @@ public class StudentAuthFacade {
                         + ". Current application status: " + status + ".");
     }
 
-    @Transactional
-    public StudentLoginResponse.StudentProfile resetPassword(String email, String newPassword) {
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new RuntimeException("Password must be at least 6 characters");
-        }
-        Application application = findApplicantByEmail(email);
-        application.setPasswordHash(passwordEncoder.encode(newPassword));
-        applicationRepository.save(application);
-        return toProfile(application);
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
-    }
-
     private Application findApplicantByEmail(String email) {
-        List<Application> applications = applicationRepository.findByEmailOrderByCreatedAtDesc(email);
+        List<Application> applications =
+                applicationRepository.findByEmailIgnoreCaseOrderByCreatedAtDesc(email);
         if (applications.isEmpty()) {
             throw new UnauthorizedException("No application found for this email");
         }

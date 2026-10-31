@@ -18,6 +18,7 @@ export const ADMIN_ROLES = [
   "ADMISSIONS_OFFICER",
   "ADMISSIONS_ADMIN",
   "SYSTEM_ADMIN",
+  "SUPER_ADMIN",
 ] as const;
 
 export interface AdminUser {
@@ -72,47 +73,8 @@ const AdminAuthBridge = ({ children }: { children: ReactNode }) => {
   const refreshTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-<<<<<<< HEAD
     // Drop anything the legacy password form stored; those tokens are no
     // longer valid and must not shadow the SSO session.
-=======
-    const storedToken = localStorage.getItem("admin_token");
-    const storedUser = localStorage.getItem("admin_user");
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
-  }, []);
-
-  const login = async (email: string, password: string) => {
-    const response = await fetch("/api/v1/admin/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Login failed");
-    }
-
-    const data = await response.json();
-    const nextUser: AdminUser = {
-      id: data.id || 0,
-      email: data.email,
-      fullName: data.fullName,
-      role: data.role,
-      tenantId: data.tenantId,
-    };
-    localStorage.setItem("admin_token", data.token);
-    localStorage.setItem("admin_user", JSON.stringify(nextUser));
-    setToken(data.token);
-    setUser(nextUser);
-  };
-
-  const logout = () => {
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
     localStorage.removeItem("admin_token");
     localStorage.removeItem("admin_user");
   }, []);
@@ -151,6 +113,7 @@ const AdminAuthBridge = ({ children }: { children: ReactNode }) => {
         id: 0,
         email: user.email,
         fullName: user.name?.trim() || user.email,
+        role: user.roles[0],
       }
     : null;
 
@@ -162,22 +125,16 @@ const AdminAuthBridge = ({ children }: { children: ReactNode }) => {
         loading: status === "loading",
         status,
         login,
-<<<<<<< HEAD
         logout: () => {
           void logout();
         },
         isAuthenticated: status === "authenticated" && token !== null,
-=======
-        logout,
-        isAuthenticated: !!token,
-        isSuperAdmin: user?.role === "SUPER_ADMIN",
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
+        isSuperAdmin: user?.roles.includes("SUPER_ADMIN") ?? false,
       }}
     >
       {children}
     </AdminAuthContext.Provider>
   );
-<<<<<<< HEAD
 };
 
 const AuthSplash = () => (
@@ -200,6 +157,3 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => (
     <AdminAuthBridge>{children}</AdminAuthBridge>
   </AuthProvider>
 );
-=======
-};
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e

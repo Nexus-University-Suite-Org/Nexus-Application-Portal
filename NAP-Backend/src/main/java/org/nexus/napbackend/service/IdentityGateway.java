@@ -124,8 +124,16 @@ public class IdentityGateway {
                     .body(Map.of("email", email == null ? "" : email))
                     .retrieve()
                     .toBodilessEntity();
+        } catch (RestClientResponseException e) {
+            int status = e.getStatusCode().value();
+            if (status == 400 || status == 404) {
+                return;
+            }
+            log.error("Nexus Identity rejected a password reset request with status {}", status);
+            throw new IdentityUnavailableException("Nexus Identity returned " + status, e);
         } catch (RestClientException e) {
-            log.warn("Could not forward a password reset request to Nexus Identity: {}", e.getMessage());
+            log.error("Could not reach Nexus Identity at {}", properties.baseUrl(), e);
+            throw new IdentityUnavailableException("Could not reach Nexus Identity.", e);
         }
     }
 

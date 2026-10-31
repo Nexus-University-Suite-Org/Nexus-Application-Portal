@@ -8,8 +8,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import PageTransition from "@/components/PageTransition";
 import ScrollToTop from "@/components/ScrollToTop";
 import useSmoothScroll from "@/hooks/useSmoothScroll";
-import { AdminAuthProvider, useAdminAuth } from "@/contexts/AdminAuthContext";
+import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
+import { RequireAuth } from "@/lib/nexus-auth";
 import DebugOverlay from "@/components/DebugOverlay";
 const Index = lazy(() => import("./pages/Index.tsx"));
   const StudyAtPortal = lazy(() => import("./pages/StudyAtPortal.tsx"));
@@ -185,84 +186,50 @@ const AnimatedRoutes = () => {
             <Route path="*" element={<NotFound />} />
 
             {/* Admin Routes */}
-            <Route
-              path="/auth/callback"
-              element={
-                <AdminAuthProvider>
-                  <AuthCallbackPage />
-                </AdminAuthProvider>
-              }
-<<<<<<< HEAD
-            />
-            <Route path="/admin" element={<AdminAuthProvider><Outlet /></AdminAuthProvider>}>
-              <Route index element={<Navigate to="/admin/dashboard" replace />} />
-              <Route path="login" element={<AdminLoginPage />} />
-              <Route element={<ProtectedRoute />}>
-                <Route element={<AdminLayout />}>
-                  <Route path="dashboard" element={<AdminDashboardPage />} />
-                  <Route path="news" element={<NewsArticlesPage />} />
-                  <Route path="events" element={<EventsPage />} />
-                  <Route path="gallery" element={<GalleryAdminPage />} />
-                  <Route path="faqs" element={<FaqsPage />} />
-                  <Route path="alumni" element={<AlumniAdminPage />} />
-                  <Route path="partners" element={<PartnersAdminPage />} />
-                  <Route path="scholarships" element={<ScholarshipsAdminPage />} />
-                  <Route path="student-stories" element={<StudentStoriesAdminPage />} />
-                  <Route path="courses" element={<CoursesPage />} />
-                  <Route path="faculty" element={<FacultyPage />} />
-                  <Route path="programmes" element={<Navigate to="/admin/applications" replace />} />
-                  <Route path="schemes" element={<SchemesAdminPage />} />
-                  <Route path="applications" element={<ApplicationsPage />} />
-                  <Route path="fees" element={<FeeAssignmentsPage />} />
-                  <Route path="contacts" element={<ContactsAdminPage />} />
-                  <Route path="partnerships" element={<PartnershipsAdminPage />} />
-                  <Route path="newsletter" element={<NewsletterAdminPage />} />
-                  <Route path="notifications" element={<NotificationsAdminPage />} />
-                  <Route path="announcements" element={<AnnouncementsAdminPage />} />
-                  <Route path="users" element={<AdminUsersPage />} />
-                  <Route path="audit-logs" element={<AuditLogsPage />} />
-                  <Route path="quick-links" element={<QuickLinksAdminPage />} />
-                  <Route path="legal-pages" element={<LegalPagesAdminPage />} />
-                  <Route path="page-sections" element={<PageSectionsAdminPage />} />
+            <Route element={<AdminAuthProvider><Outlet /></AdminAuthProvider>}>
+              <Route path="/auth/callback" element={<AuthCallbackPage />} />
+              <Route path="/admin" element={<Outlet />}>
+                <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="login" element={<AdminLoginPage />} />
+                <Route element={<ProtectedRoute />}>
+                  <Route element={<AdminLayout />}>
+                    <Route path="dashboard" element={<AdminDashboardPage />} />
+                    <Route
+                      path="platform"
+                      element={
+                        <RequireAuth roles={["SUPER_ADMIN"]}>
+                          <PlatformPage />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route path="news" element={<NewsArticlesPage />} />
+                    <Route path="events" element={<EventsPage />} />
+                    <Route path="gallery" element={<GalleryAdminPage />} />
+                    <Route path="faqs" element={<FaqsPage />} />
+                    <Route path="alumni" element={<AlumniAdminPage />} />
+                    <Route path="partners" element={<PartnersAdminPage />} />
+                    <Route path="scholarships" element={<ScholarshipsAdminPage />} />
+                    <Route path="student-stories" element={<StudentStoriesAdminPage />} />
+                    <Route path="courses" element={<CoursesPage />} />
+                    <Route path="faculty" element={<FacultyPage />} />
+                    <Route path="programmes" element={<Navigate to="/admin/applications" replace />} />
+                    <Route path="schemes" element={<SchemesAdminPage />} />
+                    <Route path="applications" element={<ApplicationsPage />} />
+                    <Route path="fees" element={<FeeAssignmentsPage />} />
+                    <Route path="contacts" element={<ContactsAdminPage />} />
+                    <Route path="partnerships" element={<PartnershipsAdminPage />} />
+                    <Route path="newsletter" element={<NewsletterAdminPage />} />
+                    <Route path="notifications" element={<NotificationsAdminPage />} />
+                    <Route path="announcements" element={<AnnouncementsAdminPage />} />
+                    <Route path="users" element={<AdminUsersPage />} />
+                    <Route path="audit-logs" element={<AuditLogsPage />} />
+                    <Route path="quick-links" element={<QuickLinksAdminPage />} />
+                    <Route path="legal-pages" element={<LegalPagesAdminPage />} />
+                    <Route path="page-sections" element={<PageSectionsAdminPage />} />
+                    <Route path="settings" element={<SettingsAdminPage />} />
+                  </Route>
                 </Route>
               </Route>
-=======
-            >
-              <Route path="dashboard" element={<AdminDashboardPage />} />
-              <Route
-                path="platform"
-                element={
-                  <ProtectedRoute requireRole="SUPER_ADMIN">
-                    <PlatformPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="news" element={<NewsArticlesPage />} />
-              <Route path="events" element={<EventsPage />} />
-              <Route path="gallery" element={<GalleryAdminPage />} />
-              <Route path="faqs" element={<FaqsPage />} />
-              <Route path="alumni" element={<AlumniAdminPage />} />
-              <Route path="partners" element={<PartnersAdminPage />} />
-              <Route path="scholarships" element={<ScholarshipsAdminPage />} />
-              <Route path="student-stories" element={<StudentStoriesAdminPage />} />
-              <Route path="courses" element={<CoursesPage />} />
-              <Route path="faculty" element={<FacultyPage />} />
-              <Route path="programmes" element={<Navigate to="/admin/applications" replace />} />
-              <Route path="schemes" element={<SchemesAdminPage />} />
-              <Route path="applications" element={<ApplicationsPage />} />
-              <Route path="fees" element={<FeeAssignmentsPage />} />
-              <Route path="contacts" element={<ContactsAdminPage />} />
-              <Route path="partnerships" element={<PartnershipsAdminPage />} />
-              <Route path="newsletter" element={<NewsletterAdminPage />} />
-              <Route path="notifications" element={<NotificationsAdminPage />} />
-              <Route path="announcements" element={<AnnouncementsAdminPage />} />
-              <Route path="users" element={<AdminUsersPage />} />
-              <Route path="audit-logs" element={<AuditLogsPage />} />
-              <Route path="quick-links" element={<QuickLinksAdminPage />} />
-              <Route path="legal-pages" element={<LegalPagesAdminPage />} />
-              <Route path="page-sections" element={<PageSectionsAdminPage />} />
-              <Route path="settings" element={<SettingsAdminPage />} />
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
             </Route>
           </Routes>
         </Suspense>
@@ -285,14 +252,8 @@ const App = () => {
           <Sonner />
           <DebugOverlay />
           <BrowserRouter>
-<<<<<<< HEAD
+            <ScrollToTop />
             <AnimatedRoutes />
-=======
-            <AdminAuthProvider>
-              <ScrollToTop />
-              <AnimatedRoutes />
-            </AdminAuthProvider>
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>

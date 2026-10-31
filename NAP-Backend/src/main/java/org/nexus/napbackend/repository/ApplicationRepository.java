@@ -20,6 +20,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     List<Application> findByEmailOrderByCreatedAtDesc(String email);
 
+    List<Application> findByEmailIgnoreCaseOrderByCreatedAtDesc(String email);
+
     List<Application> findByStatusOrderByCreatedAtDesc(String status);
 
     List<Application> findByReviewStatusOrderByCreatedAtDesc(String reviewStatus);

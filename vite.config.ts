@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // Fallback used when NAP_API_TARGET is absent from the environment.
 // Keep in sync with VITE_API_BASE_URL in .env / .env.example.
-const RAILWAY_API_TARGET = "https://backend-production-b8c2b.up.railway.app";
+const LOCAL_API_TARGET = "http://localhost:8080";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
   // Target for the `/api` dev proxy. Same host as VITE_API_BASE_URL so that
   // dev and production resolve identically. Override with NAP_API_TARGET in
   // .env (or the shell) to point at a locally running backend.
-  const apiTarget = env.NAP_API_TARGET || RAILWAY_API_TARGET;
+  const apiTarget = env.NAP_API_TARGET || LOCAL_API_TARGET;
 
   return {
     server: {

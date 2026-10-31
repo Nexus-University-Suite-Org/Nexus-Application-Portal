@@ -6,11 +6,9 @@ import java.util.Map;
 import org.nexus.napbackend.dto.AdminLoginRequest;
 import org.nexus.napbackend.dto.AdminLoginResponse;
 import org.nexus.napbackend.dto.ApplicationResponse;
-import org.nexus.napbackend.dto.ChangePasswordRequest;
 import org.nexus.napbackend.dto.DashboardStatsResponse;
 import org.nexus.napbackend.dto.PaginatedApplicationsResponse;
 import org.nexus.napbackend.dto.ReviewRequest;
-import org.nexus.napbackend.exception.UnauthorizedException;
 import org.nexus.napbackend.facade.AdminFacade;
 import org.nexus.napbackend.service.AdminService;
 import org.springframework.http.ResponseEntity;
@@ -43,28 +41,17 @@ public class AdminController {
     }
 
     @GetMapping("/auth/me")
-<<<<<<< HEAD
     public ResponseEntity<AdminLoginResponse> me(@AuthenticationPrincipal Jwt jwt) {
-        if (jwt == null) {
-            throw new UnauthorizedException("Not signed in");
-        }
         return ResponseEntity.ok(adminFacade.me(jwt));
-=======
-    public ResponseEntity<AdminLoginResponse> me(Authentication authentication) {
-        JwtAuthFilter.AdminPrincipal principal = (JwtAuthFilter.AdminPrincipal) authentication.getPrincipal();
-        AdminLoginResponse response = new AdminLoginResponse(
-                null, principal.email(), null, principal.tenantId(), principal.role());
-        return ResponseEntity.ok(response);
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
     }
 
     @PostMapping("/auth/change-password")
     public ResponseEntity<Map<String, Object>> changePassword(
-            Authentication authentication,
-            @Valid @RequestBody ChangePasswordRequest request) {
-        JwtAuthFilter.AdminPrincipal principal = (JwtAuthFilter.AdminPrincipal) authentication.getPrincipal();
-        adminFacade.changePassword(principal.id(), request.currentPassword(), request.newPassword());
-        return ResponseEntity.ok(Map.of("ok", true, "message", "Password updated"));
+            @AuthenticationPrincipal Jwt jwt) {
+        adminFacade.requestPasswordReset(jwt);
+        return ResponseEntity.ok(Map.of(
+                "ok", true,
+                "message", "If the account exists, a password reset link has been sent."));
     }
 
     @GetMapping("/users")

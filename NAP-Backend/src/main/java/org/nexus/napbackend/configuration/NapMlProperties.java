@@ -10,7 +10,7 @@ public record NapMlProperties(
         String adminToken
 ) {
     public String resolvedBaseUrl() {
-        return (baseUrl != null && !baseUrl.isBlank()) ? baseUrl : "http://127.0.0.1:8000";
+        return (baseUrl != null && !baseUrl.isBlank()) ? baseUrl : "http://localhost:8000";
     }
 
     /**

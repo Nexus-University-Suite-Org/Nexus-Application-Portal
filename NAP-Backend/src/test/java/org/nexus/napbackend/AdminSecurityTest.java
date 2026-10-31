@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,6 +103,26 @@ class AdminSecurityTest {
                         HttpStatus.FORBIDDEN.value(),
                         result.getResponse().getStatus(),
                         "admin login must stay reachable without a bearer token"));
+    }
+
+    @Test
+    @DisplayName("student identity profile requires a student access token")
+    void studentSsoProfileRequiresAuthentication() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/student/me"))
+                        .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("student identity profile requires a verified email")
+    void studentSsoProfileRequiresVerifiedEmail() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/student/me")
+                                .with(jwt()
+                                        .jwt(token -> token
+                                                .claim("email", "student@example.edu")
+                                                .claim("email_verified", false)
+                                                .claim("aud", List.of("nexus-student-portal")))
+                                        .authorities(new SimpleGrantedAuthority("ROLE_STUDENT"))))
+                        .andExpect(status().isForbidden());
     }
 
     @Test

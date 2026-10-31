@@ -3,6 +3,7 @@ package org.nexus.napbackend.configuration;
 import java.util.Arrays;
 import java.util.List;
 import org.nexus.napbackend.service.TenantService;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.nexus.napbackend.tenancy.TenantFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,25 +39,18 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final CorsProperties corsProperties;
-<<<<<<< HEAD
     private final IdentityProperties identityProperties;
-
-    public SecurityConfig(CorsProperties corsProperties, IdentityProperties identityProperties) {
-        this.corsProperties = corsProperties;
-        this.identityProperties = identityProperties;
-=======
     private final TenantService tenantService;
     private final TenancyProperties tenancyProperties;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter,
-                          CorsProperties corsProperties,
+    public SecurityConfig(CorsProperties corsProperties,
+                          IdentityProperties identityProperties,
                           TenantService tenantService,
                           TenancyProperties tenancyProperties) {
-        this.jwtAuthFilter = jwtAuthFilter;
         this.corsProperties = corsProperties;
+        this.identityProperties = identityProperties;
         this.tenantService = tenantService;
         this.tenancyProperties = tenancyProperties;
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
     }
 
     @Bean
@@ -72,13 +66,13 @@ public class SecurityConfig {
                         // Transitional shim: the app portal still posts to this endpoint
                         // until its frontend moves to the identity redirect flow.
                         .requestMatchers("/api/v1/admin/auth/login").permitAll()
-<<<<<<< HEAD
-                        .requestMatchers("/api/v1/admin/**").hasAnyRole(NexusRoles.ADMIN.toArray(String[]::new))
-=======
-                        .requestMatchers("/api/v1/admin/auth/change-password", "/api/v1/admin/auth/me")
-                        .hasAnyRole("ADMIN", "SUPER_ADMIN")
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
+                        .requestMatchers("/api/v1/admin/**")
+                        .hasAnyRole(NexusRoles.ADMIN.toArray(String[]::new))
+                        .requestMatchers("/api/v1/platform/**").hasRole("SUPER_ADMIN")
+                        .requestMatchers("/api/v1/chat/status", "/api/v1/chat/sources", "/api/v1/chat/train")
+                        .hasAnyRole(NexusRoles.ADMIN.toArray(String[]::new))
                         .requestMatchers("/api/v1/applications/**").permitAll()
+                        .requestMatchers("/api/v1/auth/student/me").hasAnyRole("STUDENT", "APPLICANT")
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/contact/**").permitAll()
                         .requestMatchers("/api/v1/partnership-discussions/**").permitAll()
@@ -89,27 +83,18 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/health/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-<<<<<<< HEAD
-                        .requestMatchers("/api/v1/programs/**").permitAll()
-                        .requestMatchers("/api/v1/schemes/**").permitAll()
-                        .anyRequest().permitAll()
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
-=======
                         .requestMatchers(HttpMethod.GET, "/api/v1/programs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/schemes/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/chat", "/api/v1/chat/").permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/platform/**").hasRole("SUPER_ADMIN")
-                        .requestMatchers("/api/v1/chat/status", "/api/v1/chat/sources", "/api/v1/chat/train").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/programs/**", "/api/v1/schemes/**")
+                        .hasAnyRole(NexusRoles.ADMIN.toArray(String[]::new))
                         .anyRequest().permitAll()
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                // Resolve the tenant before authentication so the JWT can then pin a
-                // university admin to their own tenant.
-                .addFilterBefore(new TenantFilter(tenantService, tenancyProperties), JwtAuthFilter.class);
->>>>>>> 2c9811f3bd3db583d5fc06dc3c41fc3d91caa31e
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
+                .addFilterBefore(
+                        new TenantFilter(tenantService, tenancyProperties),
+                        BearerTokenAuthenticationFilter.class);
 
         return http.build();
     }

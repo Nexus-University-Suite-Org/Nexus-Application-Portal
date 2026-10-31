@@ -11,7 +11,7 @@
  *   - others defaulted to `/api/v1` and appended a bare path
  *
  * No single base value can satisfy both. Setting `VITE_API_BASE_URL` to a bare
- * host (e.g. `https://backend-production-b8c2b.up.railway.app`) overrode the
+ * host (e.g. `https://api.example.com`) overrode the
  * correct `/api` defaults and made every env-driven request hit `/v1/...`,
  * which Spring answers with `500 No static resource`. Components that hardcoded
  * a relative `/api/v1/...` kept working, which made it look intermittent.
@@ -55,7 +55,7 @@ const rawNadBase = import.meta.env.VITE_NAD_API_BASE_URL?.trim() ?? "";
 
 const normalizeNadBase = (raw: string) => {
   const trimmed = raw.replace(/\/+$/, "");
-  if (!trimmed) return "https://admissions-backend-production-0985.up.railway.app/api";
+  if (!trimmed) return "http://localhost:8083/api";
   return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
 };
 

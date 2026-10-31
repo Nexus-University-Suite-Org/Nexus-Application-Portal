@@ -15,7 +15,9 @@ public final class NexusRoles {
     public static final List<String> ADMIN = List.of(
             "ADMISSIONS_OFFICER",
             "ADMISSIONS_ADMIN",
-            "SYSTEM_ADMIN");
+            "SYSTEM_ADMIN",
+            "ADMIN",
+            "SUPER_ADMIN");
 
     private NexusRoles() {
     }
