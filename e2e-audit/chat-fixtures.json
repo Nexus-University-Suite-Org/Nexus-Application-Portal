@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "description": "Golden QA set for the NAP chat (no LLM), aligned with the live production corpus (5 news, 4 events, 8 faqs, 3 scholarships, 3 stories, 6 courses, …). Every fixture runs through the exact retrieve -> build_answer pipeline used by /api/chat. `topic` is the intent-taxonomy target for classify_topics (Phase 1+); `titles` are expected quoted source titles; `contains` are substrings the answer must include. Fixtures whose phrasing the current KB cannot answer yet are kept deliberately so Phase 1-3 improvements become measurable.",
+  "fixtures": [
+    { "id": "cat-01", "question": "What courses do you offer?", "topic": "program_list", "should_answer": true, "titles": ["Bachelor of Science in Computer Science", "Bachelor of Business Administration", "Bachelor of Engineering in Mechanical Engineering", "Bachelor of Arts in Education", "Master of Science in Data Science", "Bachelor of Medicine and Bachelor of Surgery"], "require": "any_title" },
+    { "id": "cat-02", "question": "List all the programmes available", "topic": "program_list", "should_answer": true, "titles": ["Bachelor of Science in Computer Science", "Bachelor of Business Administration", "Bachelor of Engineering in Mechanical Engineering", "Bachelor of Arts in Education", "Master of Science in Data Science", "Bachelor of Medicine and Bachelor of Surgery"], "require": "any_title" },
+    { "id": "cat-03", "question": "Which degree programmes are available?", "topic": "program_list", "should_answer": true, "titles": ["Bachelor of Science in Computer Science", "Bachelor of Business Administration", "Bachelor of Engineering in Mechanical Engineering", "Bachelor of Arts in Education", "Master of Science in Data Science", "Bachelor of Medicine and Bachelor of Surgery"], "require": "any_title" },
+    { "id": "cat-04", "question": "What programmes can I study here?", "topic": "program_list", "should_answer": true, "titles": ["Bachelor of Science in Computer Science", "Bachelor of Business Administration", "Bachelor of Engineering in Mechanical Engineering", "Bachelor of Arts in Education", "Master of Science in Data Science", "Bachelor of Medicine and Bachelor of Surgery"], "require": "any_title" },
+
+    { "id": "pg-01", "question": "Do you offer a degree in computer science?", "topic": "program_detail", "should_answer": true, "titles": ["Bachelor of Science in Computer Science"], "contains": ["computer science"] },
+    { "id": "pg-02", "question": "Tell me about the computer science programme", "topic": "program_detail", "should_answer": true, "titles": ["Bachelor of Science in Computer Science"], "contains": ["computer science"] },
+    { "id": "pg-03", "question": "What is the medicine course about?", "topic": "program_detail", "should_answer": true, "titles": ["Bachelor of Medicine and Bachelor of Surgery"] },
+    { "id": "pg-04", "question": "How long is the engineering degree?", "topic": "program_detail", "should_answer": true, "titles": ["Bachelor of Engineering in Mechanical Engineering"], "contains": ["5 years"] },
+    { "id": "pg-05", "question": "Do you have a course in data science?", "topic": "program_detail", "should_answer": true, "titles": ["Master of Science in Data Science"] },
+    { "id": "pg-06", "question": "Is there a masters programme?", "topic": "program_detail", "should_answer": true, "titles": ["Master of Science in Data Science"] },
+    { "id": "pg-07", "question": "What is BSC-CS?", "topic": "program_detail", "should_answer": true, "titles": ["Bachelor of Science in Computer Science"] },
+
+    { "id": "fee-01", "question": "How much are the tuition fees?", "topic": "fees", "should_answer": true, "titles": ["What are the tuition fees?"], "contains": ["UGX"] },
+    { "id": "fee-02", "question": "What does it cost to study at your university?", "topic": "fees", "should_answer": true, "titles": ["What are the tuition fees?"], "contains": ["UGX"] },
+    { "id": "fee-03", "question": "How much is the fee for the computer science programme?", "topic": "fees", "should_answer": true, "titles": ["What are the tuition fees?"], "contains": ["UGX"] },
+    { "id": "fee-04", "question": "Are there extra fees beyond tuition?", "topic": "fees", "should_answer": true, "titles": ["What are the tuition fees?"] },
+
+    { "id": "pay-01", "question": "Are there payment plans available?", "topic": "fees", "should_answer": true, "titles": ["Are there payment plans available?"] },
+    { "id": "pay-02", "question": "Can I pay fees in installments?", "topic": "fees", "should_answer": true, "titles": ["Are there payment plans available?"], "contains": ["installment"] },
+    { "id": "pay-03", "question": "Do you offer installment payments?", "topic": "fees", "should_answer": true, "titles": ["Are there payment plans available?"], "contains": ["installment"] },
+
+    { "id": "apply-01", "question": "How do I apply for admission?", "topic": "apply", "should_answer": true, "titles": ["How do I apply for admission?"] },
+    { "id": "apply-02", "question": "What is the application process?", "topic": "apply", "should_answer": true, "titles": ["How do I apply for admission?"] },
+    { "id": "apply-03", "question": "Where do I submit my application?", "topic": "apply", "should_answer": true, "titles": ["How do I apply for admission?"] },
+
+    { "id": "req-01", "question": "What are the entry requirements for undergraduate programs?", "topic": "requirements", "should_answer": true, "titles": ["What are the entry requirements for undergraduate programs?"] },
+    { "id": "req-02", "question": "How many O-level credits do I need?", "topic": "requirements", "should_answer": true, "titles": ["What are the entry requirements for undergraduate programs?"], "contains": ["O-Level"] },
+    { "id": "req-03", "question": "What grades do I need to qualify for a degree?", "topic": "requirements", "should_answer": true, "titles": ["What are the entry requirements for undergraduate programs?"] },
+
+    { "id": "ddl-01", "question": "When is the application deadline?", "topic": "deadline", "should_answer": true, "titles": ["What is the application deadline?"] },
+    { "id": "ddl-02", "question": "What is the deadline for the September intake?", "topic": "deadline", "should_answer": true, "titles": ["What is the application deadline?"], "contains": ["September"] },
+
+    { "id": "sch-01", "question": "Do you offer scholarships?", "topic": "scholarships", "should_answer": true, "titles": ["STEM Women Scholarship", "Community Service Scholarship", "Merit-Based Excellence Scholarship"], "require": "any_title" },
+    { "id": "sch-02", "question": "Tell me about the merit scholarship", "topic": "scholarships", "should_answer": true, "titles": ["Merit-Based Excellence Scholarship"] },
+    { "id": "sch-03", "question": "How do I apply for a scholarship in STEM?", "topic": "scholarships", "should_answer": true, "titles": ["STEM Women Scholarship"] },
+    { "id": "sch-04", "question": "Is there financial aid for female students?", "topic": "scholarships", "should_answer": true, "titles": ["STEM Women Scholarship"] },
+
+    { "id": "news-01", "question": "What are the latest news at the university?", "topic": "news", "should_answer": true, "titles": ["Spring Graduation Celebrates 3,200 Graduates", "Student Startup Raises $2.4M in Seed Funding", "New $12M AI Research Lab Opens on Campus", "University Application Portal Ranks Among Top 200 Globally", "Partnership with MIT Launches Joint Research Program"], "require": "any_title" },
+    { "id": "news-02", "question": "Tell me about the graduation", "topic": "news", "should_answer": true, "titles": ["Spring Graduation Celebrates 3,200 Graduates"], "contains": ["Graduates"] },
+    { "id": "news-03", "question": "What is the AI research lab about?", "topic": "news", "should_answer": true, "titles": ["New $12M AI Research Lab Opens on Campus"] },
+
+    { "id": "evt-01", "question": "Are there any upcoming events?", "topic": "events", "should_answer": true, "titles": ["Open Day 2026", "Research Symposium 2026", "International Culture Week", "Alumni Homecoming"], "require": "any_title" },
+    { "id": "evt-02", "question": "When is the open day?", "topic": "events", "should_answer": true, "titles": ["Open Day 2026"] },
+    { "id": "evt-03", "question": "Tell me about the research symposium", "topic": "events", "should_answer": true, "titles": ["Research Symposium 2026"] },
+
+    { "id": "st-01", "question": "Share a student success story", "topic": "stories", "should_answer": true, "titles": ["Research That Changes Lives", "Building a Business from Classroom Knowledge", "From Village to Virtual Reality Lab"], "require": "any_title" },
+    { "id": "st-02", "question": "What do alumni do after graduation?", "topic": "stories", "should_answer": true, "titles": ["David Mugisha", "Grace Achieng", "James Okello", "Sarah Nakamya"], "require": "any_title" },
+
+    { "id": "cam-01", "question": "Is there on-campus accommodation?", "topic": "campus", "should_answer": true, "titles": ["Is accommodation available on campus?", "What student support services are available?"], "require": "any_title", "contains": ["accommodation"] },
+    { "id": "sup-01", "question": "What support services do students get?", "topic": "campus", "should_answer": true, "titles": ["What student support services are available?"] },
+    { "id": "reg-01", "question": "How do I register for courses?", "topic": "apply", "should_answer": true, "titles": ["How do I register for courses?"] },
+    { "id": "cal-01", "question": "How do I access the academic calendar?", "topic": "campus", "should_answer": true, "titles": ["Academic Calendar"] },
+    { "id": "ptl-01", "question": "How do I log into the student portal?", "topic": "campus", "should_answer": true, "titles": ["Student Portal"] },
+
+    { "id": "con-01", "question": "How can I contact the admissions office?", "topic": "contact", "should_answer": true, "contains": ["reach the team"] },
+    { "id": "con-02", "question": "What is your phone number?", "topic": "contact", "should_answer": true, "contains": ["phone"] },
+    { "id": "con-03", "question": "What is your email address?", "topic": "contact", "should_answer": true, "contains": ["email"] },
+    { "id": "con-04", "question": "Where is the university located?", "topic": "contact", "should_answer": true, "contains": ["team"] },
+    { "id": "con-05", "question": "Can I talk to a person on the admissions team?", "topic": "contact", "should_answer": true, "contains": ["team"] },
+
+    { "id": "sm-01", "question": "Hello", "topic": "greeting", "should_answer": true },
+    { "id": "sm-02", "question": "Good morning", "topic": "greeting", "should_answer": true },
+    { "id": "sm-03", "question": "Hi there, how are you?", "topic": "wellbeing", "should_answer": true },
+    { "id": "sm-04", "question": "Thanks", "topic": "thanks", "should_answer": true },
+    { "id": "sm-05", "question": "Bye", "topic": "farewell", "should_answer": true },
+    { "id": "sm-06", "question": "What is your name?", "topic": "identity", "should_answer": true },
+    { "id": "sm-07", "question": "Are you human?", "topic": "identity", "should_answer": true },
+    { "id": "sm-08", "question": "What can you do?", "topic": "capability", "should_answer": true },
+    { "id": "sm-09", "question": "Help", "topic": "capability", "should_answer": true },
+
+    { "id": "boss-01", "question": "How do I get a study visa?", "topic": "out_of_scope", "should_answer": false },
+    { "id": "boss-02", "question": "What is the weather in Kampala today?", "topic": "out_of_scope", "should_answer": false },
+    { "id": "boss-03", "question": "Can you fix my laptop?", "topic": "out_of_scope", "should_answer": false },
+    { "id": "boss-04", "question": "How much is a chicken at the market?", "topic": "out_of_scope", "should_answer": false },
+    { "id": "boss-05", "question": "Do you offer evening classes?", "topic": "out_of_scope", "should_answer": false },
+    { "id": "schm-01", "question": "Do you have admission schemes?", "topic": "apply", "should_answer": true, "titles": ["How do I apply for admission?"] }
+  ]
+}
