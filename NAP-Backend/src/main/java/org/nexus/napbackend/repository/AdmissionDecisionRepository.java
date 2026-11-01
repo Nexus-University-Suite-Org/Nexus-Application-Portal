@@ -8,5 +8,7 @@ public interface AdmissionDecisionRepository extends JpaRepository<AdmissionDeci
 
     List<AdmissionDecision> findByApplicationIdOrderByIdAsc(Long applicationId);
 
+    List<AdmissionDecision> findByTenantIdAndApplicationIdOrderByIdAsc(Long tenantId, Long applicationId);
+
     List<AdmissionDecision> findByProgrammeCodeOrderByAdmissionIndexDesc(String programmeCode);
 }

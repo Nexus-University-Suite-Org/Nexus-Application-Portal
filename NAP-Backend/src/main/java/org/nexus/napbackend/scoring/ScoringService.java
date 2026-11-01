@@ -217,12 +217,14 @@ public class ScoringService {
         decision.setProgrammeCode(evaluation.programmeCode());
         decision.setProgrammeId(programme.getId());
         decision.setAdmissionIndex(evaluation.admissionIndex());
+        decision.setModelRecommendation(evaluation.outcome().name());
         decision.setOLevelIndex(evaluation.oLevelIndex());
         decision.setALevelIndex(evaluation.aLevelIndex());
         decision.setCutoffIndex(programme.getCutoffIndex());
         decision.setLegacyTotalScore(evaluation.legacyTotalScore());
         decision.setCriteriaJson(toJson(evaluation.criteria()));
         decision.setGatesJson(toJson(evaluation.gates()));
+        decision.setReasonsJson(toJson(evaluation.reasons()));
         decision.setDataQuality(evaluation.dataQuality().toString());
         decision.setModelVersion(evaluation.modelVersion().version());
         decision.setScoringMode(mode.name());

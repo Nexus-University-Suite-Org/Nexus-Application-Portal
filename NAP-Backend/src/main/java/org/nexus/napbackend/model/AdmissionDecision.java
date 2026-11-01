@@ -49,6 +49,9 @@ public class AdmissionDecision {
     @Column(name = "outcome", nullable = false, length = 20)
     private String outcome;
 
+    @Column(name = "model_recommendation", length = 20)
+    private String modelRecommendation;
+
     @Column(name = "admission_index")
     private Double admissionIndex;
 
@@ -69,6 +72,9 @@ public class AdmissionDecision {
 
     @Column(name = "gates_json", columnDefinition = "text")
     private String gatesJson;
+
+    @Column(name = "reasons_json", columnDefinition = "text")
+    private String reasonsJson;
 
     @Column(name = "data_quality", length = 200)
     private String dataQuality;

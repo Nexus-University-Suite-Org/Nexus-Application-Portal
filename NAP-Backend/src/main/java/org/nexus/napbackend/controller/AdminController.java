@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.Map;
 import org.nexus.napbackend.dto.AdminLoginRequest;
 import org.nexus.napbackend.dto.AdminLoginResponse;
+import org.nexus.napbackend.dto.AdmissionAssessmentResponse;
 import org.nexus.napbackend.dto.ApplicationResponse;
 import org.nexus.napbackend.dto.DashboardStatsResponse;
 import org.nexus.napbackend.dto.PaginatedApplicationsResponse;
 import org.nexus.napbackend.dto.ReviewRequest;
 import org.nexus.napbackend.facade.AdminFacade;
 import org.nexus.napbackend.service.AdminService;
+import org.nexus.napbackend.scoring.AdmissionAssessmentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -29,10 +31,14 @@ public class AdminController {
 
     private final AdminFacade adminFacade;
     private final AdminService adminService;
+    private final AdmissionAssessmentService assessmentService;
 
-    public AdminController(AdminFacade adminFacade, AdminService adminService) {
+    public AdminController(AdminFacade adminFacade,
+                           AdminService adminService,
+                           AdmissionAssessmentService assessmentService) {
         this.adminFacade = adminFacade;
         this.adminService = adminService;
+        this.assessmentService = assessmentService;
     }
 
     @PostMapping("/auth/login")
@@ -86,6 +92,11 @@ public class AdminController {
     @GetMapping("/applications/{id}")
     public ResponseEntity<ApplicationResponse> getApplication(@PathVariable Long id) {
         return ResponseEntity.ok(adminFacade.getApplicationById(id));
+    }
+
+    @GetMapping("/applications/{id}/assessment")
+    public ResponseEntity<List<AdmissionAssessmentResponse>> getApplicationAssessment(@PathVariable Long id) {
+        return ResponseEntity.ok(assessmentService.getForApplication(id));
     }
 
     @PutMapping("/applications/{id}/review")

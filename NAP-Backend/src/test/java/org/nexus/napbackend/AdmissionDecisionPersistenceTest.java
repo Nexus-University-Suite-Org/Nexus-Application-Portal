@@ -1,6 +1,7 @@
 package org.nexus.napbackend;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -15,12 +16,14 @@ import org.nexus.napbackend.model.Program;
 import org.nexus.napbackend.repository.AdmissionDecisionRepository;
 import org.nexus.napbackend.repository.ApplicationRepository;
 import org.nexus.napbackend.repository.ProgramRepository;
+import org.nexus.napbackend.scoring.AdmissionAssessmentService;
 import org.nexus.napbackend.tenancy.TenantContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Proves the scoring path actually writes rows, against a real database.
@@ -51,6 +54,9 @@ class AdmissionDecisionPersistenceTest {
 
     @Autowired
     private AdmissionDecisionRepository decisionRepository;
+
+    @Autowired
+    private AdmissionAssessmentService assessmentService;
 
     private Program seedProgramme(String code) {
         Program programme = new Program();
@@ -144,6 +150,32 @@ class AdmissionDecisionPersistenceTest {
         assertThat(decision.getModelVersion()).isNotBlank();
         assertThat(decision.getCriteriaJson()).isNotBlank();
         assertThat(decision.getGatesJson()).isNotBlank();
+        assertThat(decision.getModelRecommendation()).isIn("ADMIT", "REVIEW", "REJECT");
+        assertThat(decision.getReasonsJson()).isNotBlank();
+
+        TenantContext.set(decision.getTenantId(), null);
+        try {
+            assertThat(assessmentService.getForApplication(applicant.getId()))
+                    .singleElement()
+                    .satisfies(assessment -> {
+                        assertThat(assessment.modelRecommendation())
+                                .isEqualTo(decision.getModelRecommendation());
+                        assertThat(assessment.decisionOfRecord()).isEqualTo(decision.getOutcome());
+                        assertThat(assessment.criteria()).isNotEmpty();
+                        assertThat(assessment.gates()).isNotEmpty();
+                        assertThat(assessment.reasons()).isNotEmpty();
+                    });
+        } finally {
+            TenantContext.clear();
+        }
+        TenantContext.set(decision.getTenantId() + 1, null);
+        try {
+            assertThatThrownBy(() -> assessmentService.getForApplication(applicant.getId()))
+                    .isInstanceOfSatisfying(ResponseStatusException.class,
+                            error -> assertThat(error.getStatusCode().value()).isEqualTo(404));
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     @Test
